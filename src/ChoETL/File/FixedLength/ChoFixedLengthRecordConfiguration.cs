@@ -189,10 +189,11 @@ namespace ChoETL
             AreAllFieldTypesNull = RecordFieldConfigurationsDict.All(kvp => kvp.Value.FieldType == null);
         }
 
-        public ChoFixedLengthRecordConfiguration ClearFields()
+        public new ChoFixedLengthRecordConfiguration ClearFields()
         {
             //FixedLengthRecordFieldConfigurationsForType.Clear();
             FixedLengthRecordFieldConfigurations.Clear();
+            base.ClearFields();
             return this;
         }
 
@@ -348,7 +349,7 @@ namespace ChoETL
                             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                             {
                                 pt = pd.PropertyType.GetUnderlyingType();
-                                if (pt != typeof(object) && !pt.IsSimple() /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
+                                if (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo()) /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
                                     DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
                                 else
                                 {
@@ -451,7 +452,7 @@ namespace ChoETL
                 && FixedLengthRecordFieldConfigurations.Count == 0 /*&& headers != null*/)
             {
                 if (RecordType != null && !IsDynamicObject
-                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
+                    /*&& ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any()*/)
                 {
                     MapRecordFields(RecordType);
                 }

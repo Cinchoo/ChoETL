@@ -73,6 +73,14 @@ namespace ChoETL
 
         public static object ConvertFrom(object value, Type targetType, object sourceObject = null, object[] converters = null, object[] parameters = null, CultureInfo culture = null, string propName = null)
         {
+            if (value != null)
+            {
+                var valueType = value.GetType();
+                if (valueType == targetType
+                    || targetType.IsAssignableFrom(valueType))
+                    return value;
+            }
+
             Type origType = targetType;
             targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
             if (targetType != null && targetType.IsValueType && origType != null & origType.IsNullableType())
@@ -107,14 +115,23 @@ namespace ChoETL
 
                 if (!collectionConvertersFound)
                 {
-                    if (value is ICollection && !typeof(ICollection).IsAssignableFrom(targetType))
+                    if (value is ICollection)
                     {
-                        value = ((IEnumerable)value).FirstOrDefault<object>();
+                        if (typeof(ICollection).IsAssignableFrom(targetType)
+                            || (targetType.IsGenericType() && typeof(IDictionary<,>).IsAssignableFrom(targetType.GetGenericTypeDefinition())))
+                        {
+
+                        }
+                        else
+                            value = ((IEnumerable)value).FirstOrDefaultEx<object>();
                     }
                     if (value != null && typeof(IList).IsAssignableFrom(targetType) && !(value is IList))
                     {
                         value = new object[] { value };
                     }
+                    //if (value != null && typeof(IDictionary<string, object>).IsAssignableFrom(targetType)
+                    //    && value is IDictionary<string, object>)
+                    //    return value;
                 }
             }
 
@@ -426,7 +443,7 @@ namespace ChoETL
 
                 object objArray = null;
                 if (converters.IsNullOrEmpty())
-                    converters = ChoTypeDescriptor.GetTypeConvertersForType(type);
+                    converters = ChoTypeDescriptor.GetTypeConvertersForType(targetType /*type*/);
 
                 if (converters != null && converters.Length > 0)
                 {

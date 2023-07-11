@@ -32,6 +32,8 @@ namespace ChoETL
 
         public static bool FillIfCustomSerialization(this object rec, object payload)
         {
+            if (rec == null) return false;
+
             if (rec.GetType().IsDynamicType())
                 return false;
 

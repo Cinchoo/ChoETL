@@ -366,9 +366,11 @@ namespace ChoETL
             {
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
                 else
-                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
 
                 selector?.Invoke(dict);
 
@@ -565,10 +567,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithJSONPath(string jsonPath, bool allowComplexJSONPath = false)
+        public ChoJSONReader<T> WithJSONPath(string jsonPath, bool allowComplexJSONPath = false, bool flattenIfJArrayWhenReading = true)
         {
             Configuration.JSONPath = jsonPath;
             Configuration.AllowComplexJSONPath = allowComplexJSONPath;
+            Configuration.FlattenIfJArrayWhenReading = flattenIfJArrayWhenReading;
             return this;
         }
 
@@ -592,6 +595,7 @@ namespace ChoETL
 
         public ChoJSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            ClearFieldsIf();
             Configuration.IgnoreField(field);
             return this;
         }
@@ -650,6 +654,7 @@ namespace ChoETL
                             nfc.FieldType = pd.PropertyType;
                     }
 
+                    Configuration.LoadFieldConfigurationAttributes(nfc, typeof(T));
                     Configuration.JSONRecordFieldConfigurations.Add(nfc);
                 }
             }

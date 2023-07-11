@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.1.26</Version>
+    <Version>1.0.1.27</Version>
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Description>Parquet extension to Cinchoo ETL framework</Description>

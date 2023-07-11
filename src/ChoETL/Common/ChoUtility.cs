@@ -16,6 +16,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -395,11 +396,11 @@ namespace ChoETL
                 }
 
                 object value = null;
-                T rec = ChoActivator.CreateInstance<T>();
                 int index = 0;
 
                 while (index < count)
                 {
+                    T rec = ChoActivator.CreateInstance<T>();
                     foreach (var key in keys)
                     {
                         if (isSourceDynamic)
@@ -466,7 +467,12 @@ namespace ChoETL
             }
         }
 
-        public static T FirstOrDefault<T>(this object value, T defaultValue = default(T))
+        public static object FirstOrDefaultEx(this object value, object defaultValue = null)
+        {
+            return FirstOrDefaultEx<object>(value, defaultValue);
+        }
+
+        public static T FirstOrDefaultEx<T>(this object value, T defaultValue = default(T))
         {
             if (value == null) return defaultValue;
             if (!(value is string) && value is IEnumerable)
@@ -700,7 +706,13 @@ namespace ChoETL
             if (src is ExpandoObject || src is IDictionary<string, object>)
             {
                 if (dest is ExpandoObject || dest is IDictionary<string, object>)
-                    dest = src;
+                {
+                    foreach (var kvp in ((IDictionary<string, object>)src))
+                    {
+                        IDictionary<string, object> dest1 = dest as IDictionary<string, object>;
+                        dest1.Add(kvp.Key, kvp.Value);
+                    }
+                }
                 else
                 {
                     if (dest is IDictionary)
@@ -724,7 +736,7 @@ namespace ChoETL
                             var dest1 = dest as IDictionary;
                             foreach (var key in ((IDictionary<string, object>)src).Keys)
                             {
-                                dest1.Add(ChoConvert.ConvertTo(key, keyType, null, keyConverter != null ? new object[] { keyConverter } : null, null, null), 
+                                dest1.Add(ChoConvert.ConvertTo(key, keyType, null, keyConverter != null ? new object[] { keyConverter } : null, null, null),
                                     ChoConvert.ConvertTo(((IDictionary<string, object>)src)[key], valueType, null, valueConverter != null ? new object[] { valueConverter } : null, null, null));
                             }
                         }
@@ -1420,10 +1432,10 @@ namespace ChoETL
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, 
             ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
-            string nsPrefix = null, bool emitDataType = false, bool useXmlArray = false,
+            string nsPrefix = null, bool emitDataType = false, bool? useXmlArray = null,
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
             ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, string key = null,
-            bool? turnOffPluralization = null
+            bool? turnOffPluralization = null, Func<string, object, bool?> xmlArrayQualifierOverride = null
             )
         {
             if (target is ExpandoObject)
@@ -1434,15 +1446,34 @@ namespace ChoETL
             }
             else if (target is IDictionary<string, object>)
             {
-                var dObj = new ChoDynamicObject(target as IDictionary<string, object>);
-                target = dObj;
-                dObj.DynamicObjectName = key;
+                if (target is ChoDynamicObject dObj)
+                {
+                    if (!key.IsNullOrWhiteSpace()
+                        && dObj.DynamicObjectName == ChoDynamicObject.DefaultName)
+                    {
+                        dObj.DynamicObjectName = key;
+                    }
+                }
+                else
+                {
+                    var dObj1 = new ChoDynamicObject(target as IDictionary<string, object>);
+                    target = dObj1;
+                    dObj1.DynamicObjectName = key;
+                }
             }
             else if (target is IDictionary)
             {
                 var dObj = new ChoDynamicObject(((IDictionary)target).ToDictionary());
                 target = dObj;
                 dObj.DynamicObjectName = key;
+            }
+            else if (target is ChoDynamicObject dObj)
+            {
+                if (!key.IsNullOrWhiteSpace()
+                    && dObj.DynamicObjectName == ChoDynamicObject.DefaultName)
+                {
+                    dObj.DynamicObjectName = key;
+                }
             }
 
             XmlSerializerNamespaces ns = null;
@@ -1470,7 +1501,29 @@ namespace ChoETL
             {
                 if (((IList)target).Count > 0)
                 {
-                    var xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    string xml = null;
+                    IList list = target as IList;
+                    if (list.OfType<ChoDynamicObject>().Count() == list.Count)
+                    {
+                        xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray, 
+                            useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key?.ToSingular(), turnOffPluralization, xmlArrayQualifierOverride)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    }
+                    else if (!(list is ArrayList) && list.OfType<Object>().Select(o => o.GetType()).Distinct().Count() == 1)
+                    {
+                        xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray, 
+                            useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key?.ToSingular(), turnOffPluralization, xmlArrayQualifierOverride)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    }
+                    else
+                    {
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            // Various for loops etc as necessary that will ultimately do this:
+                            XmlSerialize(memoryStream, target, xws);
+                            memoryStream.Position = 0;
+                            var bytes = memoryStream.ToArray();
+                            xml = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+                        }
+                    }
                     //return $"<dynamic>{xml}</dynamic>";
                     return xml;
                 }
@@ -1478,16 +1531,18 @@ namespace ChoETL
                     return String.Empty;
             }
 
+            bool replaceNode = false;
             using (XmlWriter xtw = XmlTextWriter.Create(xmlString, xws ?? _xws))
             {
                 if (target is ChoDynamicObject)
                 {
                     xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator, useXmlArray: useXmlArray,
                         useJsonNamespaceForObjectType: useJsonNamespaceForObjectType, nsMgr: nsMgr, ignoreFieldValueMode: ignoreFieldValueMode,
-                        turnOffPluralization: turnOffPluralization));
+                        turnOffPluralization: turnOffPluralization, xmlArrayQualifierOverride: xmlArrayQualifierOverride));
                 }
                 else
                 {
+                    replaceNode = true;
                     if (ns == null)
                         ns = new XmlSerializerNamespaces();
 
@@ -1498,7 +1553,7 @@ namespace ChoETL
 
                 xtw.Flush();
 
-                return xmlString.ToString();
+                return key.IsNullOrWhiteSpace() || !replaceNode ? xmlString.ToString() : xmlString.ToString().ReplaceXmlNodeIfAppl(key);
             }
         }
 
@@ -1833,7 +1888,9 @@ namespace ChoETL
             if (type == null)
                 throw new ArgumentNullException("type");
 
-            if (!typeof(IList).IsAssignableFrom(type))
+            if (!typeof(IList).IsAssignableFrom(type)
+                && !(type.IsGenericType() && type.GetGenericTypeDefinition() == typeof(IList<>))
+                )
                 return type;
 
             if (type.IsArray)
@@ -1933,7 +1990,7 @@ namespace ChoETL
             if (source == null)
                 return source;
 
-            if (searchText.IsNullOrWhiteSpace())
+            if (searchText.IsNullOrEmpty())
                 throw new ArgumentException("Invalid searchText passed.");
 
             int index = source.IndexOf(searchText);
@@ -2699,6 +2756,8 @@ namespace ChoETL
             if (typeof(Array).IsAssignableFrom(type))
                 return true;
             else if (typeof(IList).IsAssignableFrom(type))
+                return true;
+            else if (type.IsGenericType() && type.GetGenericTypeDefinition() == typeof(IList<>))
                 return true;
             //else if (typeof(IDictionary).IsAssignableFrom(type))
             //    return true;

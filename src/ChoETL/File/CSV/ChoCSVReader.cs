@@ -32,7 +32,6 @@ namespace ChoETL
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
         public event EventHandler<ChoMapColumnEventArgs> MapColumn;
-        public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
         public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
         public event EventHandler<ChoMultiLineHeaderEventArgs> MultiLineHeader;
         public event EventHandler<ChoCommentLineEventArgs> CommentLineFound;
@@ -368,8 +367,7 @@ namespace ChoETL
 
         public override bool RaiseReportEmptyLine(long lineNo)
         {
-            EventHandler<ChoEmptyLineEventArgs> emptyLineFound = EmptyLineFound;
-            if (emptyLineFound == null)
+            if (!HasReportEmptyLineSubscribed)
             {
                 if (Configuration.IgnoreEmptyLine)
                     return true;
@@ -378,10 +376,7 @@ namespace ChoETL
 
                 //throw new ChoParserException("Empty line found at [{0}] location.".FormatString(lineNo));
             }
-
-            var ea = new ChoEmptyLineEventArgs(lineNo);
-            emptyLineFound(this, ea);
-            return ea.Continue;
+            return base.RaiseReportEmptyLine(lineNo);
         }
 
         public string RaiseSanitizeLine(long lineNo, string line)
@@ -521,6 +516,25 @@ namespace ChoETL
         public ChoCSVReader<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoCSVReader<T> ValidationMode(ChoObjectValidationMode mode)
+        {
+            Configuration.ObjectValidationMode = mode;
+            return this;
+        }
+
+        public ChoCSVReader<T> ObjectLevelValidator(Func<T, bool> validator)
+        {
+            Configuration.Validator = (o) =>
+            {
+                if (validator != null)
+                    return validator((T)o);
+                else
+                    return true;
+            };
+             
             return this;
         }
 
@@ -673,6 +687,11 @@ namespace ChoETL
 
         public ChoCSVReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
             Configuration.IgnoreField(field);
             return this;
         }
@@ -750,6 +769,7 @@ namespace ChoETL
                             nfc.FieldType = pd.PropertyType;
                     }
 
+                    Configuration.LoadFieldConfigurationAttributesInternal(nfc, typeof(T));
                     Configuration.CSVRecordFieldConfigurations.Add(nfc);
                 }
             }
@@ -763,7 +783,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Func<object> expr = null,
-            IChoValueConverter propertyConverter = null)
+            IChoValueConverter propertyConverter = null, Func<object, bool> propertyValidator = null)
             where TClass : class
         {
             if (field == null)
@@ -771,7 +791,8 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter,
+                propertyValidator);
         }
 
         public ChoCSVReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
@@ -780,7 +801,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Func<object> expr = null,
-            IChoValueConverter propertyConverter = null)
+            IChoValueConverter propertyConverter = null, Func<object, bool> propertyValidator = null)
             where TClass : class
         {
             if (field == null)
@@ -788,7 +809,8 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter,
+                propertyValidator);
         }
 
         public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Func<TField> expr)
@@ -824,14 +846,15 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Func<object> expr = null,
-            IChoValueConverter propertyConverter = null)
+            IChoValueConverter propertyConverter = null, Func<object, bool> propertyValidator = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter,
+                propertyValidator);
         }
 
         public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position, 
@@ -841,14 +864,15 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null,
             bool excelField = false, Func<object> expr = null,
-            IChoValueConverter propertyConverter = null)
+            IChoValueConverter propertyConverter = null, Func<object, bool> propertyValidator = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, 
                 valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr, propertyConverter,
+                propertyValidator);
         }
 
         public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, 
@@ -857,11 +881,12 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type subRecordType = null, Func<object> expr = null,
-            IChoValueConverter propertyConverter = null)
+            IChoValueConverter propertyConverter = null, Func<object, bool> propertyValidator = null)
         {
             return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, 
                 valueSelector, headerSelector,
-                defaultValue, fallbackValue, altFieldNames, null, formatText, optional, nullValue, excelField, subRecordType, expr, propertyConverter);
+                defaultValue, fallbackValue, altFieldNames, null, formatText, optional, nullValue, excelField, subRecordType, expr, propertyConverter,
+                propertyValidator);
         }
 
         public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, 
@@ -870,10 +895,11 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type subRecordType = null, Func<object> expr = null,
-            IChoValueConverter propertyConverter = null)
+            IChoValueConverter propertyConverter = null, Func<object, bool> propertyValidator = null)
         {
             return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, valueSelector, headerSelector,
-                defaultValue, fallbackValue, altFieldNames, null, formatText, optional, nullValue, excelField, subRecordType, expr, propertyConverter);
+                defaultValue, fallbackValue, altFieldNames, null, formatText, optional, nullValue, excelField, subRecordType, expr, propertyConverter,
+                propertyValidator);
         }
 
         private ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, 
@@ -883,7 +909,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, 
             string fullyQualifiedMemberName = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type subRecordType = null, Func<object> expr = null,
-            IChoValueConverter propertyConverter = null)
+            IChoValueConverter propertyConverter = null, Func<object, bool> propertyValidator = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -895,7 +921,8 @@ namespace ChoETL
 
                 Configuration.WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName,
                     valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames, fullyQualifiedMemberName, formatText, optional,
-                    nullValue, excelField, typeof(T), subRecordType, null, expr, propertyConverter);
+                    nullValue, excelField, typeof(T), subRecordType, null, expr, propertyConverter,
+                    propertyValidator);
             }
 
             return this;

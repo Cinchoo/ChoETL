@@ -1,0 +1,182 @@
+<Companies xmlns:xml="http://www.w3.org/XML/1998/namespace">
+  <Company>
+    <permalink>/organization/waywire</permalink>
+    <name>#waywire</name>
+    <homepage_url>http://www.waywire.com</homepage_url>
+    <category_list>|Entertainment|Politics|Social Media|News|</category_list>
+    <market>News</market>
+    <funding_total_usd>1 750 000</funding_total_usd>
+    <status>acquired</status>
+    <country_code>USA</country_code>
+    <state_code>NY</state_code>
+    <region>New York City</region>
+    <city>New York</city>
+    <funding_rounds>1</funding_rounds>
+    <founded_at>01/06/2012</founded_at>
+    <founded_month>2012-06</founded_month>
+    <founded_quarter>2012-Q2</founded_quarter>
+    <founded_year>2012</founded_year>
+    <first_funding_at>30/06/2012</first_funding_at>
+    <last_funding_at>30/06/2012</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/tv-communications</permalink>
+    <name>&amp;TV Communications</name>
+    <homepage_url>http://enjoyandtv.com</homepage_url>
+    <category_list>|Games|</category_list>
+    <market>Games</market>
+    <funding_total_usd>4 000 000</funding_total_usd>
+    <status>operating</status>
+    <country_code>USA</country_code>
+    <state_code>CA</state_code>
+    <region>Los Angeles</region>
+    <city>Los Angeles</city>
+    <funding_rounds>2</funding_rounds>
+    <founded_at></founded_at>
+    <founded_month></founded_month>
+    <founded_quarter></founded_quarter>
+    <founded_year></founded_year>
+    <first_funding_at>04/06/2010</first_funding_at>
+    <last_funding_at>23/09/2010</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/rock-your-paper</permalink>
+    <name>'Rock' Your Paper</name>
+    <homepage_url>http://www.rockyourpaper.org</homepage_url>
+    <category_list>|Publishing|Education|</category_list>
+    <market>Publishing</market>
+    <funding_total_usd>40 000</funding_total_usd>
+    <status>operating</status>
+    <country_code>EST</country_code>
+    <state_code></state_code>
+    <region>Tallinn</region>
+    <city>Tallinn</city>
+    <funding_rounds>1</funding_rounds>
+    <founded_at>26/10/2012</founded_at>
+    <founded_month>2012-10</founded_month>
+    <founded_quarter>2012-Q4</founded_quarter>
+    <founded_year>2012</founded_year>
+    <first_funding_at>09/08/2012</first_funding_at>
+    <last_funding_at>09/08/2012</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/in-touch-network</permalink>
+    <name>(In)Touch Network</name>
+    <homepage_url>http://www.InTouchNetwork.com</homepage_url>
+    <category_list>|Electronics|Guides|Coffee|Restaurants|Music|iPhone|Apps|Mobile|iOS|E-Commerce|</category_list>
+    <market>Electronics</market>
+    <funding_total_usd>1 500 000</funding_total_usd>
+    <status>operating</status>
+    <country_code>GBR</country_code>
+    <state_code>AL</state_code>
+    <region>London</region>
+    <city>London</city>
+    <funding_rounds>1</funding_rounds>
+    <founded_at>01/04/2011</founded_at>
+    <founded_month>2011-04</founded_month>
+    <founded_quarter>2011-Q2</founded_quarter>
+    <founded_year>2011</founded_year>
+    <first_funding_at>01/04/2011</first_funding_at>
+    <last_funding_at>01/04/2011</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/n-plusn</permalink>
+    <name>+n (PlusN)</name>
+    <homepage_url>http://plusn.com</homepage_url>
+    <category_list>|Software|</category_list>
+    <market>Software</market>
+    <funding_total_usd>1 200 000</funding_total_usd>
+    <status>operating</status>
+    <country_code>USA</country_code>
+    <state_code>NY</state_code>
+    <region>New York City</region>
+    <city>New York</city>
+    <funding_rounds>2</funding_rounds>
+    <founded_at>01/01/2012</founded_at>
+    <founded_month>2012-01</founded_month>
+    <founded_quarter>2012-Q1</founded_quarter>
+    <founded_year>2012</founded_year>
+    <first_funding_at>29/08/2012</first_funding_at>
+    <last_funding_at>04/09/2014</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/r-ranch-and-mine</permalink>
+    <name>-R- Ranch and Mine</name>
+    <homepage_url></homepage_url>
+    <category_list>|Entertainment|Games|</category_list>
+    <market>Games</market>
+    <funding_total_usd>10 000</funding_total_usd>
+    <status>operating</status>
+    <country_code>USA</country_code>
+    <state_code>TX</state_code>
+    <region>Dallas</region>
+    <city>Fort Worth</city>
+    <funding_rounds>1</funding_rounds>
+    <founded_at>08/07/2014</founded_at>
+    <founded_month>2014-07</founded_month>
+    <founded_quarter>2014-Q3</founded_quarter>
+    <founded_year>2014</founded_year>
+    <first_funding_at>17/08/2014</first_funding_at>
+    <last_funding_at>17/08/2014</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/club-domains</permalink>
+    <name>.Club Domains</name>
+    <homepage_url>http://nic.club/</homepage_url>
+    <category_list>|Software|</category_list>
+    <market>Software</market>
+    <funding_total_usd>7 000 000</funding_total_usd>
+    <status></status>
+    <country_code>USA</country_code>
+    <state_code>FL</state_code>
+    <region>Ft. Lauderdale</region>
+    <city>Oakland Park</city>
+    <funding_rounds>1</funding_rounds>
+    <founded_at>10/10/2011</founded_at>
+    <founded_month>2011-10</founded_month>
+    <founded_quarter>2011-Q4</founded_quarter>
+    <founded_year>2011</founded_year>
+    <first_funding_at>31/05/2013</first_funding_at>
+    <last_funding_at>31/05/2013</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/fox-networks</permalink>
+    <name>.Fox Networks</name>
+    <homepage_url>http://www.dotfox.com</homepage_url>
+    <category_list>|Advertising|</category_list>
+    <market>Advertising</market>
+    <funding_total_usd>4 912 393</funding_total_usd>
+    <status>closed</status>
+    <country_code>ARG</country_code>
+    <state_code></state_code>
+    <region>Buenos Aires</region>
+    <city>Buenos Aires</city>
+    <funding_rounds>1</funding_rounds>
+    <founded_at></founded_at>
+    <founded_month></founded_month>
+    <founded_quarter></founded_quarter>
+    <founded_year></founded_year>
+    <first_funding_at>16/01/2007</first_funding_at>
+    <last_funding_at>16/01/2007</last_funding_at>
+  </Company>
+  <Company>
+    <permalink>/organization/0-6-com</permalink>
+    <name>0-6.com</name>
+    <homepage_url>http://www.0-6.com</homepage_url>
+    <category_list>|Curated Web|</category_list>
+    <market>Curated Web</market>
+    <funding_total_usd>2 000 000</funding_total_usd>
+    <status>operating</status>
+    <country_code></country_code>
+    <state_code></state_code>
+    <region></region>
+    <city></city>
+    <funding_rounds>1</funding_rounds>
+    <founded_at>01/01/2007</founded_at>
+    <founded_month>2007-01</founded_month>
+    <founded_quarter>2007-Q1</founded_quarter>
+    <founded_year>2007</founded_year>
+    <first_funding_at>19/03/2008</first_funding_at>
+    <last_funding_at>19/03/2008</last_funding_at>
+  </Company>
+</Companies>

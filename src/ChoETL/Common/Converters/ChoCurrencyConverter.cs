@@ -44,6 +44,16 @@ namespace ChoETL
 
                 return convValue.ToString(format, culture); // String.Format(culture, "{0:" + format + "}", value);
             }
+            else if (value is ChoCurrency curr && targetType == typeof(string))
+            {
+                decimal convValue = curr.Amount;
+                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.CurrencyFormat);
+                if (format.IsNullOrWhiteSpace())
+                    format = "C";
+
+                return convValue.ToString(format, culture); // String.Format(culture, "{0:" + format + "}", value);
+
+            }
 
             return value;
         }

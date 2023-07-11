@@ -33,16 +33,26 @@ namespace ChoETL
         /// <param name="serializer">The calling serializer.</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
+            dynamic ctx = serializer.Context.Context;
+            bool enableXmlAttributePrefix = ctx != null && ctx.EnableXmlAttributePrefix != null ? ctx.EnableXmlAttributePrefix : false;
+            bool keepNSPrefix = ctx != null && ctx.KeepNSPrefix != null ? ctx.KeepNSPrefix : false;
+            JsonSerializerSettings jsonSerializerSettings  = ctx != null && ctx.JsonSerializerSettings != null ? ctx.JsonSerializerSettings : null;
+            Formatting formatting = ctx != null && ctx.Formatting != null ? ctx.Formatting : Formatting.Indented;
+
             if (value is ChoDynamicObject)
             {
-                dynamic ctx = serializer.Context.Context;
-                bool enableXmlAttributePrefix = ctx != null && ctx.EnableXmlAttributePrefix != null ? ctx.EnableXmlAttributePrefix : false;
-                bool keepNSPrefix = ctx != null && ctx.keepNSPrefix != null ? ctx.keepNSPrefix : false;
+                var config = Context?.Configuration as IChoDynamicObjectRecordConfiguration;
+                //ChoIgnoreFieldValueMode? ignoreFieldValueMode = null;
+
+                //if (config != null && config.IgnoreFieldValueMode == null)
+                //if (serializer.NullValueHandling == NullValueHandling.Ignore)
+                //    ignoreFieldValueMode = ChoIgnoreFieldValueMode.Null;
+                //else
+                //    ignoreFieldValueMode = null;
 
                 var obj = enableXmlAttributePrefix ? (value as ChoDynamicObject).AsXmlDictionary() : 
                     (value as ChoDynamicObject).AsDictionary(keepNSPrefix);
                 
-                var config = Context?.Configuration as IChoDynamicObjectRecordConfiguration;
                 if (config != null && config.IgnoreFieldValueMode != null)
                 {
                     _ignoreFields = config.IgnoredFields;
@@ -91,14 +101,18 @@ namespace ChoETL
 
                 if (obj.Count > 0 || (obj.Count == 0 && serializer.NullValueHandling != NullValueHandling.Ignore))
                 {
-                    var t = serializer.SerializeToJToken(obj, dontUseConverter: true);
-                    t.WriteTo(writer);
+                    var t = serializer.SerializeToJToken(obj, formatting: formatting,  dontUseConverter: true, settings: jsonSerializerSettings,
+                        enableXmlAttributePrefix: enableXmlAttributePrefix, keepNSPrefix: keepNSPrefix);
+                    serializer.Serialize(writer, t);
+                    //t.WriteTo(writer);
                 }
             }
             else
             {
-                var t = serializer.SerializeToJToken(value, dontUseConverter: true);
-                t.WriteTo(writer);
+                var t = serializer.SerializeToJToken(value, formatting: formatting, dontUseConverter: true, settings: jsonSerializerSettings, 
+                    enableXmlAttributePrefix: enableXmlAttributePrefix, keepNSPrefix: keepNSPrefix);
+                //t.WriteTo(writer);
+                serializer.Serialize(writer, t);
             }
         }
 
@@ -120,7 +134,7 @@ namespace ChoETL
             return ReadValue(reader);
         }
 
-        private object ReadValue(JsonReader reader)
+        private object ReadValue(JsonReader reader, string propName = null)
         {
             while (reader.TokenType == JsonToken.Comment)
             {
@@ -131,7 +145,7 @@ namespace ChoETL
             switch (reader.TokenType)
             {
                 case JsonToken.StartObject:
-                    return ReadObject(reader);
+                    return ReadObject(reader, propName);
                 case JsonToken.StartArray:
                     return ReadList(reader);
                 default:
@@ -181,9 +195,13 @@ namespace ChoETL
             throw new Exception("Unexpected end.");
         }
 
-        private object ReadObject(JsonReader reader)
+        private object ReadObject(JsonReader reader, string propName = null)
         {
             IDictionary<string, object> expandoObject = new ChoDynamicObject();
+            if (!propName.IsNullOrWhiteSpace())
+            {
+                ((ChoDynamicObject)expandoObject).DynamicObjectName = propName;
+            }
 
             while (reader.Read())
             {
@@ -195,7 +213,7 @@ namespace ChoETL
                         if (!reader.Read())
                             throw new Exception("Unexpected end.");
 
-                        object v = ReadValue(reader);
+                        object v = ReadValue(reader, propertyName);
                         var itemType = v != null ? v.GetType() : null;
                         if (itemType != null)
                         {

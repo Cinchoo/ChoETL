@@ -37,6 +37,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="KellermanSoftware.Compare-NET-Objects, Version=4.79.0.0, Culture=neutral, PublicKeyToken=d970ace04cc85217, processorArchitecture=MSIL">
+      <HintPath>..\..\ChoETL\packages\CompareNETObjects.4.79.0\lib\net452\KellermanSoftware.Compare-NET-Objects.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\ChoETL\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -56,19 +59,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Tests\DeserializeToConcreteClassesUsingDiscriminatorAndKnownTypesTests.cs" />
+    <Compile Include="Tests\DeserializeToConcreteClassesUsingConverterTests.cs" />
+    <Compile Include="Tests\DeserializeToConcreteClassesUsingRecordTypeSelectorTests.cs" />
+    <Compile Include="Tests\DeserializeToConcreteClassesUsingDiscriminatorAttributeTests.cs" />
+    <Compile Include="Tests\MixedTests.cs" />
+    <Content Include="companies.xml" />
+    <Content Include="sample3Expected.xml" />
+    <None Include="companies.json" />
+    <None Include="companies.csv" />
     <None Include="Issue147.json" />
     <None Include="Issue148a.json" />
     <None Include="Issue148.json" />
     <None Include="Issue152.json" />
     <None Include="Issue151.json" />
+    <None Include="Movie.json" />
     <None Include="klant.json" />
     <None Include="packages.config" />
+    <None Include="sample16_1.json" />
     <None Include="sample230.json" />
     <None Include="sample100.json" />
     <None Include="Sample16Expected.csv" />
     <None Include="Sample18Expected.csv" />
     <None Include="Sample2Expected.csv" />
+    <None Include="sample32Expected.csv" />
     <None Include="sample48.json" />
+    <None Include="sample4Expected.csv" />
     <None Include="sample58.json" />
     <None Include="sample57.json" />
     <None Include="sample56.json" />
@@ -108,7 +124,9 @@
     <None Include="sample42.json" />
     <None Include="sample41.json" />
     <None Include="sample141.json" />
+    <None Include="Sensors.json" />
     <None Include="sf_city_lots.json" />
+    <None Include="smallsubset1.json" />
     <None Include="TestData2.json" />
     <None Include="TestData1.json" />
     <None Include="TestData.json" />
@@ -136,6 +154,7 @@
     <None Include="Emp.json" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="XBTUSD.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -157,7 +176,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>COPY $(ProjectDir)*.json $(TargetDir)
-COPY $(ProjectDir)*.csv $(TargetDir)</PostBuildEvent>
+COPY $(ProjectDir)*.csv $(TargetDir)
+COPY $(ProjectDir)*.xml $(TargetDir)</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

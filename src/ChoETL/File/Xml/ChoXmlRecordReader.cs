@@ -523,7 +523,7 @@ namespace ChoETL
                         }
                         else if (Configuration.ConvertToFlattenObject && Configuration.NestedKeySeparator != null)
                         {
-                            rec = rec.ConvertToFlattenObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator,
+                            rec = rec.ConvertToFlattenObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                                 Configuration.IgnoreDictionaryFieldPrefix);
                         }
                     }

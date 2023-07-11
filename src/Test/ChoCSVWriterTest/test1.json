@@ -1,0 +1,132 @@
+{
+    "data": {
+        "getUsers": [
+            {
+                "UserProfileDetail": {
+                    "UserStatus": {
+                        "name": "User One"
+                    },
+                    "UserStatusDate": "2018-10-31T06:12:42+00:00",
+                    "EnrollId": "am**********************************",
+                    "lastDate": "2019-07-22T03:05:39.0245313-04:00"
+                },
+                "UserInformation": {
+                    "Id": 1111122,
+                    "firstName": "*****",
+                    "middleName": null,
+                    "lastName": "*****",
+                    "otherNames": null,
+                    "UserType": {
+                        "name": "CP"
+                    },
+                    "primaryState": "MA",
+                    "otherState": [
+                        "MA",
+                        "BA"
+                    ],
+                    "UserLicense": [
+                        {
+                            "licenseState": "MA",
+                            "licenseNumber": "000000000",
+                            "licenseStatus": null
+                        }
+                    ],
+                    "Setting": "ADMINISTRATIVE",
+                    "primaryEmail": "*****@*****.com",
+                    "modifiedAt": null,
+                    "createdAt": null
+                }
+            },
+            {
+                "UserProfileDetail": {
+                    "UserStatus": {
+                        "name": "User Two"
+                    },
+                    "UserStatusDate": "2019-10-31T06:12:42+00:00",
+                    "EnrollId": "am**********************************",
+                    "lastDate": "2019-07-22T03:05:39.0245313-04:00"
+                },
+                "UserInformation": {
+                    "Id": 443333,
+                    "firstName": "*****",
+                    "middleName": "Jhon",
+                    "lastName": "*****",
+                    "otherNames": null,
+                    "UserType": {
+                        "name": "AP"
+                    },
+                    "primaryState": "AK",
+                    "otherState": [
+                        "MP",
+                        "CLT"
+                    ],
+                    "UserLicense": [
+                        {
+                            "licenseState": "KL",
+                            "licenseNumber": "000000220",
+                            "licenseStatus": "Valid"
+                        }
+                    ],
+                    "Setting": "ADMINISTRATIVE",
+                    "primaryEmail": "*****@*****.com",
+                    "modifiedAt": null,
+                    "createdAt": null
+                }
+            }
+        ]
+    },
+    "errors": [
+        {
+            "message": "GraphQL.ExecutionError: 13614711 - NO__DATA",
+            "extensions": {
+                "code": "212"
+            }
+        },
+        {
+            "message": "GraphQL.ExecutionError: 13614712 - NO__DATA",
+            "extensions": {
+                "code": "212"
+            }
+        },
+        {
+            "message": "GraphQL.ExecutionError: Cannot return null for non-null type. Field: PrivilegeFlag, Type: Boolean!.\r\n   at GraphQL.Execution.ExecutionStrategy.ValidateNodeResult(ExecutionContext context, ExecutionNode node)\r\n   at GraphQL.Execution.ExecutionStrategy.ExecuteNodeAsync(ExecutionContext context, ExecutionNode node)",
+            "locations": [
+                {
+                    "line": 374,
+                    "column": 9
+                }
+            ],
+            "path": [
+                "getUsers",
+                "3",
+                "UserAffiliation",
+                "0",
+                "Affiliation",
+                "admittingPrivilegeFlag"
+            ],
+            "extensions": {
+                "code": "ID: 1454790"
+            }
+        },
+        {
+            "message": "GraphQL.ExecutionError: Cannot return null for non-null type. Field: admittingArrangementFlag, Type: Boolean!.\r\n   at GraphQL.Execution.ExecutionStrategy.ValidateNodeResult(ExecutionContext context, ExecutionNode node)\r\n   at GraphQL.Execution.ExecutionStrategy.ExecuteNodeAsync(ExecutionContext context, ExecutionNode node)",
+            "locations": [
+                {
+                    "line": 403,
+                    "column": 9
+                }
+            ],
+            "path": [
+                "getUsers",
+                "3",
+                "UserAffiliation",
+                "0",
+                "Affiliation",
+                "admittingArrangementFlag"
+            ],
+            "extensions": {
+                "code": "ID: 13614790"
+            }
+        }
+    ]
+}

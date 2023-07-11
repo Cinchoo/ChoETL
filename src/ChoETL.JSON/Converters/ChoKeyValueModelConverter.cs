@@ -65,12 +65,12 @@ namespace ChoETL
                 return;
             Type objectType = value.GetType();
 
-            var dict = new Dictionary<string, string>();
+            var dict = new Dictionary<string, object>();
             if (typeof(IChoKeyValueType).IsAssignableFrom(objectType))
             {
                 IChoKeyValueType kvp = value as IChoKeyValueType;
                 var propName = kvp.Key.ToNString();
-                var propValue = kvp.Value.ToNString();
+                var propValue = kvp.Value == null ? (string)null : kvp.Value;
                 if (!propName.IsNullOrWhiteSpace())
                     dict.Add(propName, propValue);
             }
@@ -79,7 +79,7 @@ namespace ChoETL
                 var kP = ChoTypeDescriptor.GetProperties<ChoKeyAttribute>(objectType).FirstOrDefault();
                 var vP = ChoTypeDescriptor.GetProperties<ChoValueAttribute>(objectType).FirstOrDefault();
                 var propName = ChoType.GetPropertyValue(value, kP.Name).ToNString();
-                var propValue = ChoType.GetPropertyValue(value, vP.Name).ToNString();
+                var propValue = ChoType.GetPropertyValue(value, vP.Name);
 
                 if (!propName.IsNullOrWhiteSpace())
                     dict.Add(propName, propValue);

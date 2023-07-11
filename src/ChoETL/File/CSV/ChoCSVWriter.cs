@@ -103,7 +103,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
-            _writer.Dispose();
+            _writer?.Dispose();
 
             _isDisposed = true;
             if (_closeStreamOnDispose)
@@ -295,6 +295,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> ObjectValidationMode(ChoObjectValidationMode mode)
+        {
+            Configuration.ObjectValidationMode = mode;
+            return this;
+        }
+
         public ChoCSVWriter<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
         {
             Configuration.IgnoreFieldValueMode = mode;
@@ -390,6 +396,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> QuoteAllHeaders(bool flag = true)
+        {
+            Configuration.FileHeaderConfiguration.QuoteAllHeaders = flag;
+            return this;
+        }
+
         public ChoCSVWriter<T> ClearFields()
         {
             Configuration.ClearFields();
@@ -399,6 +411,11 @@ namespace ChoETL
 
         public ChoCSVWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
             Configuration.IgnoreField(field);
             return this;
         }
@@ -475,6 +492,7 @@ namespace ChoETL
                             nfc.FieldType = pd.PropertyType;
                     }
 
+                    Configuration.LoadFieldConfigurationAttributesInternal(nfc, typeof(T));
                     Configuration.CSVRecordFieldConfigurations.Add(nfc);
                 }
             }
@@ -563,7 +581,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
+            return WithField(field.GetFullyQualifiedMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, null, expr, propertyConverter);
         }
@@ -582,7 +600,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
+            return WithField(field.GetFullyQualifiedMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, null, expr, propertyConverter);
         }
@@ -868,6 +886,15 @@ namespace ChoETL
             catch { }
         }
 
+    }
+
+    public static class ChoCSVWriterEx
+    {
+
+        public static void WriteDataReader(this ChoCSVWriter<dynamic> csvWriter, IDataReader dr)
+        {
+            ChoCSVWriter.Write(csvWriter, dr);
+        }
     }
 
     public class ChoCSVWriter : ChoCSVWriter<dynamic>

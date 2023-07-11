@@ -58,6 +58,26 @@ namespace ChoETL
             return (field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member;
         }
 
+        public static string GetMemberNameX<TClass, TField>(this Expression<Func<TClass, TField>> field)
+        {
+            MemberExpression memberExp;
+            if (!TryFindMemberExpression(field.Body, out memberExp))
+                return string.Empty;
+
+            var memberNames = new Stack<string>();
+            do
+            {
+                memberNames.Push(memberExp.Member.Name);
+            }
+            while (TryFindMemberExpression(memberExp.Expression, out memberExp));
+
+            var mns = memberNames.ToArray();
+            if (mns.Length > 1)
+                mns = mns.Skip(1).ToArray();
+
+            return string.Join(".", mns.ToArray());
+        }
+
         public static string GetFullyQualifiedMemberName<TClass, TField>(this Expression<Func<TClass, TField>> field)
         {
             MemberExpression memberExp;

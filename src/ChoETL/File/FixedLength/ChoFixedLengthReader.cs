@@ -551,6 +551,11 @@ namespace ChoETL
 
         public ChoFixedLengthReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
             Configuration.IgnoreField(field);
             return this;
         }

@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -133,6 +134,7 @@ namespace ChoFixedLengthReaderTest
         public int? Id { get; set; }
         [ChoFixedLengthRecordField(8, 10)]
         public string Name { get; set; }
+        [ChoIgnoreMember]
         [ChoFixedLengthRecordField(18, 28)]
         public ChoCurrency Salary { get; set; }
 
@@ -252,32 +254,90 @@ namespace ChoFixedLengthReaderTest
             ChoXmlSettings.Reset();
         }
 
-        //[Test]
+        [Test]
         public static void AABillingTest()
         {
-            List<object> expected = new List<object>
-            { new AABillingHeaderRecord{ BusinessDate = new DateTime(2017,5,4), Description = "Sample file" },
-            new AABillingDetailRecord{ ClientID=1234567890, ClientName = "Chubb" },
-            new AABillingTrailerRecord{ RecordCount=10 }
-            };
-            List<object> actual = new List<object>();
+            string data = @"H20170504Sample file     
+1234567890Chubb          
+T10                      ";
 
-            using (var p = new ChoFixedLengthReader("AABilling.txt")
-                .WithRecordSelector(0, 1, null, typeof(AABillingDetailRecord), typeof(AABillingTrailerRecord), typeof(AABillingHeaderRecord))
-                //.WithCustomRecordSelector((l) =>
-                //{
-                //	Tuple<long, string> kvp = l as Tuple<long, string>;
-                //	if (kvp.Item2.StartsWith("H"))
-                //		return typeof(AABillingHeaderRecord);
-                //	else if (kvp.Item2.StartsWith("T"))
-                //		return typeof(AABillingTrailerRecord);
-                //	else
-                //		return typeof(AABillingDetailRecord);
-                //})
+            string expected = @"{
+  ""$type"": ""System.Object[], mscorlib"",
+  ""$values"": [
+    {
+      ""$type"": ""ChoFixedLengthReaderTest.AABillingHeaderRecord, ChoFixedLengthReaderTest"",
+      ""BusinessDate"": ""2017-05-04T00:00:00"",
+      ""Description"": ""Sample file""
+    },
+    {
+      ""$type"": ""ChoFixedLengthReaderTest.Program+AABillingDetailRecord, ChoFixedLengthReaderTest"",
+      ""ClientID"": 1234567890,
+      ""ClientName"": ""Chubb""
+    },
+    {
+      ""$type"": ""ChoFixedLengthReaderTest.AABillingTrailerRecord, ChoFixedLengthReaderTest"",
+      ""RecordCount"": 10
+    }
+  ]
+}";
+            using (var p = ChoFixedLengthReader.LoadText(data)
+                .WithRecordSelector(0, 1, typeof(AABillingDetailRecord), typeof(AABillingTrailerRecord), typeof(AABillingHeaderRecord))
                 )
             {
-                foreach (var rec in p)
-                    actual.Add(rec);// Console.WriteLine(ChoUtility.Dump(rec));
+                var recs = p.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented, new JsonSerializerSettings()
+                {
+                    TypeNameHandling = TypeNameHandling.All
+                });
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void AABillingTest1()
+        {
+            string data = @"H20170504Sample file     
+1234567890Chubb          
+T10                      ";
+
+            string expected = @"{
+  ""$type"": ""System.Object[], mscorlib"",
+  ""$values"": [
+    {
+      ""$type"": ""ChoFixedLengthReaderTest.AABillingHeaderRecord, ChoFixedLengthReaderTest"",
+      ""BusinessDate"": ""2017-05-04T00:00:00"",
+      ""Description"": ""Sample file""
+    },
+    {
+      ""$type"": ""ChoFixedLengthReaderTest.Program+AABillingDetailRecord, ChoFixedLengthReaderTest"",
+      ""ClientID"": 1234567890,
+      ""ClientName"": ""Chubb""
+    },
+    {
+      ""$type"": ""ChoFixedLengthReaderTest.AABillingTrailerRecord, ChoFixedLengthReaderTest"",
+      ""RecordCount"": 10
+    }
+  ]
+}";
+            using (var p = ChoFixedLengthReader.LoadText(data)
+                .WithCustomRecordSelector((l) =>
+                {
+                    Tuple<long, string> kvp = l as Tuple<long, string>;
+                    if (kvp.Item2.StartsWith("H"))
+                        return typeof(AABillingHeaderRecord);
+                    else if (kvp.Item2.StartsWith("T"))
+                        return typeof(AABillingTrailerRecord);
+                    else
+                        return typeof(AABillingDetailRecord);
+                })
+                )
+            {
+                var recs = p.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented, new JsonSerializerSettings()
+                {
+                    TypeNameHandling = TypeNameHandling.All
+                });
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -288,7 +348,7 @@ namespace ChoFixedLengthReaderTest
             public List<string> lastTwelveMonths { get; set; }
         }
 
-        //[Test]
+        [Test]
         public static void NestedObjectTest()
         {
             string expected = @"ID   Name Mon,T
@@ -388,7 +448,7 @@ namespace ChoFixedLengthReaderTest
             }
         }
 
-        //[Test]
+        [Test]
         public static void Test1()
         {
             List<object> expected = new List<object> {
@@ -437,7 +497,7 @@ AntoinedeSaint-ExupéryMale  1529-06-1900";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Test2()
         {
             List<object> expected = new List<object>
@@ -462,8 +522,8 @@ AntoinedeSaint-ExupéryMale  1529-06-1900";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-
-        static void Sample1Test()
+        [Test]
+        public static void Sample1Test()
         {
             string fix = @"---------------------------A---------------------------
 
@@ -475,13 +535,30 @@ ABNER MENEZEZ SOUZA                      1494778 500-35
 
 EDSON EDUARD MOZART                      1286664 500-34";
 
+            string expected = @"[
+  {
+    ""Name"": ""AARON THIAGO LOPES""
+  },
+  {
+    ""Name"": ""AARON PAPA DA SILVA""
+  },
+  {
+    ""Name"": ""ABNER MENEZEZ SOUZA""
+  },
+  {
+    ""Name"": ""EDSON EDUARD MOZART""
+  }
+]";
             using (var r = ChoFixedLengthReader.LoadText(fix)
                 .Configure(c => c.Comment = "--")
                 .WithField("Name", 0, 41)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -492,8 +569,8 @@ EDSON EDUARD MOZART                      1286664 500-34";
             public string Address { get; set; }
             public string Age { get; set; }
         }
-
-        static void QuoteValueTest()
+        [Test]
+        public static void QuoteValueTest()
         {
             List<EmpRec> employees = new List<EmpRec>()
                 {
@@ -501,7 +578,13 @@ EDSON EDUARD MOZART                      1286664 500-34";
                     new EmpRec() { Id = 21, Name = "Bob Kevin", Address = "123 NEW LIVERPOOL RD \"APT 12\"", Age = "30" },
                     new EmpRec() { Id = 22, Name = "Jack Robert", Address = "PO BOX 123", Age = "40" }
                 };
-            using (var w = new ChoFixedLengthWriter<EmpRec>(Console.Out)
+
+            string expected = @"Id        Name                     Address                                           Age       
+0000000020 John Smith              PO BOX 12165                                      25        
+0000000021Bob Kevin                123 NEW LIVERPOOL RD ""APT 12""                     30        
+0000000022Jack Robert              PO BOX 123                                        40        ";
+            StringBuilder data = new StringBuilder();
+            using (var w = new ChoFixedLengthWriter<EmpRec>(data)
                 .WithFirstLineHeader()
                 .Configure(c => c.EscapeQuoteAndDelimiter = false)
                 //.Configure(c => c.QuoteChar = '`')
@@ -513,6 +596,9 @@ EDSON EDUARD MOZART                      1286664 500-34";
             {
                 w.Write(employees);
             }
+
+            var actual = data.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         internal class TestData
@@ -528,18 +614,63 @@ EDSON EDUARD MOZART                      1286664 500-34";
             [ChoFixedLengthRecordField(4, 1)]
             public string TestString { get; set; }
         }
-
-        static void Issue219()
+        [Test]
+        public static void Issue219()
         {
             string csv = @"0101a
 1111b
 1011c
 0000d
 1000e";
-            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne;
+            //ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne;
 
-            foreach (var e in ChoFixedLengthReader<TestData>.LoadText(csv))
-                Console.WriteLine("TestBool1: " + e.TestBool1 + " TestBool2: " + e.TestBool2 + " TestBool3: " + e.TestBool3 + " TestBool4: " + e.TestBool4 + " TestString: " + e.TestString);
+            string expected = @"[
+  {
+    ""TestBool1"": false,
+    ""TestBool2"": true,
+    ""TestBool3"": false,
+    ""TestBool4"": true,
+    ""TestString"": ""a""
+  },
+  {
+    ""TestBool1"": true,
+    ""TestBool2"": true,
+    ""TestBool3"": true,
+    ""TestBool4"": true,
+    ""TestString"": ""b""
+  },
+  {
+    ""TestBool1"": true,
+    ""TestBool2"": false,
+    ""TestBool3"": true,
+    ""TestBool4"": true,
+    ""TestString"": ""c""
+  },
+  {
+    ""TestBool1"": false,
+    ""TestBool2"": false,
+    ""TestBool3"": false,
+    ""TestBool4"": false,
+    ""TestString"": ""d""
+  },
+  {
+    ""TestBool1"": true,
+    ""TestBool2"": false,
+    ""TestBool3"": false,
+    ""TestBool4"": false,
+    ""TestString"": ""e""
+  }
+]";
+            using (var r = ChoFixedLengthReader<TestData>.LoadText(csv)
+                .TypeConverterFormatSpec(fs => fs.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne)
+                )
+            {
+                //Console.WriteLine("TestBool1: " + e.TestBool1 + " TestBool2: " + e.TestBool2 + " TestBool3: " + e.TestBool3 + " TestBool4: " + e.TestBool4 + " TestString: " + e.TestString);
+
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
         }
 
         [Test]
@@ -548,6 +679,18 @@ EDSON EDUARD MOZART                      1286664 500-34";
             var csv = @"01010000001002699000PRESUNTO FATIADO KG         
 01010000002004199000BACON KG                                              ";
 
+            string expected = @"[
+  {
+    ""Code"": ""01010000001002699000"",
+    ""Name"": ""RESUNTO FATIADO KG"",
+    ""Price"": null
+  },
+  {
+    ""Code"": ""01010000002004199000"",
+    ""Name"": ""ACON KG"",
+    ""Price"": null
+  }
+]";
             using (var r = ChoFixedLengthReader<Product>.LoadText(csv)
                 .WithField("Code", 0, 20)
                 .WithField("Name", 21, 25)
@@ -564,6 +707,9 @@ EDSON EDUARD MOZART                      1286664 500-34";
                 var recs = r.ToArray();
                 recs.Print();
                 Assert.AreEqual(recs.Length, 2);
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
         public class Product
@@ -572,14 +718,10 @@ EDSON EDUARD MOZART                      1286664 500-34";
             public string Name { get; set; }
             public string Price { get; set; }
         }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Discussion275();
-            return;
-
-            AABillingTest();
-            return;
             //QuickLoad();
             //return;
             //foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
@@ -627,74 +769,133 @@ EDSON EDUARD MOZART                      1286664 500-34";
 
             QuickLoad();
         }
+        [Test]
+        public static void QuickLoad1()
+        {
+            string expected = @"[
+  {
+    ""id"": ""1"",
+    ""Name"": ""\""Carl's\""""
+  },
+  {
+    ""id"": ""2"",
+    ""Name"": ""Mark""
+  }
+]";
+            using (var r = new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
+                .Configure(c => c.MayContainEOLInData = true)
+                .Configure(c => c.FileHeaderConfiguration.IgnoreCase = true)
+                .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None))
+            {
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
 
-        //[Test]
+        [Test]
         public static void QuickLoad()
         {
-            Stopwatch[] sw = new Stopwatch[5];
-            for (int i = 0; i < 5; i++)
+            string expected = @"[
+  {
+    ""Account"": 101,
+    ""LastName"": ""Reeves"",
+    ""FirstName"": ""Keanu"",
+    ""Balance"": 9315.45,
+    ""CreditLimit"": 10000.0,
+    ""AccountCreated"": ""1998-01-17T00:00:00"",
+    ""Rating"": ""A""
+  },
+  {
+    ""Account"": 101,
+    ""LastName"": ""Reeves"",
+    ""FirstName"": ""Keanu"",
+    ""Balance"": 9315.45,
+    ""CreditLimit"": 10000.0,
+    ""AccountCreated"": ""1998-01-17T00:00:00"",
+    ""Rating"": ""A""
+  },
+  {
+    ""Account"": 101,
+    ""LastName"": ""Reeves"",
+    ""FirstName"": ""Keanu"",
+    ""Balance"": 9315.45,
+    ""CreditLimit"": 10000.0,
+    ""AccountCreated"": ""1998-01-17T00:00:00"",
+    ""Rating"": ""A""
+  }
+]";
+            using (var r = new ChoFixedLengthReader(FileNameAccountsTXT)
+                .WithFirstLineHeader()
+                .Configure(c => c.MaxScanRows = 2)
+                )
             {
-                sw[i] = Stopwatch.StartNew();
-                using (var r = new ChoFixedLengthReader(FileNameAccountsTXT)
-                    //.WithFirstLineHeader()
-                    //.Configure(c => c.MaxScanRows = 2)
-                    )
-                {
-                    //r.RecordLoadError += (o, e) =>
-                    //{
-                    //    Console.WriteLine(e.Exception.Message);
-                    //    e.Handled = true;
-                    //};
-                    foreach (dynamic rec in r)
-                    {
-                        //Console.WriteLine("{0}", rec.Dump());
-                    }
-                }
-                sw[i].Stop();
-                Console.WriteLine(sw[i].Elapsed.TotalSeconds);
+                //r.RecordLoadError += (o, e) =>
+                //{
+                //    Console.WriteLine(e.Exception.Message);
+                //    e.Handled = true;
+                //};
+
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
-            Assert.Warn("I am not sure what to test. Maximum amount of elapsed time?");
-            Assert.Less(sw.Average(x => x.Elapsed.TotalSeconds), 1);
         }
 
-        //[Test]
+        [Test]
         public static void QuickDataTableTest()
         {
-            DataTable expected = new DataTable();
-            object[] tmpHeader = new object[] { "Account", "LastName", "FirstName", "Balance", "CreditLimit", "AccountCreated", "Rating" };
-            object[] allHeader = new object[tmpHeader.Length * 97];
-            object[] tmpRow = new object[] { 101, "Reeves", "Keanu", 9315.45, "10000.00", new DateTime(1998, 1, 17).ToString("d"), "A" };
-            object[] allRow = new object[tmpRow.Length * 97];
-            for (int i = 1; i <= 679; i++)
-                expected.Columns.Add("Column" + i.ToString());
-            for (int i = 0; i < 97; i++)
-            {
-                tmpHeader.CopyTo(allHeader, i * 7);
-                tmpRow.CopyTo(allRow, i * 7);
-            }
-
-            expected.Rows.Add(allHeader);
-            expected.Rows.Add(allRow);
-            expected.Rows.Add(allRow);
-            expected.Rows.Add(allRow);
-
-            var actual = new ChoFixedLengthReader(FileNameAccountsTXT).AsDataTable();
-
-            DataTableAssert.AreEqual(expected, actual);
+            string expected = @"[
+  {
+    ""Account"": ""101"",
+    ""LastName"": ""Reeves"",
+    ""FirstName"": ""Keanu"",
+    ""Balance"": ""9315.45"",
+    ""CreditLimit"": ""10000.00"",
+    ""AccountCreated"": ""1/17/1998"",
+    ""Rating"": ""A""
+  },
+  {
+    ""Account"": ""101"",
+    ""LastName"": ""Reeves"",
+    ""FirstName"": ""Keanu"",
+    ""Balance"": ""9315.45"",
+    ""CreditLimit"": ""10000.00"",
+    ""AccountCreated"": ""1/17/1998"",
+    ""Rating"": ""A""
+  },
+  {
+    ""Account"": ""101"",
+    ""LastName"": ""Reeves"",
+    ""FirstName"": ""Keanu"",
+    ""Balance"": ""9315.45"",
+    ""CreditLimit"": ""10000.00"",
+    ""AccountCreated"": ""1/17/1998"",
+    ""Rating"": ""A""
+  }
+]";
+            var dt = new ChoFixedLengthReader(FileNameAccountsTXT, new ChoFixedLengthRecordConfiguration()
+            { 
+                
+            }.Configure(c => c.WithFirstLineHeader())).AsDataTable();
+            var actual = JsonConvert.SerializeObject(dt, Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void POCODataTableTest()
         {
-            DataTable expected = new DataTable();
-            expected.Columns.Add("Account", typeof(int));
-            expected.Columns.Add("LastName", typeof(string));
-            expected.Columns.Add("FirstName", typeof(string));
-            expected.Columns.Add("Balance", typeof(double));
-            expected.Columns.Add("CreditLimit", typeof(double));
-            expected.Columns.Add("AccountCreated", typeof(DateTime));
-            expected.Columns.Add("Rating", typeof(string));
-            expected.Rows.Add(101, "Reeves", "Keanu", 9315.45, 10000, new DateTime(1998, 1, 17), "A");
-            DataTable actual = null;
+            string expected = @"[
+  {
+    ""Account"": 101,
+    ""LastName"": ""Reeves"",
+    ""FirstName"": ""Keanu"",
+    ""Balance"": 9315.45,
+    ""CreditLimit"": 10000.0,
+    ""AccountCreated"": ""1998-01-17T00:00:00"",
+    ""Rating"": ""A""
+  }
+]";
+            DataTable dt = null;
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -706,12 +907,13 @@ EDSON EDUARD MOZART                      1286664 500-34";
                 writer.Flush();
                 stream.Position = 0;
 
-                actual = parser.AsDataTable();
+                dt = parser.AsDataTable();
             }
-            DataTableAssert.AreEqual(expected, actual);
+            var actual = JsonConvert.SerializeObject(dt, Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void DynamicApproach()
         {
             List<object> expected = new List<object> {
@@ -748,7 +950,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void LoadTextTest()
         {
             List<object> expected = new List<object> {
@@ -765,7 +967,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void CodeFirstApproach()
         {
             List<EmployeeRecSimple> expected = new List<EmployeeRecSimple> {
@@ -780,9 +982,9 @@ EDSON EDUARD MOZART                      1286664 500-34";
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoFixedLengthReader<EmployeeRecSimple>(reader).WithFirstLineHeader())
             {
-                writer.WriteLine("Id      Name      ");
-                writer.WriteLine("1       Carl      ");
-                writer.WriteLine("2       Mark      ");
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -794,7 +996,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void QuickDynamicLoadTest()
         {
             List<object> expected = new List<object> {
@@ -823,7 +1025,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void QuickDynamicLoadTestUsingIterator()
         {
             List<object> expected = new List<object> {
@@ -836,9 +1038,9 @@ EDSON EDUARD MOZART                      1286664 500-34";
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
             {
-                writer.WriteLine("Id      Name      ");
-                writer.WriteLine("1       Carl      ");
-                writer.WriteLine("2       Mark      ");
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -852,7 +1054,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
         public static string FileNameEmpTXT => "Emp.txt";
         public static string FileNameAccountsTXT => "Accounts.txt";
 
-        //[Test]
+        [Test]
         public static void MultiLineTest()
         {
             List<object> expected = new List<object>
@@ -873,7 +1075,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void ConfigFirstApproachReadAsDynamicRecords()
         {
             List<object> expected = new List<object>{
@@ -892,9 +1094,9 @@ EDSON EDUARD MOZART                      1286664 500-34";
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoFixedLengthReader(reader, config).WithFirstLineHeader())
             {
-                writer.WriteLine("Id      Name      ");
-                writer.WriteLine("1       Carl      ");
-                writer.WriteLine("2       Mark      ");
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -907,7 +1109,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void ConfigFirstApproachReadAsTypedRecords()
         {
             List<object> expected = new List<object>{
@@ -926,9 +1128,9 @@ EDSON EDUARD MOZART                      1286664 500-34";
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoFixedLengthReader<EmployeeRecSimple>(reader, config).WithFirstLineHeader())
             {
-                writer.WriteLine("Id      Name      ");
-                writer.WriteLine("1       Carl      ");
-                writer.WriteLine("2       Mark      ");
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -941,7 +1143,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void CodeFirstWithDeclarativeApproachRead()
         {
             List<EmployeeRec> expected = new List<EmployeeRec> {
@@ -956,9 +1158,9 @@ EDSON EDUARD MOZART                      1286664 500-34";
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoFixedLengthReader<EmployeeRec>(reader).WithFirstLineHeader())
             {
-                writer.WriteLine("Id      Name      ");
-                writer.WriteLine("1       Carl      ");
-                writer.WriteLine("2       Mark      ");
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -970,26 +1172,145 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void QuickTest()
         {
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Carl""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""Mark""
+  }
+]";
+
             object row = null;
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthReader<EmployeeRecWithCurrency>(reader).WithFirstLineHeader())
+            using (var parser = new ChoFixedLengthReader<EmployeeRecSimple>(reader)
+                .WithFirstLineHeader()
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                )
             {
-                writer.WriteLine("Id      Name      ");
-                writer.WriteLine("1       Carl      ");
-                writer.WriteLine("2       Mark      ");
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
                 writer.Flush();
                 stream.Position = 0;
 
-                Assert.Throws<ChoRecordConfigurationException>(() => { row = parser.Read(); });
+                //Assert.Throws<ChoRecordConfigurationException>(() => { row = parser.Read(); });
+                var actual = JsonConvert.SerializeObject(parser, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-        //[Test]
+        [Test]
+        public static void IgnoreMemberTest()
+        {
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Carl"",
+    ""Salary"": 0.0
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""Mark"",
+    ""Salary"": 0.0
+  }
+]";
+
+            object row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader<EmployeeRecWithCurrency>(reader)
+                .WithFirstLineHeader()
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                )
+            {
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
+                writer.Flush();
+                stream.Position = 0;
+
+                //Assert.Throws<ChoRecordConfigurationException>(() => { row = parser.Read(); });
+                var actual = JsonConvert.SerializeObject(parser, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        public class EmployeeRecWithCurrency1
+        {
+            [ChoFixedLengthRecordField(0, 8)]
+            public int? Id { get; set; }
+            [ChoFixedLengthRecordField(8, 10)]
+            public string Name { get; set; }
+            [ChoFixedLengthRecordField(18, 28)]
+            public ChoCurrency Salary { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var currency = obj as EmployeeRecWithCurrency;
+                return currency != null &&
+                       EqualityComparer<int?>.Default.Equals(Id, currency.Id) &&
+                       Name == currency.Name &&
+                       Salary.Equals(currency.Salary);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1858601383;
+                hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(Id);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + EqualityComparer<ChoCurrency>.Default.GetHashCode(Salary);
+                return hashCode;
+            }
+        }
+        [Test]
+        public static void MissingHeaderTest()
+        {
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Carl"",
+    ""Salary"": 0.0
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""Mark"",
+    ""Salary"": 0.0
+  }
+]";
+
+            object row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader<EmployeeRecWithCurrency1>(reader)
+                .WithFirstLineHeader()
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                )
+            {
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2         Mark                     ");
+                writer.Flush();
+                stream.Position = 0;
+
+                //Assert.Throws<ChoRecordConfigurationException>(() => { row = parser.Read(); });
+                Assert.Catch<ChoParserException>(() =>
+                {
+                    var actual = JsonConvert.SerializeObject(parser, Formatting.Indented);
+                    Assert.AreEqual(expected, actual);
+                });
+            }
+        }
+        [Test]
         public static void CodeFirstWithDeclarativeApproach()
         {
             List<CreditBalanceRecord> expected = new List<CreditBalanceRecord> {
@@ -1017,7 +1338,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void CodeFirstWithDeclarativeApproach2()
         {
             List<CreditBalanceRecord> expected = new List<CreditBalanceRecord> {
@@ -1043,34 +1364,58 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void FallbackValueUsedViaCodeFirstApproach()
         {
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Carl"",
+    ""JoinedDate"": ""2016-12-08T00:00:00"",
+    ""Salary"": 100000.0,
+    ""IsActive"": false,
+    ""Status"": ""F""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""MarkS"",
+    ""JoinedDate"": ""2011-01-13T00:00:00"",
+    ""Salary"": 500000.0,
+    ""IsActive"": true,
+    ""Status"": ""C""
+  }
+]";
+
             EmployeeRecSimpleFallback row = null;
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthReader<EmployeeRecSimpleFallback>(reader))
+            using (var parser = new ChoFixedLengthReader<EmployeeRecSimpleFallback>(reader)
+                .TypeConverterFormatSpec(fs => fs.DateTimeFormat = "dd/MM/yyyy")
+                .TypeConverterFormatSpec(fs => fs.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne)
+                )
             {
                 writer.WriteLine("001Carl 08/12/2016$100,000                      0F");
-                writer.WriteLine("002MarkS13/01/2010$500,000                      1C");
+                writer.WriteLine("002MarkS13/13/2010$500,000                      1C");
                 writer.Flush();
                 stream.Position = 0;
 
-                while ((row = parser.Read()) != null)
-                {
-                    Console.WriteLine(row.ToStringEx());
-                }
+                //while ((row = parser.Read()) != null)
+                //{
+                //    Console.WriteLine(row.ToStringEx());
+                //}
+
+                var actual = JsonConvert.SerializeObject(parser, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
-            Assert.Fail("Not sure, how to parse the correct position for Salary");
         }
 
-        //[Test]
+        [Test]
         public static void FallbackValueUsedViaConfigFirstApproach()
         {
             List<object> expected = new List<object> {
-                new ChoDynamicObject { { "Id", (int)1},{"Name","Carl" },{ "JoinedDate", new DateTime(2016, 8, 12) },{ "Salary", new ChoCurrency(100000) },{ "IsActive", false },{ "Status", 'F' }  },
-                new ChoDynamicObject { { "Id", (int)2},{"Name","MarkS" },{ "JoinedDate", new DateTime(2010, 1, 1) },{ "Salary", new ChoCurrency(500000) },{ "IsActive", true },{ "Status", 'C' }  }
+                new ChoDynamicObject { { "Id", (int)1},{"Name","Carl" },{ "JoinedDate", new DateTime(2016, 12, 8) },{ "Salary", new ChoCurrency(100000) },{ "IsActive", false },{ "Status", 'F' }  },
+                new ChoDynamicObject { { "Id", (int)2},{"Name","MarkS" },{ "JoinedDate", new DateTime(2010, 1, 13) },{ "Salary", new ChoCurrency(500000) },{ "IsActive", true },{ "Status", 'C' }  }
             };
             List<object> actual = new List<object>();
 
@@ -1087,7 +1432,10 @@ EDSON EDUARD MOZART                      1286664 500-34";
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthReader(reader, config))
+            using (var parser = new ChoFixedLengthReader(reader, config)
+                .TypeConverterFormatSpec(fs => fs.DateTimeFormat = "dd/MM/yyyy")
+                .TypeConverterFormatSpec(fs => fs.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne)
+                )
             {
                 writer.WriteLine("001Carl 08/12/2016100,000   0F");
                 writer.WriteLine("002MarkS13/01/2010500,000   1C");
@@ -1102,70 +1450,96 @@ EDSON EDUARD MOZART                      1286664 500-34";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void DefaultValueUsedViaCodeFirstApproach()
         {
-            EmployeeRecSimple row = null;
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Carl""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""XX""
+  }
+]";
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthReader<EmployeeRecSimple>(reader))
+            using (var parser = new ChoFixedLengthReader<EmployeeRecSimple>(reader)
+                .WithFirstLineHeader()
+                )
             {
-                writer.WriteLine("001Carl 08/12/2016$100,000                      0F");
-                writer.WriteLine("002MarkS01/01/2010$500,000                      1C");
+                writer.WriteLine("Id        Name                     ");
+                writer.WriteLine("1         Carl                     ");
+                writer.WriteLine("2                                  ");
                 writer.Flush();
                 stream.Position = 0;
 
-                while ((row = parser.Read()) != null)
-                {
-                    Console.WriteLine(row.ToStringEx());
-                }
+                var recs = parser.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+
             }
-            Assert.Fail("Not sure, how to write a correct list of expected values, because none of the POCO-Classes EmplyeeRecXXX is suitable.");
         }
 
-        //[Test]
+        [Test]
         public static void DefaultValueUsedViaConfigFirstApproach()
         {
-            List<object> expected = new List<object> {
-                new ChoDynamicObject{ { "Id", (int)1 },{ "Name", "Carl" },{ "JoinedDate", new DateTime(2016, 8, 12) },{ "Salary", new ChoCurrency(100000) },{ "IsActive", false },{ "Status", 'F' } },
-                new ChoDynamicObject{ { "Id", (int)2 },{ "Name", "MarkS" },{ "JoinedDate", new DateTime(2010,10, 10) },{ "Salary", new ChoCurrency(500000) },{ "IsActive", true },{ "Status", 'C' } }
-            };
-            List<object> actual = new List<object>();
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Carl"",
+    ""JoinedDate"": ""2016-12-08T00:00:00"",
+    ""Salary"": 100000.0,
+    ""IsActive"": false,
+    ""Status"": ""F""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""XX"",
+    ""JoinedDate"": ""2010-01-13T00:00:00"",
+    ""Salary"": 500000.0,
+    ""IsActive"": true,
+    ""Status"": ""C""
+  }
+]";
 
             ChoFixedLengthRecordConfiguration config = new ChoFixedLengthRecordConfiguration();
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Id", 0, 3) { FieldType = typeof(int) });
-            config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Name", 3, 5) { FieldType = typeof(string) });
+            config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Name", 3, 5) { FieldType = typeof(string), DefaultValue = "XX" });
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("JoinedDate", 8, 10) { FieldType = typeof(DateTime), DefaultValue = "10/10/2010" });
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Salary", 18, 10) { FieldType = typeof(ChoCurrency) });
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("IsActive", 28, 1) { FieldType = typeof(bool) });
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Status", 29, 1) { FieldType = typeof(char) });
             config.ErrorMode = ChoErrorMode.ReportAndContinue;
 
-            dynamic row = null;
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthReader(reader, config))
+            using (var parser = new ChoFixedLengthReader(reader, config)
+                .TypeConverterFormatSpec(fs => fs.DateTimeFormat = "dd/MM/yyyy")
+                .TypeConverterFormatSpec(fs => fs.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne)
+                )
             {
                 writer.WriteLine("001Carl 08/12/2016100,000   0F");
-                writer.WriteLine("002MarkS13/01/2010500,000   1C");
+                writer.WriteLine("002     13/01/2010500,000   1C");
                 writer.Flush();
                 stream.Position = 0;
 
-                while ((row = parser.Read()) != null)
-                {
-                    actual.Add(row);
-                }
+                var recs = parser.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
-            CollectionAssert.AreEqual(expected, actual);
         }
     }
 
     public partial class EmployeeRecSimple
     {
         public int Id { get; set; }
+        [DefaultValue("XX")]
         public string Name { get; set; }
 
         public override bool Equals(object obj)
@@ -1224,14 +1598,20 @@ EDSON EDUARD MOZART                      1286664 500-34";
     [ChoFixedLengthRecordObject(ErrorMode = ChoErrorMode.ReportAndContinue)]
     public partial class EmployeeRecSimpleFallback
     {
+        [ChoFixedLengthRecordField(0, 3)]
         public int Id { get; set; }
+        [ChoFixedLengthRecordField(3, 5)]
         public string Name { get; set; }
         [DefaultValue("1/1/2001")]
-        [ChoFallbackValue("13/1/2011")]
+        [ChoFallbackValue("01/13/2011")]
+        [ChoFixedLengthRecordField(8, 10)]
         public DateTime JoinedDate { get; set; }
         [DefaultValue("50000")]
+        [ChoFixedLengthRecordField(18, 30)]
         public ChoCurrency Salary { get; set; }
+        [ChoFixedLengthRecordField(48, 1)]
         public bool IsActive { get; set; }
+        [ChoFixedLengthRecordField(49, 1)]
         public char Status { get; set; }
     }
 

@@ -411,10 +411,12 @@ namespace ChoETL
             {
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
                 else
                 {
-                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
                 }
 
                 selector?.Invoke(dict);
@@ -659,6 +661,7 @@ namespace ChoETL
 
         public ChoXmlReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            ClearFieldsIf();
             Configuration.IgnoreField(field);
             return this;
         }

@@ -41,6 +41,72 @@ namespace ChoETL
             get;
             set;
         }
+        private static readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+)\:(\w+)(.*)", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        private static readonly Regex _endNSTagRegex = new Regex(@"(.*)(</\w+)\:(\w+)$", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        private static readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        private static readonly Regex _endTagRegex = new Regex("(.*)(</.*>)$", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        public static string ReplaceXmlNodeIfAppl(this string xml, string nodeName, string defaultNamespacePrefix = null)
+        {
+            if (_beginNSTagRegex.Match(xml).Success)
+            {
+                return xml;
+                xml = _beginNSTagRegex.Replace(xml, delegate (Match m)
+                {
+                    return m.Groups[1].Value + ":" + nodeName + m.Groups[3].Value;
+                }, 1);
+                xml = _endNSTagRegex.Replace(xml, delegate (Match m)
+                {
+                    return m.Groups[2].Value + "</{0}:{1}>".FormatString(m.Groups[1].Value, nodeName);
+                }, 1);
+            }
+            else
+            {
+                if (defaultNamespacePrefix.IsNullOrWhiteSpace())
+                {
+                    xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return "<" + nodeName + m.Groups[2].Value;
+                    }, 1);
+                    xml = _endTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return m.Groups[1].Value + "</{0}>".FormatString(nodeName);
+                    }, 1);
+                }
+                else
+                {
+                    xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return "<" + XmlNamespaceElementName(nodeName, defaultNamespacePrefix) + m.Groups[2].Value;
+                    }, 1);
+                    xml = _endTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(nodeName, defaultNamespacePrefix));
+                    }, 1);
+                }
+            }
+            return xml;
+        }
+        private static string XmlNamespaceElementName(string name, string nsPrefix = null)
+        {
+            string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
+            name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
+
+            if (prefix == null)
+            {
+                if (nsPrefix.IsNullOrWhiteSpace())
+                {
+                    return name;
+                }
+                else
+                {
+                    return @"{0}:{1}".FormatString(nsPrefix, name);
+                }
+            }
+            else
+            {
+                return name;
+            }
+        }
 
         #region Constants
 
@@ -467,6 +533,16 @@ namespace ChoETL
 
         public static string ToPlural(this string text, List<string> invariants)
         {
+            if (ChoETLSettings.ToPlural != null)
+            {
+                var ret = ChoETLSettings.ToPlural(text);
+                if (ret != null)
+                    return ret; 
+            }
+
+            if (text.IsPlural())
+                return text;
+
             // handle invariants
             if (invariants != null && invariants.Contains(text)) return text;
             //if (!IsSingular(text)) return text;
@@ -522,6 +598,14 @@ namespace ChoETL
         public static string ToSingular(this string text, List<string> invariants)
         {
             if (invariants != null && invariants.Contains(text)) return text;
+
+            if (ChoETLSettings.ToSingular != null)
+            {
+                var ret = ChoETLSettings.ToSingular(text);
+                if (ret != null)
+                    return ret;
+            }
+
             if (!IsPlural(text)) return text;
 
             if (_pluralRegex1.IsMatch(text))
@@ -1920,7 +2004,8 @@ namespace ChoETL
         {
             if (xml == null || nsText.IsNullOrWhiteSpace())
                 return xml;
-            var x = Regex.Replace(xml, @"(<\S+)(>.*)", $"$1{nsText}$2", RegexOptions.Singleline);
+            //var x = Regex.Replace(xml, @"(<\S+)(>.*)", $"$1{nsText}$2", RegexOptions.Singleline);
+            var x = Regex.Replace(xml, @"^\s*(<[\w+:]*\w+)", $"$1{nsText}", RegexOptions.Singleline);
             return x;
         }
 

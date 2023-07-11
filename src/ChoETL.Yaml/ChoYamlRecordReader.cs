@@ -217,7 +217,7 @@ namespace ChoETL
                                     yield return item1 as IDictionary<string, object>;
                                 else
                                 {
-                                    yield return new Dictionary<string, object>() { { TYPED_VALUE, value } };
+                                    yield return new Dictionary<string, object>() { { TYPED_VALUE, item1 /*value*/ } };
 
                                 }
                             }
@@ -796,10 +796,10 @@ namespace ChoETL
                                 fieldValue = arr.ToArray();
                             }
                         }
-                        else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
+                        else if ((fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
+                            && fieldValue is IDictionary[] && ((IDictionary[])fieldValue).FirstOrDefault() is IDictionary)
                         {
-                            if (fieldValue is IDictionary[])
-                                fieldValue = ((IDictionary[])fieldValue).FirstOrDefault();
+                            fieldValue = ((IDictionary[])fieldValue).FirstOrDefault();
 
                             if (fieldValue is IDictionary)
                             {
@@ -1244,7 +1244,7 @@ namespace ChoETL
                 {
                     var rec = ChoActivator.CreateInstanceNCache(RecordType);
                     if (rec is IChoItemConvertable)
-                        fieldValue = ((IChoItemConvertable)rec).ItemConvert(fieldConfig.Name, fieldConfig);
+                        fieldValue = ((IChoItemConvertable)rec).ItemConvert(fieldConfig.Name, fieldValue);
                 }
             }
 

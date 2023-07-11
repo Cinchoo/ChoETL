@@ -1,0 +1,18 @@
+<MyObjectTypes xmlns:xml="http://www.w3.org/XML/1998/namespace">
+  <MyObjectType>
+    <Id>file</Id>
+    <Value1>FileMenu</Value1>
+    <MenuItems>
+      <Value>New</Value>
+      <OnClick>CreateNewDoc()</OnClick>
+    </MenuItems>
+    <MenuItems>
+      <Value>Open</Value>
+      <OnClick>OpenDoc()</OnClick>
+    </MenuItems>
+    <MenuItems>
+      <Value>Close</Value>
+      <OnClick>CloseDoc()</OnClick>
+    </MenuItems>
+  </MyObjectType>
+</MyObjectTypes>

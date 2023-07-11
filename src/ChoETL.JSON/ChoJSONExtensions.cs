@@ -908,12 +908,13 @@ namespace ChoETL
                 return $"{type.Name}Converter";
         }
 
-        public static string JTokenToString(this JToken jt)
+        public static string JTokenToString(this JToken jt, JsonSerializer serializer, JsonSerializerSettings serializerSettings, Formatting formatting)
         {
+            return JsonConvert.SerializeObject(jt, formatting, serializerSettings);
             if (jt != null && jt.Type == JTokenType.String)
                 return $"\"{jt.ToNString()}\"";
             else
-                return jt.ToNString();
+                return jt == null ? jt.ToNString() : jt.ToString(Formatting.Indented, serializer.Converters.ToArray());
         }
 
         public static JToken SerializeToJToken(this JsonSerializer serializer, object value, Formatting? formatting = null, JsonSerializerSettings settings = null,
@@ -982,18 +983,19 @@ namespace ChoETL
                 dynamic ctx = settings.Context.Context;
                 ctx.EnableXmlAttributePrefix = enableXmlAttributePrefix;
                 ctx.KeepNSPrefix = keepNSPrefix;
+                ctx.JsonSerializerSettings = settings;
             }
 
             if (conv != null)
             {
                 serializer.Converters.Add(conv);
-                t = JToken.FromObject(value, serializer);
+                t = value != null ? JToken.FromObject(value, serializer) : null;
             }
             //else if (settings != null)
             //    t = JToken.Parse(JsonConvert.SerializeObject(value, formatting.Value, settings));
             else
             {
-                t = JToken.FromObject(value, serializer);
+                t = value != null ? JToken.FromObject(value, serializer) : null;
             }
             return t;
         }

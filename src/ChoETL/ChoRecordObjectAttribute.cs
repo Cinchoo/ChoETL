@@ -15,6 +15,12 @@ namespace ChoETL
         }
         public ChoIgnoreFieldValueMode IgnoreFieldValueMode
         {
+            get { return _ignoreFieldValueModeInternal == null ? ChoIgnoreFieldValueMode.None : _ignoreFieldValueModeInternal.Value; }
+            set { _ignoreFieldValueModeInternal = value; }
+        }
+        private ChoIgnoreFieldValueMode? _ignoreFieldValueModeInternal = null;
+        internal ChoIgnoreFieldValueMode? IgnoreFieldValueModeInternal
+        {
             get;
             set;
         }

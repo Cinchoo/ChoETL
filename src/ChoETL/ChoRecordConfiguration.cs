@@ -20,6 +20,12 @@ namespace ChoETL
     {
         protected Lazy<object> _recObject;
         private ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
+
+        public char? ItemSeparator
+        {
+            get;
+            set;
+        }
         public Func<object, bool> Validator
         {
             get;
@@ -100,17 +106,17 @@ namespace ChoETL
         internal Dictionary<string, ValidationAttribute[]> ValDict = null;
         internal string[] PropertyNames;
         private HashSet<string> _ignoredFields = new HashSet<string>();
-        public HashSet<string> IgnoredFields 
-        { 
+        public HashSet<string> IgnoredFields
+        {
             get { return _ignoredFields; }
-            set 
+            set
             {
                 if (value != null)
                     _ignoredFields = value;
                 else
                     _ignoredFields.Clear();
             }
-        } 
+        }
         public abstract IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
         {
             get;
@@ -119,7 +125,7 @@ namespace ChoETL
         internal ChoRecordConfiguration(Type recordType = null)
         {
             RecordType = recordType.GetUnderlyingType();
-            ErrorMode = ChoErrorMode.ReportAndContinue;
+            ErrorMode = ChoErrorMode.ThrowAndStop; //  ChoErrorMode.ReportAndContinue;
             AutoDiscoverColumns = true;
             ThrowAndStopOnMissingField = true;
             ObjectValidationMode = ChoObjectValidationMode.Off;
@@ -156,7 +162,7 @@ namespace ChoETL
             if (recObjAttr != null)
             {
                 ErrorMode = recObjAttr.ErrorMode;
-                IgnoreFieldValueMode = recObjAttr.IgnoreFieldValueMode;
+                IgnoreFieldValueMode = recObjAttr.IgnoreFieldValueModeInternal;
                 ThrowAndStopOnMissingField = recObjAttr.ThrowAndStopOnMissingField;
                 ObjectValidationMode = recObjAttr.ObjectValidationMode;
             }
@@ -177,6 +183,60 @@ namespace ChoETL
                 }
             }
         }
+
+        internal void LoadFieldConfigurationAttributesInternal(ChoRecordFieldConfiguration fc, Type reflectedType)
+        {
+            LoadFieldConfigurationAttributes(fc, reflectedType);
+        }
+
+        protected void LoadFieldConfigurationAttributes(ChoRecordFieldConfiguration fc, Type reflectedType)
+        {
+            if (!IsDynamicObject)
+            {
+                if (fc.PD != null && fc.PI != null)
+                    return;
+                    
+                var recordType = reflectedType; // fc.ReflectedType == null ? RecordType : fc.ReflectedType;
+
+                string name = null;
+                object defaultValue = null;
+                object fallbackValue = null;
+                name = fc.Name;
+
+                fc.ReflectedType = reflectedType;
+                fc.PD = ChoTypeDescriptor.GetProperty(recordType, name);
+                fc.PI = ChoType.GetProperty(recordType, name);
+
+                if (fc.PD == null || fc.PI == null)
+                    return;
+
+                //Load default value
+                defaultValue = ChoType.GetRawDefaultValue(fc.PD);
+                if (defaultValue != null)
+                {
+                    fc.DefaultValue = defaultValue;
+                    fc.IsDefaultValueSpecified = true;
+                }
+                //Load fallback value
+                fallbackValue = ChoType.GetRawFallbackValue(fc.PD);
+                if (fallbackValue != null)
+                {
+                    fc.FallbackValue = fallbackValue;
+                    fc.IsFallbackValueSpecified = true;
+                }
+
+                //Load Converters
+                fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
+                fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
+
+                //Load Custom Serializer
+                fc.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fc.PI);
+                fc.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fc.PI);
+
+                if (fc.SourceType == null)
+                    fc.SourceType = fc.GetSourceTypeFromConvertersIfAny();
+            }
+        }
         protected virtual void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
         {
             if (!IsDynamicObject)
@@ -189,9 +249,9 @@ namespace ChoETL
                     //if (fc is ChoFileRecordFieldConfiguration)
                     //    name = ((ChoFileRecordFieldConfiguration)fc).FieldName;
                     //else
-                        name = fc.Name;
+                    name = fc.Name;
 
-                    fc.PD = PDDict.ContainsKey(name) ? PDDict[name] : 
+                    fc.PD = PDDict.ContainsKey(name) ? PDDict[name] :
                         (PDDict.Any(p => p.Value.Name == name) ? PDDict.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
                     fc.PI = PIDict.ContainsKey(name) ? PIDict[name] :
            (PIDict.Any(p => p.Value.Name == name) ? PIDict.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
@@ -231,8 +291,8 @@ namespace ChoETL
 
             //Validators
             HasConfigValidators = (from fc in fcs
-                                        where fc.Validators != null
-                                        select fc).FirstOrDefault() != null;
+                                   where fc.Validators != null
+                                   select fc).FirstOrDefault() != null;
 
             if (!HasConfigValidators)
             {

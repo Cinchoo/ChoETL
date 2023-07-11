@@ -265,7 +265,8 @@ namespace ChoETL
             return this.Select(s =>
             {
                 if (s is IDictionary<string, object>)
-                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary() as object;
+                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
+                        Configuration.IgnoreDictionaryFieldPrefix).ToDictionary() as object;
                 else
                     return s;
             }).AsDataReader();
@@ -453,6 +454,11 @@ namespace ChoETL
 
         public ChoParquetReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
             Configuration.IgnoreField(field);
             return this;
         }

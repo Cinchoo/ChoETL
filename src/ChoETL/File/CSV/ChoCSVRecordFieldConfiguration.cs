@@ -50,7 +50,13 @@ namespace ChoETL
             set;
         }
 
-        public char ItemSeparator
+        public char ArrayValueItemSeparator
+        {
+            get;
+            set;
+        }
+
+        public char KeyValueItemSeparator
         {
             get;
             set;

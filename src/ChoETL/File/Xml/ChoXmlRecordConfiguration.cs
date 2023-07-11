@@ -24,6 +24,11 @@ namespace ChoETL
         internal Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>> XmlRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>>();
         internal Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
         internal ChoResetLazy<ChoXmlNamespaceManager> XmlNamespaceManager;
+        public Func<string, object, bool?> XmlArrayQualifier
+        {
+            get;
+            set;
+        }
 
         public bool? UseProxy
         {
@@ -556,7 +561,8 @@ namespace ChoETL
 
                         pt = pd.PropertyType.GetUnderlyingType();
                         //if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
+                        if ((pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
+                            || (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo())))
                         {
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, recordFieldConfigurations, false);
                         }
@@ -743,7 +749,7 @@ namespace ChoETL
                 || XmlRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && !IsDynamicObject
-                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfBaseType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
+                    /*&& ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfBaseType<ChoXmlNodeRecordFieldAttribute>().Any()).Any()*/)
                 {
                     DiscoverRecordFields(RecordType);
                 }
@@ -1080,10 +1086,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlRecordConfiguration ClearFields()
+        public new ChoXmlRecordConfiguration ClearFields()
         {
             //XmlRecordFieldConfigurationsForType.Clear();
             XmlRecordFieldConfigurations.Clear();
+            base.ClearFields();
             return this;
         }
 

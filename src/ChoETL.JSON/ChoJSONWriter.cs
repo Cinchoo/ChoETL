@@ -423,6 +423,7 @@ namespace ChoETL
 
         public ChoJSONWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            ClearFieldsIf();
             Configuration.IgnoreField(field);
             return this;
         }
@@ -480,6 +481,7 @@ namespace ChoETL
                             nfc.FieldType = pd.PropertyType;
                     }
 
+                    Configuration.LoadFieldConfigurationAttributes(nfc, typeof(T));
                     Configuration.JSONRecordFieldConfigurations.Add(nfc);
                 }
             }

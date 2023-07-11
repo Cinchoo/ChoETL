@@ -1,12 +1,48 @@
-﻿[
-    {
-        "EnrityList": "Attribute",
-        "KeyName": "AkeyName",
-        "Value": "Avalue"
-    },
-    {
-        "EnrityList": "BusinessKey",
-        "KeyName": "AkeyName",
-        "Value": "Avalue"
-    }
-]
+﻿{
+  "buienradar": {
+    "copyright": "(C)opyright Buienradar / RTL. Alle rechten voorbehouden",
+    "terms": "Deze feed mag vrij worden gebruikt onder voorwaarde van bronvermelding buienradar.nl inclusief een hyperlink naar https://www.buienradar.nl. Aan de feed kunnen door gebruikers of andere personen geen rechten worden ontleend."
+  },
+  "actual": {
+    "stationmeasurements": [
+      {
+        "stationid": 6330,
+        "stationname": "Meetstation Hoek van Holland",
+        "lat": 51.98,
+        "lon": 4.1,
+        "regio": "Hoek van Holland",
+        "timestamp": "2018-12-23T09:40:00",
+        "dayhistory": {
+          "timestamp": "2018-12-23T01:00:00",
+          "temperatureMin": 7.3,
+          "temperatureMax": 8.8,
+          "groundtemperatureMin": 6.9,
+          "sunshineHours": 0.0,
+          "windgustsMax": 9.71,
+          "windspeedMax": 7.81,
+          "windspeedBftMax": 4,
+          "windDirectionDegreesMax": 223
+        }
+      },
+      {
+        "stationid": 6279,
+        "stationname": "Meetstation Hoogeveen",
+        "lat": 52.73,
+        "lon": 6.52,
+        "regio": "Hoogeveen",
+        "timestamp": "2018-12-23T09:40:00",
+        "dayhistory": {
+          "timestamp": "2018-12-23T01:00:00",
+          "temperatureMin": 6.0,
+          "temperatureMax": 7.5,
+          "groundtemperatureMin": 5.7,
+          "sunshineHours": 0.0,
+          "windgustsMax": 7.21,
+          "windspeedMax": 5.05,
+          "windspeedBftMax": 3,
+          "windDirectionDegreesMax": 255
+        }
+      }
+    ]
+  }
+}

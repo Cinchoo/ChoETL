@@ -11,7 +11,7 @@
 
     #endregion
 
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
     public class ChoTypeConverterAttribute : ChoAllowMultipleAttribute
     {
         #region Instance Properties

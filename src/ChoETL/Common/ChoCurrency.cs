@@ -145,7 +145,7 @@ namespace ChoETL
 
         public TypeCode GetTypeCode()
         {
-            throw new NotImplementedException();
+            return TypeCode.Decimal;
         }
 
         public bool ToBoolean(IFormatProvider provider)
@@ -225,7 +225,7 @@ namespace ChoETL
 
         public object ToType(Type conversionType, IFormatProvider provider)
         {
-            throw new NotImplementedException();
+            return Amount;
         }
     }
 }

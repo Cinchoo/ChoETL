@@ -53,6 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChoJObjectLoader.cs" />
     <Compile Include="ChoJObjectWriter.cs" />
     <Compile Include="ChoJSONConvertersCache.cs" />
     <Compile Include="ChoDisableAutoDiscoverabilityAttribute.cs" />

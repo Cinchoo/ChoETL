@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,6 +28,8 @@ namespace ChoETL
         public event EventHandler<ChoBeforeRecordFieldLoadEventArgs> BeforeRecordFieldLoad;
         public event EventHandler<ChoAfterRecordFieldLoadEventArgs> AfterRecordFieldLoad;
         public event EventHandler<ChoRecordFieldLoadErrorEventArgs> RecordFieldLoadError;
+
+        public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
 
         public event EventHandler<ChoSkipUntilEventArgs> SkipUntil;
         public event EventHandler<ChoDoWhileEventArgs> DoWhile;
@@ -260,12 +263,20 @@ namespace ChoETL
 
         public virtual bool HasReportEmptyLineSubscribed
         {
-            get { return false; }
+            get
+            {
+                EventHandler<ChoEmptyLineEventArgs> eh = EmptyLineFound;
+                return (eh != null);
+            }
         }
 
         public virtual bool RaiseReportEmptyLine(long lineNo)
         {
-            return true;
+            EventHandler<ChoEmptyLineEventArgs> emptyLineFound = EmptyLineFound;
+
+            var ea = new ChoEmptyLineEventArgs(lineNo);
+            emptyLineFound(this, ea);
+            return ea.Continue;
         }
 
         public virtual bool TryValidate(object target, ICollection<ValidationResult> validationResults)

@@ -319,8 +319,11 @@ namespace ChoETL
 
         #endregion
 
-        protected void SetFields(Type elementType, KeyValuePair<string, Type>[] membersInfo = null)
+        protected void SetFields(Type elementType, KeyValuePair<string, Type>[] membersInfo = null, bool overrideFields = false)
         {
+            if (!overrideFields && Fields != null)
+                return;
+
             Dictionary<string, ChoObjectDataReaderProperty> prop = new Dictionary<string, ChoObjectDataReaderProperty>();
             Fields = new List<ChoObjectDataReaderProperty>();
 
@@ -330,9 +333,11 @@ namespace ChoETL
                 var m = ChoType.GetMembers(elementType).Where(m1 => dict.ContainsKey(m1.Name));
                 if (m.Any())
                 {
+                    int index = 0;
                     foreach (var mi in m)
                     {
-                        prop.Add(mi.Name, new ChoObjectDataReaderProperty(mi));
+                        prop.Add(mi.Name, new ChoObjectDataReaderProperty(mi, index));
+                        index++;
                     }
                 }
                 else
@@ -343,10 +348,13 @@ namespace ChoETL
                     }
                     else
                     {
+                        int index = 0;
                         foreach (KeyValuePair<string, Type> kvp in membersInfo)
                         {
                             if (!prop.ContainsKey(kvp.Key))
-                                prop.Add(kvp.Key, new ChoObjectDataReaderProperty(kvp.Key, kvp.Value));
+                                prop.Add(kvp.Key, new ChoObjectDataReaderProperty(kvp.Key, kvp.Value, false, index));
+
+                            index++;
                         }
                     }
                 }
@@ -370,11 +378,13 @@ namespace ChoETL
             public readonly string MemberName;
             public readonly bool IsNullable;
             private readonly bool _isSimpleType;
+            private int? _index = null;
 
-            public ChoObjectDataReaderProperty(MemberInfo info)
+            public ChoObjectDataReaderProperty(MemberInfo info, int? index = null)
             {
                 ChoGuard.ArgumentNotNullOrEmpty(info, "MemberInfo");
                 MemberInfo = info;
+                _index = index;
                 ProperyType = ChoType.GetMemberType(MemberInfo).GetUnderlyingType();
                 var t = ChoType.GetMemberType(MemberInfo);
                 var ra = ChoType.GetAttribute<RequiredAttribute>(info);
@@ -388,11 +398,12 @@ namespace ChoETL
                     IsNullable = t.IsNullableType() || t == typeof(string) || t.IsClass();
             }
 
-            public ChoObjectDataReaderProperty(string memberName, Type memberType, bool isSimpleType = false)
+            public ChoObjectDataReaderProperty(string memberName, Type memberType, bool isSimpleType = false, int? index = null)
             {
                 ChoGuard.ArgumentNotNullOrEmpty(memberName, "MemberName");
                 //ChoGuard.ArgumentNotNullOrEmpty(memberType, "MemberType");
                 _isSimpleType = isSimpleType;
+                _index = index;
                 MemberName = memberName;
                 ProperyType = memberType == null ? typeof(string) : memberType.GetUnderlyingType();
                 IsNullable = true; // memberType == null ? true : memberType.IsNullableType() || memberType == typeof(string) || !memberType.IsValueType;
@@ -435,7 +446,18 @@ namespace ChoETL
                     }
                 }
                 else
-                    return ChoType.GetMemberValue(target, MemberName); // ChoConvert.ConvertTo(ChoType.GetMemberValue(target, MemberName), ProperyType);
+                {
+                    if (ChoType.HasProperty(target.GetType(), MemberName))
+                        return ChoType.GetMemberValue(target, MemberName); // ChoConvert.ConvertTo(ChoType.GetMemberValue(target, MemberName), ProperyType);
+                    else if (_index != null)
+                    {
+                        var prop = target.GetType().GetProperties().Skip(_index.Value).FirstOrDefault();
+                        if (prop != null)
+                            return ChoType.GetPropertyValue(target, prop);
+                    }
+                }
+
+                return null;
             }
 
             public string GetName()

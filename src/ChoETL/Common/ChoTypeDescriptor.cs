@@ -239,7 +239,10 @@
             if (pd == null)
                 return new T[] { };
             else
+            {
                 return pd.Attributes.OfType<T>();
+                //return pd.Attributes.OfType<Attribute>().Where(a => a.GetType() == typeof(T)).OfType<T>();
+            }
         }
 
         public static T GetPropetyAttribute<T>(Type type, string propName)

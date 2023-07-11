@@ -103,7 +103,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
-            _writer.Dispose();
+            _writer?.Dispose();
 
             _isDisposed = true;
             if (_closeStreamOnDispose)
@@ -348,6 +348,11 @@ namespace ChoETL
 
         public ChoFixedLengthWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
             Configuration.IgnoreField(field);
             return this;
         }

@@ -160,21 +160,21 @@ namespace ChoXmlWriterTest
         [Test]
         public static void QuickDynamicTest_5()
         {
-            string expected = @"<Employees>
+            string expected = @"<Employees xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
   <Employee>
     <Id>1</Id>
     <Name>Mark</Name>
     <IsActive>true</IsActive>
     <Message><![CDATA[Test]]></Message>
-    <Array>
-      <int>1</int>
-      <string>abc</string>
-    </Array>
-    <int>1</int>
-    <int>2</int>
+    <ArrayOfAnyType>
+      <anyType xsi:type=""xsd:int"">1</anyType>
+      <anyType xsi:type=""xsd:string"">abc</anyType>
+    </ArrayOfAnyType>
+    <Lint>1</Lint>
+    <Lint>2</Lint>
     <HT>
-      <a2>abc</a2>
       <a1>abc</a1>
+      <a2>abc</a2>
     </HT>
     <Dict>
       <b1>abc</b1>
@@ -231,6 +231,8 @@ namespace ChoXmlWriterTest
                 .Configure(c => c.ThrowAndStopOnMissingField = false)
                 .Configure(c => c.UseXmlArray = false)
                 .Configure(c => c.TurnOffPluralization = true)
+                .Configure(c => c.OmitXsiNamespace= false)
+                .WithXmlNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace)
                 //.UseXmlSerialization()
                 )
             {
@@ -251,15 +253,15 @@ namespace ChoXmlWriterTest
     <Name>Mark</Name>
     <IsActive>True</IsActive>
     <Message><![CDATA[Test]]></Message>
-    <Array>
-      <int>1</int>
-      <string>abc</string>
-    </Array>
-    <int>1</int>
-    <int>2</int>
+    <Arrays>
+      <Arrays>1</Arrays>
+      <Arrays>abc</Arrays>
+    </Arrays>
+    <Lint>1</Lint>
+    <Lint>2</Lint>
     <HT>
-      <a2>abc</a2>
       <a1>abc</a1>
+      <a2>abc</a2>
     </HT>
     <Dict>
       <b1>abc</b1>
@@ -315,7 +317,7 @@ namespace ChoXmlWriterTest
                 .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null)
                 .Configure(c => c.ThrowAndStopOnMissingField = false)
                 .Configure(c => c.UseXmlArray = false)
-                .Configure(c => c.TurnOffPluralization = true)
+                .Configure(c => c.TurnOffPluralization = false)
                 .UseXmlSerialization()
                 )
             {

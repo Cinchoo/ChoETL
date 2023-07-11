@@ -1387,7 +1387,7 @@ namespace ChoETL
 
                                 if (keyName.IndexOf(":") < 0)
                                 {
-                                    if (!ChoExtensions.IsNullOrWhiteSpace(dobj.GetNSPrefix()))
+                                    if (dobj is ChoDynamicObject && !ChoExtensions.IsNullOrWhiteSpace(dobj.GetNSPrefix()))
                                         keyName = $"{dobj.GetNSPrefix()}:{keyName}";
                                 }
                             }

@@ -14,6 +14,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using SharpYaml;
 using SharpYaml.Events;
 using SharpYaml.Serialization;
@@ -22,7 +24,7 @@ using SharpYaml.Serialization.Serializers;
 namespace ChoETL
 {
     [DataContract]
-    public class ChoYamlRecordConfiguration : ChoFileRecordConfiguration, IChoDynamicObjectRecordConfiguration
+    public class ChoYamlRecordConfiguration : ChoFileRecordConfiguration, IChoDynamicObjectRecordConfiguration, IChoJSONRecordConfiguration
     {
         private readonly object _padLock = new object();
         internal readonly Dictionary<Type, Dictionary<string, ChoYamlRecordFieldConfiguration>> YamlRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoYamlRecordFieldConfiguration>>();
@@ -141,10 +143,10 @@ namespace ChoETL
                     return _jsonSerializerSettings;
                 }
             }
-            //set
-            //{
-            //    _jsonSerializerSettings = value;
-            //}
+            set
+            {
+                throw new NotSupportedException();
+            }
         }
         private Func<IDictionary<string, object>, IDictionary<string, object>> _customNodeSelecter = null;
         public Func<IDictionary<string, object>, IDictionary<string, object>> CustomNodeSelecter
@@ -181,6 +183,19 @@ namespace ChoETL
 
         public string RootName { get; internal set; }
         public Type TargetRecordType { get; internal set; }
+        public Func<Type, MemberInfo, string, bool?> IgnoreProperty { get; set; }
+        public Func<Type, MemberInfo, string, string> RenameProperty { get; set; }
+        public Action<Type, MemberInfo, string, JsonProperty> RemapJsonProperty { get; set; }
+        public JsonLoadSettings JsonLoadSettings { get; set; }
+        public ChoJObjectLoadOptions? JObjectLoadOptions { get; set; }
+        public Func<JsonReader, JsonLoadSettings, JObject> CustomJObjectLoader { get; set; }
+        public Func<JsonReader, JsonLoadSettings, JArray> CustomJArrayLoader { get; set; }
+        public Type UnknownType { get; set; }
+        public Func<JObject, object> UnknownTypeConverter { get; set; }
+        public bool EnableXmlAttributePrefix { get; set; }
+        public bool KeepNSPrefix { get; set; }
+        public Formatting Formatting { get; set; }
+        public Func<object, JToken> ObjectToJTokenConverter { get; set; }
 
         public ChoYamlRecordFieldConfiguration this[string name]
         {
@@ -460,7 +475,8 @@ namespace ChoETL
                             recordType = typeof(ExpandoObject);
                             return recordType;
                         }
-                        else if (typeof(IDictionary).IsAssignableFrom(recordType))
+                        else if (typeof(IDictionary).IsAssignableFrom(recordType)
+                            || typeof(IDictionary<string, object>).IsAssignableFrom(recordType))
                         {
                             recordType = typeof(ExpandoObject);
                             return recordType;
@@ -483,13 +499,16 @@ namespace ChoETL
                             continue;
 
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
+                        //if ((pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
+                        //    || (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo())))
+                        if (false)
                         {
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, recordFieldConfigurations, false);
                         }
                         else
                         {
-                            var obj = new ChoYamlRecordFieldConfiguration(pd.Name, (string)null);
+                            var obj = new ChoYamlRecordFieldConfiguration(pd.Name, ChoTypeDescriptor.GetPropetyAttribute<ChoYamlRecordFieldAttribute>(pd),
+                                pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
@@ -584,7 +603,7 @@ namespace ChoETL
                 && YamlRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && !IsDynamicObject /*&& RecordType != typeof(ExpandoObject)*/
-                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoYamlRecordFieldAttribute>().Any()).Any())
+                    /*&& ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoYamlRecordFieldAttribute>().Any()).Any()*/)
                 {
                     MapRecordFields(RecordType);
                 }
@@ -711,10 +730,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoYamlRecordConfiguration ClearFields()
+        public new ChoYamlRecordConfiguration ClearFields()
         {
             YamlRecordFieldConfigurationsForType.Clear();
             YamlRecordFieldConfigurations.Clear();
+            base.ClearFields();
             return this;
         }
 

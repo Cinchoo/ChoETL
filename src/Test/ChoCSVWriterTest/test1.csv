@@ -1,0 +1,9 @@
+UserProfileDetail_UserStatus_name,UserProfileDetail_UserStatusDate,UserProfileDetail_EnrollId,UserProfileDetail_lastDate,UserInformation_Id,UserInformation_firstName,UserInformation_middleName,UserInformation_lastName,UserInformation_otherNames,UserInformation_UserType_name,UserInformation_primaryState,UserInformation_otherState_0,UserInformation_otherState_1,UserInformation_UserLicense_0_licenseState,UserInformation_UserLicense_0_licenseNumber,UserInformation_UserLicense_0_licenseStatus,UserInformation_Setting,UserInformation_primaryEmail,UserInformation_modifiedAt,UserInformation_createdAt,message,extensions_code
+User One,10/31/2018 2:12:42 AM,am**********************************,7/22/2019 3:05:39 AM,1111122,*****,,*****,,CP,MA,MA,BA,MA,000000000,,ADMINISTRATIVE,*****@*****.com,,,GraphQL.ExecutionError: 13614711 - NO__DATA,212
+User Two,10/31/2019 2:12:42 AM,am**********************************,7/22/2019 3:05:39 AM,443333,*****,Jhon,*****,,AP,AK,MP,CLT,KL,000000220,Valid,ADMINISTRATIVE,*****@*****.com,,,GraphQL.ExecutionError: 13614712 - NO__DATA,212
+,,,,,,,,,,,,,,,,,,,,"GraphQL.ExecutionError: Cannot return null for non-null type. Field: PrivilegeFlag, Type: Boolean!.
+   at GraphQL.Execution.ExecutionStrategy.ValidateNodeResult(ExecutionContext context, ExecutionNode node)
+   at GraphQL.Execution.ExecutionStrategy.ExecuteNodeAsync(ExecutionContext context, ExecutionNode node)",ID: 1454790
+,,,,,,,,,,,,,,,,,,,,"GraphQL.ExecutionError: Cannot return null for non-null type. Field: admittingArrangementFlag, Type: Boolean!.
+   at GraphQL.Execution.ExecutionStrategy.ValidateNodeResult(ExecutionContext context, ExecutionNode node)
+   at GraphQL.Execution.ExecutionStrategy.ExecuteNodeAsync(ExecutionContext context, ExecutionNode node)",ID: 13614790

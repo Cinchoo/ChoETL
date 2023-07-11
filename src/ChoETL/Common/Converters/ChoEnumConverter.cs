@@ -16,7 +16,7 @@ namespace ChoETL
     public class ChoEnumConverter : IChoValueConverter
 #endif
     {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public virtual object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string && targetType.IsEnum)
             {
@@ -41,11 +41,11 @@ namespace ChoETL
                 return value;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public virtual object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if ((value != null && value.GetType().IsEnum))
             {
-                ChoEnumFormatSpec EnumFormat = parameter.GetValueFor("EnumFormat", 0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
+                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
                 switch (EnumFormat)
                 {
                     case ChoEnumFormatSpec.Name:
@@ -66,6 +66,34 @@ namespace ChoETL
             }
 
             return value;
+        }
+    }
+
+    [ChoTypeConverter(typeof(Enum))]
+    public class ChoEnumNameConverter : ChoEnumConverter
+    {
+        public override object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return base.Convert(value, targetType, new string[] { "Name" }, culture);
+        }
+
+        public override object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return base.ConvertBack(value, targetType, new string[] { "Name" }, culture);
+        }
+    }
+
+    [ChoTypeConverter(typeof(Enum))]
+    public class ChoEnumDescriptionConverter : ChoEnumConverter
+    {
+        public override object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return base.Convert(value, targetType, new string[] { "Description" }, culture);
+        }
+
+        public override object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            return base.ConvertBack(value, targetType, new string[] { "Description" }, culture);
         }
     }
 }

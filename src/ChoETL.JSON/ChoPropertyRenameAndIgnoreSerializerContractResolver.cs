@@ -19,10 +19,11 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace ChoETL
 {
-    public class ChoPropertyRenameAndIgnoreSerializerContractResolver : DefaultContractResolver
+    public class ChoPropertyRenameAndIgnoreSerializerContractResolver : DefaultContractResolver, IChoJsonContractResolver
     {
         public static readonly JsonConverter[] BuiltInConverters = new JsonConverter[10]
         {
@@ -38,6 +39,8 @@ namespace ChoETL
             new RegexConverter()
         };
 
+        private readonly Dictionary<MemberInfo, JsonProperty> _jsonProperties = new Dictionary<MemberInfo, JsonProperty>();
+        private readonly Dictionary<JsonProperty, string> _jsonPropertyJsonPaths = new Dictionary<JsonProperty, string>();
         private readonly ChoFileRecordConfiguration _configuration;
         public IChoNotifyRecordFieldWrite CallbackRecordFieldWrite
         {
@@ -51,6 +54,12 @@ namespace ChoETL
         }
         public IChoNotifyRecordFieldRead CallbackRecordFieldRead { get; set; }
         public ChoReader Reader { get; set; }
+
+        public ChoFileRecordConfiguration RecordConfiguration => _configuration;
+
+        public Dictionary<MemberInfo, JsonProperty> JsonProperties => _jsonProperties;
+        public Dictionary<JsonProperty, string> JsonPropertiesJsonPaths => _jsonPropertyJsonPaths;
+
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoPropertyRenameAndIgnoreSerializerContractResolver(ChoFileRecordConfiguration configuration)
@@ -133,9 +142,13 @@ namespace ChoETL
                             CallbackRecordFieldWrite = CallbackRecordFieldWrite
                         };
                     }
+                    if (fc is IChoJSONRecordFieldConfiguration JSONRecordFieldConfiguration)
+                    {
+                        ExtractJsonPathIfAny(property, pd, JSONRecordFieldConfiguration.JSONPath);
+                    }
                 }
             }
-            else if (rfc.Any(f => f.DeclaringMember == propertyFullName))
+            else if (rfc.Any(f => f.DeclaringMember == propertyFullName) && rfc.First(f => f.DeclaringMember == propertyFullName).PD?.ComponentType == property.DeclaringType)
             {
                 var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
                 fc = rfc.First(f => f.DeclaringMember == propertyFullName) as ChoFileRecordFieldConfiguration;
@@ -149,9 +162,10 @@ namespace ChoETL
                         Writer = Writer,
                         CallbackRecordFieldWrite = CallbackRecordFieldWrite
                     };
+                    ExtractJsonPathIfAny(property, pd);
                 }
             }
-            else if (rfc.Any(f => f.Name == propertyName))
+            else if (rfc.Any(f => f.Name == propertyName) && rfc.First(f => f.Name == propertyName).PD?.ComponentType == property.DeclaringType)
             {
                 var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
                 fc = rfc.First(f => f.Name == propertyName) as ChoFileRecordFieldConfiguration;
@@ -165,11 +179,13 @@ namespace ChoETL
                         Writer = Writer,
                         CallbackRecordFieldWrite = CallbackRecordFieldWrite
                     };
+                    ExtractJsonPathIfAny(property, pd);
                 }
             }
             else
             {
                 var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
+                property.PropertyName = pd.DisplayName;
                 if (pd != null)
                 {
                     if (pd.Attributes.OfType<DefaultValueAttribute>().Any())
@@ -179,7 +195,8 @@ namespace ChoETL
                         var jp = pd.Attributes.OfType<ChoFileRecordFieldAttribute>().First();
 
                         property.Order = jp.Order;
-                        property.PropertyName = jp.FieldName;
+                        if (!jp.FieldName.IsNullOrWhiteSpace())
+                            property.PropertyName = jp.FieldName;
                     }
                     else if (pd.Attributes.OfType<DisplayAttribute>().Any())
                     {
@@ -216,8 +233,8 @@ namespace ChoETL
                         property.ItemTypeNameHandling = jp.ItemTypeNameHandling;
                         property.ItemIsReference = jp.ItemIsReference;
                     }
-                    //else if (pd.Attributes.OfType<ChoJSONPathAttribute>().Any())
-                    //    property.PropertyName = pd.Attributes.OfType<ChoJSONPathAttribute>().First().JSONPath;
+
+                    ExtractJsonPathIfAny(property, pd);
 
                     if (CanIncludeConverter(pd))
                     {
@@ -244,7 +261,28 @@ namespace ChoETL
                 property.Order = fc.Order;
             }
 
+            if (!_jsonProperties.ContainsKey(member))
+                _jsonProperties.Add(member, property);
             return property;
+        }
+
+        private void ExtractJsonPathIfAny(JsonProperty property, PropertyDescriptor pd,
+            string jsonPath = null)
+        {
+            if (jsonPath == null)
+            {
+                if (pd.Attributes.OfType<ChoJSONPathAttribute>().Any())
+                {
+                    jsonPath = pd.Attributes.OfType<ChoJSONPathAttribute>().First().JSONPath;
+                    if (!_jsonPropertyJsonPaths.ContainsKey(property))
+                        _jsonPropertyJsonPaths.Add(property, jsonPath);
+                }
+            }
+            else
+            {
+                if (!_jsonPropertyJsonPaths.ContainsKey(property))
+                    _jsonPropertyJsonPaths.Add(property, jsonPath);
+            }
         }
 
         private void RemapToRefTypePropertiesIfAny(Type type, string propertyName, JsonProperty prop, MemberInfo member)
@@ -277,7 +315,7 @@ namespace ChoETL
 
                 }
             }
-            var cf = _configuration as ChoJSONRecordConfiguration;
+            var cf = _configuration as IChoJSONRecordConfiguration;
             if (cf != null && cf.RemapJsonProperty != null)
             {
                 cf.RemapJsonProperty(type, member, propertyName, prop);
@@ -286,7 +324,7 @@ namespace ChoETL
 
         private bool IsIgnored(Type type, string jsonPropertyName, string propertyName, string propertyFullName, MemberInfo member)
         {
-            var cf = _configuration as ChoJSONRecordConfiguration;
+            var cf = _configuration as IChoJSONRecordConfiguration;
             if (cf != null && cf.IgnoreProperty != null)
             {
                 var ret = cf.IgnoreProperty(type, member, jsonPropertyName);
@@ -314,7 +352,7 @@ namespace ChoETL
         private bool IsRenamed(Type type, string jsonPropertyName, string propertyName, string propertyFullName, MemberInfo member, out string newJsonPropertyName)
         {
             newJsonPropertyName = null;
-            var cf = _configuration as ChoJSONRecordConfiguration;
+            var cf = _configuration as IChoJSONRecordConfiguration;
             if (cf != null && cf.RenameProperty != null)
             {
                 var ret = cf.RenameProperty(type, member, jsonPropertyName);
@@ -410,6 +448,7 @@ namespace ChoETL
         public IChoNotifyRecordFieldRead CallbackRecordFieldRead { get; set; }
         public ChoReader Reader { get; set; }
         public ChoFileRecordConfiguration Configuration { get; set; }
+        public IChoJSONRecordConfiguration JSONConfiguration { get { return Configuration as IChoJSONRecordConfiguration; } }
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoContractResolverJsonConverter(ChoFileRecordFieldConfiguration fc, CultureInfo culture, Type objType, ChoObjectValidationMode validationMode, MemberInfo mi)
@@ -426,25 +465,25 @@ namespace ChoETL
             return true;
         }
 
-        private ChoJSONRecordFieldConfiguration GetFieldConfiguration(Type rt, string fn)
+        private ChoFileRecordFieldConfiguration GetFieldConfiguration(Type rt, string fn)
         {
             if (Configuration != null)
             {
                 var lrt = Configuration.GetRecordConfigDictionaryForType(rt);
-                if (Configuration is ChoJSONRecordConfiguration)
+                if (Configuration is IChoJSONRecordConfiguration config)
                 {
                     if (lrt == null)
-                        ((ChoJSONRecordConfiguration)Configuration).MapRecordFieldsForType(rt);
+                        config.MapRecordFieldsForType(rt);
 
                     lrt = Configuration.GetRecordConfigDictionaryForType(rt);
                     if (lrt != null)
                     {
                         if (lrt.ContainsKey(fn))
-                            return lrt[fn] as ChoJSONRecordFieldConfiguration;
+                            return lrt[fn] as ChoFileRecordFieldConfiguration;
                     }
                     else
                     {
-                        return Configuration.RecordFieldConfigurations.Select(fc => fc.Name == fn).OfType<ChoJSONRecordFieldConfiguration>().FirstOrDefault();
+                        return Configuration.RecordFieldConfigurations.Select(fc => fc.Name == fn).OfType<ChoFileRecordFieldConfiguration>().FirstOrDefault();
                     }
                 }
             }
@@ -465,7 +504,7 @@ namespace ChoETL
             return conv;
         }
 
-        private IContractResolver GetContractResolver(ChoJSONRecordFieldConfiguration config)
+        private IContractResolver GetContractResolver(IChoJSONRecordFieldConfiguration config)
         {
             return config == null ? null : config.ContractResolver;
         }
@@ -483,34 +522,40 @@ namespace ChoETL
                 _fc = GetFieldConfiguration(_mi.ReflectedType, _mi.Name);
             }
 
-            var jsonConfig = Configuration as ChoJSONRecordConfiguration;
+            var jsonConfig = Configuration as IChoJSONRecordConfiguration;
             if (crs == null || _fc == null)
             {
                 try
                 {
-                    var jo = jsonConfig == null ? JObject.Load(reader) : jsonConfig.InvokeJObjectLoader(reader);
-                    try
+                    var jo = jsonConfig == null ? JToken.Load(reader):
+                        ChoJObjectLoader.InvokeJObjectLoader(reader, jsonConfig.JsonLoadSettings, jsonConfig.JObjectLoadOptions,
+                            jsonConfig.CustomJObjectLoader);
+                    if (jo != null)
                     {
-                        using (var jObjectReader = reader.CopyReaderForObject(jo))
+                        try
                         {
-                            return serializer.Deserialize(jObjectReader, objectType);
+                            using (var jObjectReader = reader.CopyReaderForObject(jo))
+                            {
+                                return serializer.Deserialize(jObjectReader, objectType);
+                            }
+                            //return serializer.Deserialize(reader, objectType);
                         }
-                        //return serializer.Deserialize(reader, objectType);
-                    }
-                    catch
-                    {
-                        var c = Configuration as ChoJSONRecordConfiguration;
-                        if (c != null)
+                        catch
                         {
-                            var ut = c.UnknownType;
-                            var utc = c.UnknownTypeConverter;
-                            if (utc != null)
-                                return utc(jo);
-                            else if (ut != null)
-                                return jo.ToObject(ut);
+                            var c = Configuration as IChoJSONRecordConfiguration;
+                            if (c != null)
+                            {
+                                var ut = c.UnknownType;
+                                var utc = c.UnknownTypeConverter;
+                                if (utc != null && jo is JObject jobj)
+                                    return utc(jobj);
+                                else if (ut != null)
+                                    return jo.ToObject(ut);
+                            }
+                            return jo;
                         }
-                        return jo;
                     }
+                    return null;
                 }
                 catch
                 {
@@ -519,7 +564,7 @@ namespace ChoETL
             }
             else
             {
-                IContractResolver contractResolver = GetContractResolver(_fc as ChoJSONRecordFieldConfiguration);
+                IContractResolver contractResolver = GetContractResolver(_fc as IChoJSONRecordFieldConfiguration);
                 var savedContractResolver = serializer.ContractResolver;
                 try
                 {
@@ -533,57 +578,70 @@ namespace ChoETL
                     Type mt = ChoType.GetMemberType(_mi);
                     var name = ChoType.GetFieldName(crs.Name);
                     var rec = ChoType.GetMemberObjectMatchingType(name, crs.Record);
+                    //if (rec == null)
+                    //{
+                    //    rec = ChoActivator.CreateInstance(mt);
+                    //    ChoType.SetMemberValue(crs.Record, name, rec);
+                    //}
 
                     try
                     {
-                        try
+                        retValue = jsonConfig == null ? JObject.Load(reader) : ChoJObjectLoader.InvokeJObjectLoader(reader, jsonConfig.JsonLoadSettings, jsonConfig.JObjectLoadOptions,
+                            jsonConfig.CustomJObjectLoader);
+                        if (RaiseBeforeRecordFieldLoad(crs.Record, crs.Index, name, ref retValue))
                         {
-                            retValue = jsonConfig == null ? JObject.Load(reader) : jsonConfig.InvokeJObjectLoader(reader);
-                        }
-                        catch
-                        {
-                            if (_fc.ValueConverter == null)
-                                retValue = serializer.Deserialize(reader, objectType);
-                            else
+                            try
                             {
-                                retValue = serializer.Deserialize(reader, typeof(string));
-                                retValue = _fc.ValueConverter(retValue);
-                            }
-
-                        }
-
-                        var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
-                        if (st != null && st.Type != null)
-                            _objType = st.Type;
-                        if (_fc != null && _fc.SourceType != null)
-                            _objType = _fc.SourceType;
-                        else if (_objType.GetImplicitTypeCastOps().Any())
-                        {
-                            bool disableImplcityOp = false;
-                            if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType) != null)
-                                disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType).Flag;
-
-                            if (!disableImplcityOp)
-                            {
-                                if (retValue is JToken)
+                                if (retValue is JToken jo)
                                 {
-                                    var castTypes = _objType.GetImplicitTypeCastOps();
-
-                                    foreach (var ct in castTypes)
+                                    using (var jObjectReader = reader.CopyReaderForObject(jo))
                                     {
-                                        try
-                                        {
-                                            retValue = ((JToken)retValue).ToObject(ct);
-                                            break;
-                                        }
-                                        catch { }
+                                        retValue = serializer.Deserialize(jObjectReader, objectType);
                                     }
                                 }
                             }
-                        }
+                            catch
+                            {
+                                if (_fc.ValueConverter == null)
+                                    retValue = serializer.Deserialize(reader, objectType);
+                                else
+                                {
+                                    retValue = serializer.Deserialize(reader, typeof(string));
+                                    //retValue = _fc.ValueConverter(retValue);
+                                }
 
-                        if (!RaiseBeforeRecordFieldLoad(crs.Record, crs.Index, name, ref retValue))
-                        {
+                            }
+
+                            var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+                            if (st != null && st.Type != null)
+                                _objType = st.Type;
+                            if (_fc != null && _fc.SourceType != null)
+                                _objType = _fc.SourceType;
+                            else if (_objType.GetImplicitTypeCastOps().Any())
+                            {
+                                bool disableImplcityOp = false;
+                                if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType) != null)
+                                    disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType).Flag;
+
+                                if (!disableImplcityOp)
+                                {
+                                    if (retValue is JToken)
+                                    {
+                                        var castTypes = _objType.GetImplicitTypeCastOps();
+
+                                        foreach (var ct in castTypes)
+                                        {
+                                            try
+                                            {
+                                                retValue = ((JToken)retValue).ToObject(ct);
+                                                break;
+                                            }
+                                            catch { }
+                                        }
+                                    }
+                                }
+                            }
+
                             if (_fc != null)
                             {
                                 if (_fc.CustomSerializer == null && retValue is JObject)
@@ -596,9 +654,9 @@ namespace ChoETL
                                     else
                                         retValue = _fc.ValueConverter(retValue);
                                 }
-                                else
+                                else if (_fc.CustomSerializer != null)
                                 {
-                                    retValue = _fc.CustomSerializer(retValue);
+                                    retValue = _fc.CustomSerializer(reader);
                                 }
 
                                 //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
@@ -699,12 +757,18 @@ namespace ChoETL
             var crs = Writer != null ? Writer.ContractResolverState : null;
             if (Configuration.TurnOffContractResolverState)
                 crs = null;
+            bool enableXmlAttributePrefix = JSONConfiguration != null ? JSONConfiguration.EnableXmlAttributePrefix : false;
+            bool keepNSPrefix = JSONConfiguration != null ? JSONConfiguration.KeepNSPrefix : false;
+            Formatting formatting = JSONConfiguration != null ? JSONConfiguration.Formatting : Formatting.Indented;
+            JsonSerializerSettings jsonSerializerSettings = JSONConfiguration != null ? JSONConfiguration.JsonSerializerSettings : null;
+
             if (crs == null)
             {
-                var t = serializer.SerializeToJToken(value);
-                if (t != null)
-                    t.WriteTo(writer);
-                else
+                var t = serializer.SerializeToJToken(value, formatting, settings: jsonSerializerSettings, enableXmlAttributePrefix: enableXmlAttributePrefix,
+                    keepNSPrefix: keepNSPrefix);
+                //if (t != null)
+                //    t.WriteTo(writer);
+                //else
                     serializer.Serialize(writer, t);
                 return;
             }
@@ -715,7 +779,8 @@ namespace ChoETL
             }
             if (_fc == null)
             {
-                var t = serializer.SerializeToJToken(value);
+                var t = serializer.SerializeToJToken(value, formatting, settings: jsonSerializerSettings, enableXmlAttributePrefix: enableXmlAttributePrefix,
+                    keepNSPrefix: keepNSPrefix);
                 if (t != null)
                     t.WriteTo(writer);
                 else
@@ -727,7 +792,7 @@ namespace ChoETL
             crs.FieldConfig = _fc;
             crs.Record = crs.Record == null ? ChoActivator.CreateInstanceNCache(_mi.ReflectedType) : crs.Record;
 
-            IContractResolver contractResolver = GetContractResolver(_fc as ChoJSONRecordFieldConfiguration);
+            IContractResolver contractResolver = GetContractResolver(_fc as IChoJSONRecordFieldConfiguration);
             var savedContractResolver = serializer.ContractResolver;
 
             try
@@ -750,7 +815,7 @@ namespace ChoETL
                     if (_fc != null)
                     {
                         if (_fc != null)
-                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value, config: Configuration);
+                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value, true, config: Configuration);
                         else
                         {
                             if (value != null && _objType != null)
@@ -761,8 +826,9 @@ namespace ChoETL
                         {
                             if (_fc.ValueConverter == null)
                             {
-                                var t = serializer.SerializeToJToken(value);
-                                t.WriteTo(writer);
+                                var t = serializer.SerializeToJToken(value, formatting, settings: jsonSerializerSettings, enableXmlAttributePrefix: enableXmlAttributePrefix,
+                    keepNSPrefix: keepNSPrefix);
+                                t?.WriteTo(writer);
                             }
                             else
                             {
@@ -771,7 +837,7 @@ namespace ChoETL
 
                                 //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
                                 JToken t = JToken.FromObject(retValue, serializer);
-                                t.WriteTo(writer);
+                                t?.WriteTo(writer);
                             }
                         }
                         else
@@ -779,7 +845,7 @@ namespace ChoETL
                             object retValue = _fc.CustomSerializer(writer);
                             ValidateOnWrite(ref retValue);
                             JToken t = JToken.FromObject(retValue, serializer);
-                            t.WriteTo(writer);
+                            t?.WriteTo(writer);
                         }
                     }
                     else
@@ -794,7 +860,8 @@ namespace ChoETL
 
                         if (ValidateOnWrite(ref value))
                         {
-                            var t = serializer.SerializeToJToken(value);
+                            var t = serializer.SerializeToJToken(value, formatting, settings: jsonSerializerSettings, enableXmlAttributePrefix: enableXmlAttributePrefix,
+                    keepNSPrefix: keepNSPrefix);
                             t.WriteTo(writer);
                         }
                         else
@@ -1096,116 +1163,172 @@ namespace ChoETL
             return msg.ToString();
         }
     }
-    /*
-    public class ChoJSONPathConverter : JsonConverter
+    public class ChoJsonPathJsonConverter : JsonConverter
     {
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            JObject jo = JObject.Load(reader);
-            object targetObj = Activator.CreateInstance(objectType);
+            var jsonContract = serializer.ContractResolver.ResolveContract(value.GetType()) as JsonObjectContract;
+            var contractResolver = serializer.ContractResolver as IChoJsonContractResolver;
 
-            foreach (PropertyInfo prop in objectType.GetProperties().Where(p => p.CanRead && p.CanWrite))
+            var properties = jsonContract.Properties.Where(e => !e.Ignored && e.Readable).ToArray();
+            var result = new JObject();
+
+            foreach (var jsonProperty in properties)
             {
-                JsonPropertyAttribute att = prop.GetCustomAttributes(true)
-                                                .OfType<JsonPropertyAttribute>()
-                                                .FirstOrDefault();
-
-                string jsonPath = att != null ? att.PropertyName : prop.Name;
-
-                if (serializer.ContractResolver is DefaultContractResolver)
+                var propertyPath = jsonProperty.PropertyName.Split('.');
+                if (contractResolver != null)
                 {
-                    var resolver = (DefaultContractResolver)serializer.ContractResolver;
-                    jsonPath = resolver.GetResolvedPropertyName(jsonPath);
+                    var path = contractResolver.JsonPropertiesJsonPaths.Where(kvp => kvp.Key.PropertyName == jsonProperty.PropertyName).Select(kvp => kvp.Value).FirstOrDefault();
+                    if (!path.IsObjectNullOrEmpty())
+                        propertyPath = path.Split('.');
                 }
 
-                //if (!Regex.IsMatch(jsonPath, @"^[a-zA-Z0-9_.-]+$"))
-                //{
-                //    throw new InvalidOperationException($"JProperties of JsonPathConverter can have only letters, numbers, underscores, hiffens and dots but name was ${jsonPath}."); // Array operations not permitted
-                //}
+                JObject currentLevel = result;
+                for (int i = 0; i < propertyPath.Length - 1; ++i)
+                {
+                    if (currentLevel[propertyPath[i]] == null)
+                        currentLevel[propertyPath[i]] = new JObject();
 
-                JToken token = jo.SelectToken(jsonPath);
+                    currentLevel = (JObject)currentLevel[propertyPath[i]];
+                }
+
+                JToken propretyValueToken;
+                if (jsonProperty.Converter != null && jsonProperty.Converter.CanWrite)
+                {
+                    using (var stringWriter = new StringWriter())
+                    using (var jsonWriter = new JsonTextWriter(stringWriter))
+                    {
+                        jsonProperty.Converter.WriteJson(jsonWriter, jsonProperty.ValueProvider.GetValue(value), serializer);
+                        propretyValueToken = JToken.Parse(stringWriter.ToString());
+                    }
+                }
+                else
+                {
+                    var val = jsonProperty.ValueProvider.GetValue(value);
+                    propretyValueToken = val == null ? null : JToken.FromObject(val);
+                }
+
+                currentLevel[propertyPath[propertyPath.Length - 1]] = propretyValueToken;
+            }
+
+            serializer.Serialize(writer, result);
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
+            JsonSerializer serializer)
+        {
+            var jsonObject = JToken.Load(reader);
+
+            var jsonContract = serializer.ContractResolver.ResolveContract(objectType) as JsonObjectContract;
+            var contractResolver = serializer.ContractResolver as IChoJsonContractResolver;
+
+            var result = jsonContract.DefaultCreator();
+            var properties = jsonContract.Properties.Where(e => !e.Ignored && e.Writable).ToArray();
+
+            foreach (JsonProperty prop in properties) //jsonContract.Properties.Where(p => p.Writable && !p.Ignored))
+            {
+                string jsonPath = prop.PropertyName;
+                if (contractResolver != null)
+                {
+                    var path = contractResolver.JsonPropertiesJsonPaths.Where(kvp => kvp.Key.PropertyName == prop.PropertyName).Select(kvp => kvp.Value).FirstOrDefault();
+                    if (!path.IsObjectNullOrEmpty())
+                        jsonPath = path;
+                }
+                //if (!Regex.IsMatch(jsonPath, "^[a-zA-Z0-9_.-]+$"))
+                //    throw new InvalidOperationException(
+                //        string.Format("JProperties of JsonPathConverter can have only letters, numbers, underscores, hyphens and dots but name was {0}.", jsonPath)); // Array operations not permitted
+
+                JToken token = jsonObject.SelectToken(jsonPath);
+
                 if (token != null && token.Type != JTokenType.Null)
                 {
-                    object value = token.ToObject(prop.PropertyType, serializer);
-                    prop.SetValue(targetObj, value, null);
+                    object value;
+                    if (prop.Converter == null || !prop.Converter.CanRead)
+                    {
+                        value = token.ToObject(prop.PropertyType, serializer);
+                    }
+                    else
+                    {
+                        var r = token.CreateReader();
+                        r.Read();
+                        value = prop.Converter.ReadJson(r, prop.PropertyType, null, serializer);
+                    }
+
+                    prop.ValueProvider.SetValue(result, value);
                 }
             }
 
-            return targetObj;
-
-            //var jo = JObject.Load(reader);
-            //object targetObj = existingValue ?? Activator.CreateInstance(objectType);
-
-            //foreach (var prop in objectType.GetProperties().Where(p => p.CanRead))
-            //{
-            //    var pathAttribute = prop.GetCustomAttributes(true).OfType<JsonPropertyAttribute>().FirstOrDefault();
-            //    var converterAttribute = prop.GetCustomAttributes(true).OfType<JsonConverterAttribute>().FirstOrDefault();
-
-            //    string jsonPath = pathAttribute?.PropertyName ?? prop.Name;
-            //    var token = jo.SelectToken(jsonPath);
-
-            //    if (token != null && token.Type != JTokenType.Null)
-            //    {
-            //        bool done = false;
-
-            //        if (converterAttribute != null)
-            //        {
-            //            var args = converterAttribute.ConverterParameters ?? Array.Empty<object>();
-            //            var converter = Activator.CreateInstance(converterAttribute.ConverterType, args) as JsonConverter;
-            //            if (converter != null && converter.CanRead)
-            //            {
-            //                using (var sr = new StringReader(token.ToString()))
-            //                using (var jr = new JsonTextReader(sr))
-            //                {
-            //                    var value = converter.ReadJson(jr, prop.PropertyType, prop.GetValue(targetObj), serializer);
-            //                    if (prop.CanWrite)
-            //                    {
-            //                        prop.SetValue(targetObj, value);
-            //                    }
-            //                    done = true;
-            //                }
-            //            }
-            //        }
-
-            //        if (!done)
-            //        {
-            //            if (prop.CanWrite)
-            //            {
-            //                object value = token.ToObject(prop.PropertyType, serializer);
-            //                prop.SetValue(targetObj, value);
-            //            }
-            //            else
-            //            {
-            //                using (var sr = new StringReader(token.ToString()))
-            //                {
-            //                    serializer.Populate(sr, prop.GetValue(targetObj));
-            //                }
-            //            }
-            //        }
-            //    }
-            //}
-
-            //return targetObj;
+            return result;
         }
 
-        /// <remarks>
-        /// CanConvert is not called when <see cref="JsonConverterAttribute">JsonConverterAttribute</see> is used.
-        /// </remarks>
-        public override bool CanConvert(Type objectType) => false;
-
-        public override bool CanRead => true;
-
-        public override bool CanWrite => false;
-
-        public override void WriteJson
-        (
-            JsonWriter writer,
-            object value,
-            JsonSerializer serializer
-        )
+        public override bool CanConvert(Type objectType)
         {
-            throw new NotImplementedException();
+            var contract =
+                JsonSerializer.Create().ContractResolver.ResolveContract(objectType);
+
+            return contract is JsonObjectContract &&
+                   (contract as JsonObjectContract).Properties.Any(e => !e.Ignored && e.PropertyName.Contains('.'));
         }
     }
-    */
+
+    public interface IChoJSONRecordConfiguration
+    {
+        Func<Type, MemberInfo, string, bool?> IgnoreProperty { get; set; }
+        Func<Type, MemberInfo, string, string> RenameProperty { get; set; }
+        Action<Type, MemberInfo, string, JsonProperty> RemapJsonProperty { get; set; }
+        void MapRecordFieldsForType(Type rt);
+        JsonLoadSettings JsonLoadSettings
+        {
+            get;
+            set;
+        }
+        ChoJObjectLoadOptions? JObjectLoadOptions
+        {
+            get;
+            set;
+        }
+        Func<JsonReader, JsonLoadSettings, JObject> CustomJObjectLoader
+        {
+            get;
+            set;
+        }
+
+        Func<JsonReader, JsonLoadSettings, JArray> CustomJArrayLoader
+        {
+            get;
+            set;
+        }
+        Type UnknownType
+        {
+            get;
+            set;
+        }
+
+        Func<JObject, object> UnknownTypeConverter
+        {
+            get;
+            set;
+        }
+
+        bool EnableXmlAttributePrefix { get; set; }
+        bool KeepNSPrefix { get; set; }
+        Formatting Formatting { get; set; }
+        JsonSerializerSettings JsonSerializerSettings { get; set; }
+        Func<object, JToken> ObjectToJTokenConverter { get; set; }
+    }
+
+    public interface IChoJSONRecordFieldConfiguration
+    {
+        IContractResolver ContractResolver { get; set; }
+        string JSONPath { get; set; }
+    }
+
+    public interface IChoJsonContractResolver
+    {
+        ChoFileRecordConfiguration RecordConfiguration { get; }
+        Dictionary<MemberInfo, JsonProperty> JsonProperties { get; }
+        Dictionary<JsonProperty, string> JsonPropertiesJsonPaths { get; }
+    }
+
+
 }

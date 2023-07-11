@@ -27,6 +27,11 @@ using System.Windows.Data;
 using System.Net;
 using System.IO.MemoryMappedFiles;
 using Newtonsoft.Json.Serialization;
+using System.Linq.Expressions;
+using System.Xml.Schema;
+using KellermanSoftware.CompareNetObjects;
+using static ChoJSONReaderTest.Program;
+using System.Web;
 
 namespace ChoJSONReaderTest
 {
@@ -93,11 +98,18 @@ namespace ChoJSONReaderTest
             SubDataMappers = new List<DataMapper>();
         }
 
-        public string Name { get; set; }
-
-        public DataMapperProperty DataMapperProperty { get; set; }
-
-        public List<DataMapper> SubDataMappers { get; set; }
+        [IgnoreDataMember]
+        public object Key
+        {
+            get
+            {
+                return Name;
+            }
+            set
+            {
+                Name = value.ToNString();
+            }
+        }
 
         [ChoIgnoreMember]
         [IgnoreDataMember]
@@ -155,18 +167,11 @@ namespace ChoJSONReaderTest
             }
         }
 
-        [IgnoreDataMember]
-        public object Key
-        {
-            get
-            {
-                return Name;
-            }
-            set
-            {
-                Name = value.ToNString();
-            }
-        }
+        public string Name { get; set; }
+
+        public DataMapperProperty DataMapperProperty { get; set; }
+
+        public List<DataMapper> SubDataMappers { get; set; }
 
         public override bool Equals(object obj)
         {
@@ -301,6 +306,37 @@ namespace ChoJSONReaderTest
             // Needs to be reset because of some tests changes these settings
             ChoTypeConverterFormatSpec.Instance.Reset();
             ChoXmlSettings.Reset();
+
+            ChoActivator.Factory = (t, args) =>
+            {
+                if (t == typeof(Person3))
+                    return new Employee3();
+                else if (t == typeof(IDictionary))
+                    return new Dictionary<string, object>();
+                else if (t == typeof(GeographyPoint3))
+                    return new GeographyPoint(0, 0);
+                else if (t == typeof(StaticCar))
+                    return StaticCar.Instance;
+                else if (t == typeof(D3Point))
+                    return new D3Point(0, 0, 0);
+                else
+                    return null;
+            };
+
+            //ChoActivator.Factory = (t, args) =>
+            //{
+            //    if (t == typeof(GeographyPoint))
+            //        return new GeographyPoint(0, 0);
+            //    else
+            //        return null;
+            //};
+            //ChoActivator.Factory = (t, args) =>
+            //{
+            //    if (t == typeof(GeographyPoint))
+            //        return new GeographyPoint(0, 0);
+            //    else
+            //        return null;
+            //};
         }
 
         public class FamilyMember
@@ -328,21 +364,21 @@ namespace ChoJSONReaderTest
         public class Family
         {
             public int Id { get; set; }
-            public ArrayList Daughters { get; set; }
+            public List<FamilyMember> Daughters { get; set; }
 
             public override bool Equals(object obj)
             {
                 var family = obj as Family;
                 return family != null &&
                        Id == family.Id &&
-                       new ArrayListEqualityComparer().Equals(Daughters, family.Daughters);
+                    new ListEqualityComparer<FamilyMember>().Equals(Daughters, family.Daughters);
             }
 
             public override int GetHashCode()
             {
                 var hashCode = 635865446;
                 hashCode = hashCode * -1521134295 + Id.GetHashCode();
-                hashCode = hashCode * -1521134295 + new ArrayListEqualityComparer().GetHashCode(Daughters);
+                //hashCode = hashCode * -1521134295 + new ArrayListEqualityComparer().GetHashCode(Daughters);
                 return hashCode;
             }
         }
@@ -366,7 +402,54 @@ namespace ChoJSONReaderTest
             public string Street { get; set; }
         }
 
-        //[Test]
+        [Test]
+        public static void ConvertNestedJson2CSV()
+        {
+            string json = @"{
+""GpsLocation"": {
+        ""Equipment"": [
+            {
+                ""EquipmentId"": ""EQ00001"",
+                ""InquiryValue"": [
+                    ""IV00001""
+                ],
+                ""Timestamp"": ""2020-02-01 01:01:01.01"",
+            },
+            {
+                ""EquipmentId"": ""EQ00002"",
+                ""InquiryValue"": [
+                    ""IV00002""
+                ],
+                ""Timestamp"": ""2020-01-01 01:01:01.01""
+            }
+        ]
+    }
+}";
+            string expected = @"EquipmentId,InquiryValue,Timestamp
+EQ00001,IV00001,2/1/2020 1:01:01 AM
+EQ00002,IV00002,1/1/2020 1:01:01 AM";
+
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$.GpsLocation.Equipment")
+                .WithField("EquipmentId")
+                .WithField("InquiryValue", jsonPath: "InquiryValue[0]", fieldType: typeof(string))
+                .WithField("Timestamp", fieldType: typeof(DateTime))
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader())
+
+                    w.Write(r);
+            }
+            var actual = csv.ToString();
+            Assert.AreEqual(actual, expected);
+        }
+
+        [Test]
         public static void Test()
         {
             Assert.Ignore("Where is the testcase for ChoJSONReader ?");
@@ -501,7 +584,7 @@ namespace ChoJSONReaderTest
         }
       ]
     }
-  ]}            ";
+  ]}";
 
         public class IRCUBE
         {
@@ -601,7 +684,7 @@ namespace ChoJSONReaderTest
             }
         }
 
-        //[Test]
+        [Test]
         public static void GetKeyTest()
         {
             List<object> expected = new List<object>
@@ -630,15 +713,18 @@ namespace ChoJSONReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample18()
         {
-            using (var csv = new ChoCSVWriter(FileNameSample18TestCSV).WithFirstLineHeader())
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter(csv).WithFirstLineHeader())
             {
                 using (var json = new ChoJSONReader(FileNameSample18JSON))
                 {
                     //var result = json.Select(a => a.data.sensors).ToArray();
-                    csv.Write(json.Select(i => new
+                    w.Write(json.Select(i => new
                     {
                         // Info about device
                         Id = i.id,
@@ -678,19 +764,19 @@ namespace ChoJSONReaderTest
                         DataCountry = i.data.location.country,
                         //SensorBattery
 
-                        SensorsId = i.data.sensors.Length > 0 ? i.data.sensors[0].id : 0,
-                        SensortAncestry = i.data.sensors.Length > 0 ? i.data.sensors[0].ancestry : null,
-                        SensorName = i.data.sensors.Length > 0 ? i.data.sensors[0].name : null,
-                        SensorDescription = i.data.sensors.Length > 0 ? i.data.sensors[0].description : null,
-                        SensorUnit = i.data.sensors.Length > 0 ? i.data.sensors[0].unit : 0,
-                        SensorCreatedAt = i.data.sensors.Length > 0 ? i.data.sensors[0].created_at : DateTime.MinValue,
-                        SensorUpdated_at = i.data.sensors.Length > 0 ? i.data.sensors[0].updated_at : DateTime.MinValue,
-                        SensorMeasurement_id = i.data.sensors.Length > 0 ? i.data.sensors[0].measurement_id : 0,
-                        SensorUuid = i.data.sensors.Length > 0 ? i.data.sensors[0].uuid : null,
-                        SensorValue = i.data.sensors.Length > 0 ? i.data.sensors[0].value : 0,
-                        SensorRawValue = i.data.sensors.Length > 0 ? i.data.sensors[0].raw_value : 0,
-                        SensorPrevValue = i.data.sensors.Length > 0 ? i.data.sensors[0].prev_value : 0,
-                        SensorPrevRawValue = i.data.sensors.Length > 0 ? i.data.sensors[0].prev_raw_value : 0,
+                        SensorsId = i.data.sensors.Count > 0 ? i.data.sensors[0].id : 0,
+                        SensortAncestry = i.data.sensors.Count > 0 ? i.data.sensors[0].ancestry : null,
+                        SensorName = i.data.sensors.Count > 0 ? i.data.sensors[0].name : null,
+                        SensorDescription = i.data.sensors.Count > 0 ? i.data.sensors[0].description : null,
+                        SensorUnit = i.data.sensors.Count > 0 ? i.data.sensors[0].unit : 0,
+                        SensorCreatedAt = i.data.sensors.Count > 0 ? i.data.sensors[0].created_at : DateTime.MinValue,
+                        SensorUpdated_at = i.data.sensors.Count > 0 ? i.data.sensors[0].updated_at : DateTime.MinValue,
+                        SensorMeasurement_id = i.data.sensors.Count > 0 ? i.data.sensors[0].measurement_id : 0,
+                        SensorUuid = i.data.sensors.Count > 0 ? i.data.sensors[0].uuid : null,
+                        SensorValue = i.data.sensors.Count > 0 ? i.data.sensors[0].value : 0,
+                        SensorRawValue = i.data.sensors.Count > 0 ? i.data.sensors[0].raw_value : 0,
+                        SensorPrevValue = i.data.sensors.Count > 0 ? i.data.sensors[0].prev_value : 0,
+                        SensorPrevRawValue = i.data.sensors.Count > 0 ? i.data.sensors[0].prev_raw_value : 0,
 
                         ////SensorHumidity
                         //SensorsHumidityId = i.data.sensors[1].id,
@@ -839,7 +925,10 @@ namespace ChoJSONReaderTest
                 }
             }
 
-            FileAssert.AreEqual(FileNameSample18ExpectedCSV, FileNameSample18TestCSV);
+            var actual = csv.ToString();
+            var expected = File.ReadAllText(FileNameSample18ExpectedCSV);
+
+            Assert.AreEqual(expected, actual);
         }
 
         public class JSObject
@@ -869,7 +958,7 @@ namespace ChoJSONReaderTest
                 return hashCode;
             }
         }
-        //[Test]
+        [Test]
         public static void ArrayTest()
         {
             List<object> expected = new List<object>
@@ -900,16 +989,16 @@ namespace ChoJSONReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void JSONToXmlTest()
         {
             string expected = @"<dynamic>
-    <Email>james@example.com</Email>
-    <Roles>
-      <role>User</role>
-  <role>Admin</role></Roles>
-  </dynamic>
-";
+  <Email>james@example.com</Email>
+  <Roles>
+    <role>User</role>
+    <role>Admin</role>
+  </Roles>
+</dynamic>";
             string actual = null;
 
             string json = @" {
@@ -921,6 +1010,13 @@ namespace ChoJSONReaderTest
     'Admin'
   ]
  }";
+            //ChoDynamicObjectSettings.XmlArrayQualifier = (key, obj) =>
+            //{
+            //    if (key == "features")
+            //        return true;
+            //    return null;
+            //};
+
             using (var p = ChoJSONReader.LoadText(json)
                 .WithField("Email")
                 .WithField("Roles", customSerializer: ((o) =>
@@ -934,7 +1030,13 @@ namespace ChoJSONReaderTest
                 .Configure(c => c.SupportMultipleContent = true)
                 )
             {
-                actual = ChoXmlWriter.ToText(p.First());
+                actual = ChoXmlWriter.ToText(p.First(), new ChoXmlRecordConfiguration()
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.NodeName = "dynamic")
+                    .Configure(c => c.DoNotEmitXmlNamespace = true)
+                    .Configure(c => c.UseXmlArray = true)
+                    .Configure(c => c.TurnOffPluralization = true)
+                    );
             }
             Assert.AreEqual(expected, actual);
 
@@ -955,7 +1057,7 @@ namespace ChoJSONReaderTest
             public int Id { get; set; }
 
             [JsonProperty("type")]
-            [ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Description")]
+            [ChoTypeConverter(typeof(ChoEnumDescriptionConverter))]
             public CoubType Type { get; set; }
 
             [JsonProperty("permalink")]
@@ -980,7 +1082,7 @@ namespace ChoJSONReaderTest
             public int ViewsCount { get; set; }
 
             [JsonProperty("cotd")]
-            public bool Cotd { get; set; }
+            public bool? Cotd { get; set; }
 
             [JsonProperty("cotd_at")]
             public object CotdAt { get; set; }
@@ -992,7 +1094,7 @@ namespace ChoJSONReaderTest
             public bool HasSound { get; set; }
 
             [JsonProperty("recoub_to")]
-            public int RecoubTo { get; set; }
+            public int? RecoubTo { get; set; }
 
             [JsonProperty("age_restricted")]
             public bool AgeRestricted { get; set; }
@@ -1090,7 +1192,7 @@ namespace ChoJSONReaderTest
             }
         }
 
-        //[Test]
+        [Test]
         public static void Sample25Test()
         {
             //using (var p = new ChoJSONReader("sample26.json"))
@@ -1110,32 +1212,25 @@ namespace ChoJSONReaderTest
                 }
             };
             List<CoubBig> actual = null;
-            var o = ChoJSONReader.Deserialize<CoubBig>(FileNameSample25JSON, new ChoJSONRecordConfiguration() { SupportMultipleContent = true });
+            var config = new ChoJSONRecordConfiguration() { SupportMultipleContent = true };
+            config.JsonSerializerSettings.DateParseHandling = DateParseHandling.DateTimeOffset;
+            var o = ChoJSONReader.Deserialize<CoubBig>(FileNameSample25JSON, config);
             actual = o.ToList();
 
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
-        public static void LoadTest1()
-        {
-            Assert.Fail(@"File C:\Users\nraj39\Downloads\ratings.json not found");
-
-            var x = new ChoJSONReader(@"ratings.json").First();
-            Console.WriteLine(x.Dump());
-        }
-
         public class Event
         {
             //[ChoJSONRecordField(FieldName = "event_id")]
-            //[JsonProperty("event_id")]
+            [JsonProperty("event_id")]
             public int EventId { get; set; }
-            //[JsonProperty("event_name")]
+            [JsonProperty("event_name")]
             public string EventName { get; set; }
-            //[JsonProperty("start_date")]
-            public DateTime StartDate { get; set; }
-            //[JsonProperty("end_date")]
-            public DateTime EndDate { get; set; }
+            [JsonProperty("start_date")]
+            public DateTime? StartDate { get; set; }
+            [JsonProperty("end_date")]
+            public DateTime? EndDate { get; set; }
             //[ChoJSONRecordField(JSONPath = "$..guests[*]")]
             //[ChoJSONPath("$..guests[*]")]
             //[ChoUseJSONSerialization()]
@@ -1196,15 +1291,9 @@ namespace ChoJSONReaderTest
             }
         }
 
-        //[Test]
+        [Test]
         public static void Test3()
         {
-            List<object> expected = new List<object>
-            {
-                new Event { EventId = 123, Guests = new List<Guest> { new Guest { }, new Guest { } } }
-            };
-            List<object> actual = new List<object>();
-
             string json = @"{
     ""event_id"": 123,
     ""event_name"": ""event1"",
@@ -1225,7 +1314,28 @@ namespace ChoJSONReaderTest
         ]
     }
 }";
-
+            string expected = @"[
+  {
+    ""event_id"": 123,
+    ""event_name"": ""event1"",
+    ""start_date"": ""2018-11-30T00:00:00"",
+    ""end_date"": ""2018-12-04T00:00:00"",
+    ""Guests"": [
+      {
+        ""guest_id"": ""143"",
+        ""first_name"": ""John"",
+        ""LastName"": ""Smith"",
+        ""Email"": null
+      },
+      {
+        ""guest_id"": ""189"",
+        ""first_name"": ""Bob"",
+        ""LastName"": ""Duke"",
+        ""Email"": null
+      }
+    ]
+  }
+]";
             var config = new ChoJSONRecordConfiguration<Event>()
                 //.Map(p => p.Guests.FirstOrDefault().GuestId, fieldName: "guest_id")
                 //.Map(p => p.Guests.FirstOrDefault().FirstName, fieldName: "first_name")
@@ -1245,22 +1355,27 @@ namespace ChoJSONReaderTest
                 //.WithFieldForType<Guest>(m => m.LastName, fieldName: "last_name")
                 )
             {
-                foreach (var rec in p)
-                {
-                    actual.Add(rec);
-                    Console.WriteLine(rec.Dump());
-                }
+                //foreach (var rec in p)
+                //{
+                //    actual.Add(rec);
+                //    Console.WriteLine(rec.Dump());
+                //}
+
+                var actual = JsonConvert.SerializeObject(p, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
             //CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample29_1()
         {
             List<object> expected = new List<object>
             {
-                new ChoDynamicObject {{ "RollId", ".key.7157" }, { "MType", ".TestMType" } }
+                new ChoDynamicObject {{ "RollId", ".key.7157" }, { "MType", ".TestMType" } },
+                new ChoDynamicObject {{ "RollId", ".key.11261" }, { "MType", null } },
+                new ChoDynamicObject {{ "RollId", ".key.7914" }, { "MType", null } }
             };
             List<object> actual = new List<object>();
             using (var r = new ChoJSONReader(FileNameSample29JSON)
@@ -1296,7 +1411,7 @@ namespace ChoJSONReaderTest
             [ChoJSONRecordField]
             public bool Active { get; set; }
         }
-        //[Test]
+        [Test]
         public static void Issue42()
         {
             string expected = @"Id,Name,CreatedAt,UpdatedAt,Active
@@ -1350,7 +1465,7 @@ namespace ChoJSONReaderTest
             //Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample31Test()
         {
             DataTable expected = new DataTable();
@@ -1422,34 +1537,13 @@ namespace ChoJSONReaderTest
             expected.Rows.Add(203932, "Aaron Gordon", 1610612753, "ORL", 23.0, 15, 9, 6, 0.6, 34.8, 6.5, 14.7, 0.439, 1.7, 4.7, 0.366, 2.4, 3.1, 0.783, 1.7, 5.9, 7.6, 3.7, 2.2, 0.7, 0.7, 0.7, 1.9, 3.5, 17.1, 4.4, 33.6, 2, 0, 1, 57, 152, 139, 23, 55, 41, 223, 80, 87, 140, 81, 78, 188, 60, 38, 44, 67, 46, 165, 72, 77, 193, 42, 55, 53, 57, 67, 11, 5, "203932,1610612753");
             expected.Rows.Add(203932, "Aaron Gordon", 1610612753, "ORL", 23.0, 15, 9, 6, 0.6, 34.8, 6.5, 14.7, 0.439, 1.7, 4.7, 0.366, 2.4, 3.1, 0.783, 1.7, 5.9, 7.6, 3.7, 2.2, 0.7, 0.7, 0.7, 1.9, 3.5, 17.1, 4.4, 33.6, 2, 0, 1, 57, 152, 139, 23, 55, 41, 223, 80, 87, 140, 81, 78, 188, 60, 38, 44, 67, 46, 165, 72, 77, 193, 42, 55, 53, 57, 67, 11, 5, "203932,1610612753");
 
-            var actual = new ChoJSONReader(FileNameSample31JSON).WithJSONPath("$..headers[*]").Transpose().AsDataTable();
-            new ChoJSONReader(FileNameSample31JSON).WithJSONPath("$..rowSet[*]").Select(r => ((Array)r.Value).ToDictionary()).Fill(actual);
+            var actual = new ChoJSONReader(FileNameSample31JSON).WithJSONPath("$..headers[*]", true).Transpose().AsDataTable();
+            new ChoJSONReader(FileNameSample31JSON).WithJSONPath("$..rowSet[*]", true).Select(r => ((Array)r.Value).ToDictionary()).Fill(actual);
 
             DataTableAssert.AreEqual(expected, actual);
         }
 
-        public class RootObjectx
-        {
-            public Dictionary<string, IList<Output>> Outputs { get; set; }
-        }
-
-        public class Output
-        {
-            public string GSTIN_Status { get; set; }
-            public string GSTIN { get; set; }
-            public string Unique_ID { get; set; }
-            public string State { get; set; }
-            public string Input_PAN { get; set; }
-            public string Processing_Status { get; set; }
-        }
-
-        static void TestData1()
-        {
-            JsonSerializer serializer = new JsonSerializer();
-            var x = JsonConvert.DeserializeObject<Dictionary<string, Output[]>[]>(File.ReadAllText("TestData1.json"));
-        }
-
-        //[Test]
+        [Test]
         public static void TestData2()
         {
             string expected = @"Column1,Column2,Column3,Column4,Column5,Column6,Column7,Column8,Column9,Column10
@@ -1468,7 +1562,7 @@ K,L,M,N,O,P,Q,R,S,T";
 
             StringBuilder msg = new StringBuilder();
             using (var p = ChoJSONReader.LoadText(json)
-                .WithJSONPath("$.inputFile[*]")
+                .WithJSONPath("$.inputFile[*]", true)
                 )
             {
                 using (var w = new ChoCSVWriter(msg))
@@ -1479,34 +1573,6 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
             Assert.AreEqual(expected, actual);
-        }
-
-        //[Test]
-        public static void DuplicateNames()
-        {
-            string csv = @"Id, Name, 
-1, Tom, NY
-2, Mark, NJ
-3, Lou, FL
-4, Smith, PA
-5, Raj, DC
-";
-
-            StringBuilder sb = new StringBuilder();
-            using (var p = ChoCSVReader.LoadText(csv)
-                .WithField("Id", position: 1)
-                .WithField("Name", position: 2)
-                .WithField("City", position: 3)
-                .WithFirstLineHeader()
-                )
-            {
-                using (var w = new ChoJSONWriter(sb))
-                    w.Write(p);
-            }
-
-            Console.WriteLine(sb.ToString());
-
-            Assert.Fail("I am not sure what to test? Where are the duplicate names? What does the position parameter in the function WithField");
         }
 
         public class Car
@@ -1555,7 +1621,7 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
-        //[Test]
+        [Test]
         public static void ChildLoad()
         {
             List<object> expected = new List<object> {
@@ -1587,30 +1653,33 @@ K,L,M,N,O,P,Q,R,S,T";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample32Test()
         {
-            StringBuilder msg = new StringBuilder();
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
 
-            //            using (var fw = new StreamWriter("Sample321.csv", true))
-            //            {
-            using (var w = new ChoCSVWriter(FileNameSample32TestCSV)
+            StringBuilder csv = new StringBuilder();
+
+            using (var w = new ChoCSVWriter(csv)
                 .WithFirstLineHeader()
                 )
             {
                 using (var r = new ChoJSONReader(FileNameSample32JSON)
-                    .WithJSONPath("$..Individuals[*]")
+                    .WithJSONPath("$..Individuals[*]", true)
                     )
                 {
                     w.Write(r.SelectMany(r1 => ((dynamic[])r1.Events).Select(r2 => new { r1.Id, r2.RecordId, r2.RecordType, r2.EventDate })));
                 }
             }
-            //            }
 
-            FileAssert.AreEqual(FileNameSample32ExpectedCSV, FileNameSample32TestCSV);
+            var actual = csv.ToString();
+            var expected = File.ReadAllText(FileNameSample32ExpectedCSV);
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void JSON2DataTable1()
+        [Test]
+        public static void FlattenByTest()
         {
             string json = @"
 {
@@ -1661,15 +1730,58 @@ K,L,M,N,O,P,Q,R,S,T";
         ]
     }
 ]}";
+            var expected = @"[
+  {
+    ""Make_ID"": 474,
+    ""Model_ID"": 1861,
+    ""name"": ""Balaji"",
+    ""city"": ""kcp"",
+    ""pincode"": ""12345""
+  },
+  {
+    ""Make_ID"": 474,
+    ""Model_ID"": 1861,
+    ""name"": ""Rajesh"",
+    ""city"": ""chennai"",
+    ""pincode"": ""12346""
+  },
+  {
+    ""Make_ID"": 475,
+    ""Model_ID"": 1862,
+    ""name"": ""Vijay"",
+    ""city"": ""madurai"",
+    ""pincode"": ""12347""
+  },
+  {
+    ""Make_ID"": 475,
+    ""Model_ID"": 1862,
+    ""name"": ""Andrej"",
+    ""city"": ""Berlin"",
+    ""pincode"": ""12348""
+  }
+]";
+            //ChoDynamicObjectSettings.JsonArrayQualifier = (key, obj) =>
+            //{
+            //    if (key == "address")
+            //        return false;
+
+            //    return null;
+            //};
+
+            string actual = null;
             using (var r = ChoJSONReader.LoadText(json)
                 .WithJSONPath("$..Results[*]", true)
                 .WithField("Make_ID", jsonPath: "$..Make_ID", isArray: false)
                 .WithField("Model_ID", jsonPath: "$..Model_ID", isArray: false)
-                .WithField("owners", jsonPath: "$..owners[0].address[0]", isArray: false)
+                .WithField("owners", jsonPath: "$..owners[*]")
+                //.WithField("owners", jsonPath: "$..owners[0].address[0]", isArray: false)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+
+                actual = JsonConvert.SerializeObject(r.FlattenBy("owners", "address").ToArray(), Newtonsoft.Json.Formatting.Indented);
+
                 //foreach (var rec in r.FlattenBy("owners", "address"))
                 //    Console.WriteLine(rec.Dump());
 
@@ -1693,10 +1805,228 @@ K,L,M,N,O,P,Q,R,S,T";
                 //    //    }
                 //}
             }
-
+            Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
+        public static void ManualFlattenByTest()
+        {
+            string json = @"
+{
+""Count"": 185,
+""Message"": ""Results returned successfully"",
+""SearchCriteria"": ""Make ID:474 | ModelYear:2016"",
+""Results"": [{
+        ""Make_ID"": 474,
+        ""Make_Name"": ""Honda"",
+        ""Model_ID"": 1861,
+        ""Model_Name"": ""i10"",
+        ""owners"": [{
+                ""name"": ""Balaji"",
+                ""address"": [{
+                        ""city"": ""kcp"",
+                        ""pincode"": ""12345""
+                    }
+                ]
+            }, {
+                ""name"": ""Rajesh"",
+                ""address"": [{
+                        ""city"": ""chennai"",
+                        ""pincode"": ""12346""
+                    }
+                ]
+            }
+        ]
+    }, {
+        ""Make_ID"": 475,
+        ""Make_Name"": ""Honda"",
+        ""Model_ID"": 1862,
+        ""Model_Name"": ""i20"",
+        ""owners"": [{
+                ""name"": ""Vijay"",
+                ""address"": [{
+                        ""city"": ""madurai"",
+                        ""pincode"": ""12347""
+                    }
+                ]
+            }, {
+                ""name"": ""Andrej"",
+                ""address"": [{
+                        ""city"": ""Berlin"",
+                        ""pincode"": ""12348""
+                    }
+                ]
+            }
+        ]
+    }
+]}";
+            var expected = @"[
+  {
+    ""Make_ID"": 474,
+    ""Model_ID"": 1861,
+    ""name"": ""Balaji"",
+    ""city"": ""kcp"",
+    ""pincode"": ""12345""
+  },
+  {
+    ""Make_ID"": 474,
+    ""Model_ID"": 1861,
+    ""name"": ""Rajesh"",
+    ""city"": ""chennai"",
+    ""pincode"": ""12346""
+  },
+  {
+    ""Make_ID"": 475,
+    ""Model_ID"": 1862,
+    ""name"": ""Vijay"",
+    ""city"": ""madurai"",
+    ""pincode"": ""12347""
+  },
+  {
+    ""Make_ID"": 475,
+    ""Model_ID"": 1862,
+    ""name"": ""Andrej"",
+    ""city"": ""Berlin"",
+    ""pincode"": ""12348""
+  }
+]";
+            string actual = null;
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$..Results[*]", true)
+                .WithField("Make_ID", jsonPath: "$..Make_ID", isArray: false)
+                .WithField("Model_ID", jsonPath: "$..Model_ID", isArray: false)
+                .WithField("owners", jsonPath: "$..owners[*]")
+                //.WithField("owners", jsonPath: "$..owners[0].address[0]", isArray: false)
+                )
+            {
+
+                List<object> output = new List<object>();
+                foreach (IDictionary<string, object> rec in r)
+                {
+                    foreach (IDictionary<string, object> owner in (IEnumerable)rec["owners"])
+                    {
+                        foreach (IDictionary<string, object> address in (IEnumerable)owner["address"])
+                        {
+                            dynamic x = new ChoDynamicObject();
+                            x.Merge(rec);
+                            x.Merge(owner);
+                            x.Merge(address);
+
+                            x.Remove("owners");
+                            x.Remove("address");
+
+                            output.Add(x);
+                        }
+                    }
+                }
+                actual = JsonConvert.SerializeObject(output.ToArray(), Newtonsoft.Json.Formatting.Indented);
+            }
+            Assert.AreEqual(expected, actual);
+        }
+        public enum GenderEnumWithDesc
+        {
+            [Description("M")]
+            Male,
+            [Description("F")]
+            Female
+        }
+
+        public class PersonWithEnum
+        {
+            public int Age { get; set; }
+            //[ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Name")]
+            public GenderEnumWithDesc Gender { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var person = obj as PersonWithEnum;
+                return person != null &&
+                       Age == person.Age &&
+                       Gender == person.Gender;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1400370628;
+                hashCode = hashCode * -1521134295 + Age.GetHashCode();
+                hashCode = hashCode * -1521134295 + Gender.GetHashCode();
+                return hashCode;
+            }
+        }
+        [Test]
+        public static void EnumLoadTest()
+        {
+            List<object> expected = new List<object>
+            {
+                new PersonWithEnum { Age = 1, Gender = GenderEnumWithDesc.Female}
+            };
+            List<object> actual = new List<object>();
+
+            string json = @"[
+ {
+  ""Age"": 1,
+  ""Gender"": ""F""
+ }
+]";
+            //ChoTypeConverter.Global.Add(typeof(Enum), new ChoEnumConverter());
+            ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
+
+            using (var p = ChoJSONReader<PersonWithEnum>.LoadText(json))
+            {
+                foreach (var rec in p)
+                    actual.Add(rec);
+            }
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        public class PersonWithEnumDeclarative
+        {
+            public int Age { get; set; }
+            [ChoTypeConverter(typeof(ChoEnumDescriptionConverter))]
+            public GenderEnumWithDesc Gender { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var person = obj as PersonWithEnumDeclarative;
+                return person != null &&
+                       Age == person.Age &&
+                       Gender == person.Gender;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1400370628;
+                hashCode = hashCode * -1521134295 + Age.GetHashCode();
+                hashCode = hashCode * -1521134295 + Gender.GetHashCode();
+                return hashCode;
+            }
+        }
+        [Test]
+        public static void EnumDeclarativeLoadTest()
+        {
+            List<object> expected = new List<object>
+            {
+                new PersonWithEnumDeclarative { Age = 1, Gender = GenderEnumWithDesc.Female}
+            };
+            List<object> actual = new List<object>();
+
+            string json = @"[
+ {
+  ""Age"": 1,
+  ""Gender"": ""F""
+ }
+]";
+
+            using (var p = ChoJSONReader<PersonWithEnumDeclarative>.LoadText(json))
+            {
+                foreach (var rec in p)
+                    actual.Add(rec);
+            }
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+        [Test]
         public static void ArrayItemsTest()
         {
             DataTable expected = new DataTable();
@@ -1832,16 +2162,16 @@ K,L,M,N,O,P,Q,R,S,T";
     ""0""
 ]
 ]";
-
-            using (var r = ChoJSONReader.LoadText(json))
+            using (var r = ChoJSONReader.LoadText(json)
+                )
             {
-                var dt = r.Select(rec => ((object[])rec.Value).ToDictionary()).AsDataTable();
+                var dt = r.Select(rec => ((object[])rec.Value).ToDictionary(valueNamePrefix:"Column_")).AsDataTable();
 
                 DataTableAssert.AreEqual(expected, dt);
             }
         }
 
-        //[Test]
+        [Test]
         public static void Sample33Test()
         {
             //StringBuilder csvErrors = new StringBuilder();
@@ -1873,9 +2203,11 @@ K,L,M,N,O,P,Q,R,S,T";
             //}
             //Console.WriteLine(csvErrors.ToString());
             //return;
+
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader(FileNameSample33JSON)
-                .WithJSONPath("$..getUsers[*]")
+                .WithJSONPath("$..getUsers[*]", true)
                 )
             {
                 using (var w = new ChoCSVWriter(csv)
@@ -1888,8 +2220,10 @@ K,L,M,N,O,P,Q,R,S,T";
 
             using (var sw = new StreamWriter(FileNameSample33TestCSV))
                 sw.Write(csv.ToString());
+            var actual = csv.ToString();
+            var expected = File.ReadAllText(FileNameSample33ExpectedCSV);
 
-            FileAssert.AreEqual(FileNameSample33ExpectedCSV, FileNameSample33TestCSV);
+            Assert.AreEqual(expected, actual);
         }
         interface Vehicle1 { }
 
@@ -1937,7 +2271,7 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
-        //[Test]
+        [Test]
         public static void PolyTypeTest()
         {
             List<object> expected = new List<object>
@@ -1991,12 +2325,17 @@ K,L,M,N,O,P,Q,R,S,T";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void Sample34Test()
+        [Test]
+        public static void Sample34Test()
         {
+            string expected = @"UserProfileDetail_UserStatus_name,UserProfileDetail_UserStatusDate,UserProfileDetail_EnrollId,UserProfileDetail_lastDate,UserInformation_id,UserInformation_firstName,UserInformation_middleName,UserInformation_lastName,UserInformation_otherNames,UserInformation_primaryState,UserInformation_otherState,UserInformation_UserLicense_licenseState,UserInformation_UserLicense_licenseNumber,UserInformation_UserLicense_licenseStatus,UserInformation_UserLicense_aaaaaaaaaaaaaaaaa,UserInformation_Setting,UserInformation_primaryEmail,UserInformation_modifiedAt,UserInformation_createdAt
+User One,10/31/2018,am**********************************,7/22/2019,1111122,*****,,*****,,MA,MA|BA|DL|RJ,MA|MA2,0|22,,only one|only one2,ADMINISTRATIVE,*****@*****.com,,
+User Two,10/31/2019,am**********************************,7/22/2019,443333,*****,Jhon,*****,,AK,MP|CLT,KL,220,Valid,,ADMINISTRATIVE,*****@*****.com,,";
+
             StringBuilder csv = new StringBuilder();
 
             using (var r = new ChoJSONReader("sample34.json")
-                .WithJSONPath("$..data.getUsers[*]")
+                .WithJSONPath("$..data.getUsers[*]", true)
                 )
             {
                 var arrPractitioners = r.ToArray();
@@ -2005,6 +2344,7 @@ K,L,M,N,O,P,Q,R,S,T";
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
                     .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
                     )
                 {
                     w.Write(arrPractitioners.Select(r1 => new
@@ -2020,10 +2360,10 @@ K,L,M,N,O,P,Q,R,S,T";
                         UserInformation_otherNames = r1.UserInformation.otherNames,
                         UserInformation_primaryState = r1.UserInformation.primaryState,
                         UserInformation_otherState = r1.UserInformation.otherState != null ? string.Join("|", r1.UserInformation.otherState) : null,
-                        UserInformation_UserLicense_licenseState = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => r2.licenseState).ToArray()) : null,
-                        UserInformation_UserLicense_licenseNumber = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => Int32.Parse(r2.licenseNumber)).ToArray()) : null,
-                        UserInformation_UserLicense_licenseStatus = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => r2.licenseStatus).ToArray()) : null,
-                        UserInformation_UserLicense_aaaaaaaaaaaaaaaaa = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => r2.aaaaaaaaaaaaaaaaa).ToArray()) : null,
+                        UserInformation_UserLicense_licenseState = r1.UserInformation.UserLicense != null ? string.Join("|", ((List<object>)r1.UserInformation.UserLicense).Cast<dynamic>().Select(r2 => r2.licenseState).ToArray()) : null,
+                        UserInformation_UserLicense_licenseNumber = r1.UserInformation.UserLicense != null ? string.Join("|", ((List<object>)r1.UserInformation.UserLicense).Cast<dynamic>().Select(r2 => Int32.Parse(r2.licenseNumber)).ToArray()) : null,
+                        UserInformation_UserLicense_licenseStatus = r1.UserInformation.UserLicense != null ? string.Join("|", ((List<object>)r1.UserInformation.UserLicense).Cast<dynamic>().Select(r2 => r2.licenseStatus).ToArray()) : null,
+                        UserInformation_UserLicense_aaaaaaaaaaaaaaaaa = r1.UserInformation.UserLicense != null ? string.Join("|", ((List<object>)r1.UserInformation.UserLicense).Cast<dynamic>().Select(r2 => r2.aaaaaaaaaaaaaaaaa).ToArray()) : null,
                         UserInformation_Setting = r1.UserInformation.Setting,
                         UserInformation_primaryEmail = r1.UserInformation.primaryEmail,
                         UserInformation_modifiedAt = r1.UserInformation.modifiedAt,
@@ -2038,10 +2378,12 @@ K,L,M,N,O,P,Q,R,S,T";
                 //    w.Write(r);
             }
 
-            Console.WriteLine(csv.ToString());
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void JSON2XmlArray()
+        [Test]
+        public static void JSON2XmlArray()
         {
             string json = @"{
   ""header"": ""myheader"",
@@ -2061,6 +2403,13 @@ K,L,M,N,O,P,Q,R,S,T";
     ]
   }
 }";
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
+  <header>myheader</header>
+  <transaction date=""2019-09-24"">
+    <items number=""123"" unit=""EA"" qty=""6"" />
+    <items number=""456"" unit=""CS"" qty=""4"" />
+  </transaction>
+</Root>";
 
             StringBuilder xml = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
@@ -2089,19 +2438,53 @@ K,L,M,N,O,P,Q,R,S,T";
                 }
             }
 
+            string actual = xml.ToString();
             Console.WriteLine(xml.ToString());
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void BuildDynamicDataTableFromJSON()
+        [Test]
+        public static void BuildDynamicDataTableFromJSON()
         {
+            string expected = @"[
+  {
+    ""Make_ID"": 474,
+    ""Model_ID"": 1861,
+    ""name"": ""Balaji"",
+    ""city"": ""kcp""
+  },
+  {
+    ""Make_ID"": 474,
+    ""Model_ID"": 1861,
+    ""name"": ""Rajesh"",
+    ""city"": ""chennai""
+  },
+  {
+    ""Make_ID"": 475,
+    ""Model_ID"": 1862,
+    ""name"": ""Vijay"",
+    ""city"": ""madurai""
+  },
+  {
+    ""Make_ID"": 475,
+    ""Model_ID"": 1862,
+    ""name"": ""Andrej"",
+    ""city"": ""Berlin""
+  }
+]";
+
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader("sample35.json")
                 .WithJSONPath("$..Results")
                 )
             {
-                var r1 = r.FlattenBy("owners", "address");
+                var r1 = r.FlattenBy("owners", "address").ToArray();
                 var dt = r1.AsDataTable(selectedFields: new string[] { "Make_ID", "Model_ID", "name", "city" });
+                var actual = dt.DumpAsJson();
                 Console.WriteLine(dt.DumpAsJson());
+
+                Assert.AreEqual(expected, actual);
 
                 return;
                 using (var w = new ChoCSVWriter(csv)
@@ -2114,8 +2497,22 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(csv.ToString());
         }
 
-        static void JSONDataTable()
+        [Test]
+        public static void JSONDataTable()
         {
+            string expected = @"[
+  {
+    ""header"": ""myheader"",
+    ""transaction_date"": ""2019-09-24"",
+    ""transaction_items_0_number"": ""123"",
+    ""transaction_items_0_unit"": ""EA"",
+    ""transaction_items_0_qty"": 6,
+    ""transaction_items_1_number"": ""456"",
+    ""transaction_items_1_unit"": ""CS"",
+    ""transaction_items_1_qty"": 4
+  }
+]";
+
             string json = @"{
               ""header"": ""myheader"",
               ""transaction"": {
@@ -2135,15 +2532,22 @@ K,L,M,N,O,P,Q,R,S,T";
               }
             }";
 
+            string actual = null;
             using (var r = ChoJSONReader.LoadText(json))
             {
                 var dt = r.Select(f => f.Flatten()).AsDataTable();
-                Console.WriteLine(dt.DumpAsJson());
+                actual = dt.DumpAsJson();
             }
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void JSON2CSV1()
+        [Test]
+        public static void JSON2CSV1()
         {
+            var expected = @"product,display_en,description_summary_en,description_action_en,description_full_en,fulfillment_instructions_en,fulfillment_instructions_es,image,format,sku,attributes_key1,attributes_key2,pricing_trial,pricing_interval,pricing_intervalLength,pricing_quantityBehavior,pricing_quantityDefault,pricing_price_USD,pricing_price_EUR,pricing_quantityDiscounts_10,pricing_discountReason_en,pricing_discountDuration
+my-sku-123,String,String,String,String,String,String,https://d8y8nchqlnmka.cloudfront.net/NVaGM-nhSpQ/-FooqIP-R84/photio-imac-hero.png,digital,string,value1,value2,2,month,1,allow,1,14.95,10.99,25,The Reason,1";
+
             StringBuilder csv = new StringBuilder();
 
             using (var r = new ChoJSONReader("sample36.json")
@@ -2152,14 +2556,15 @@ K,L,M,N,O,P,Q,R,S,T";
             {
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
-                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = false)
                     )
                 {
                     w.Write(r);
                 }
             }
 
-            Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class Person
@@ -2171,7 +2576,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public string ItemsValue => Items.ToString();
         }
 
-        static void DeserializeAsJToken()
+        [Test]
+        public static void DeserializeAsJToken()
         {
             string json = @"{
   ""name"" : ""tim"",
@@ -2212,18 +2618,35 @@ K,L,M,N,O,P,Q,R,S,T";
 
             Console.WriteLine(csv.ToString());
         }
+        [Test]
 
-        static void LargeJsonTest()
+        public static void LargeJsonTest()
         {
             //JObject o1 = JObject.Parse(File.ReadAllText(@"citylots.json"));
+            var expected = @"[
+  {
+    ""FCC-IRCUBE"": [
+      {
+        ""curveDefinitionId"": ""FCC"",
+        ""curveFamilyId"": ""EUR/EURCURVE"",
+        ""curveName"": ""EURCURVE"",
+        ""marketDataSet"": ""FCC-IRCUBE"",
+        ""referenced"": false
+      }
+    ]
+  }
+]";
 
             using (var r = new ChoJSONReader("sample14.json") //sf_city_lots citylots
                 .WithJSONPath("$.irCurves.EUR")
                 )
             {
                 //Console.WriteLine(r.Count());
-                foreach (var rec in r.Take(10))
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r.Take(10))
+                //    Console.WriteLine(rec.Dump());
+
+                var actual = JsonConvert.SerializeObject(r.ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -2249,27 +2672,41 @@ K,L,M,N,O,P,Q,R,S,T";
             public string FavoriteWord { get; set; }
         }
 
-        static void InterfaceTest()
+        [Test]
+        public static void InterfaceTest()
         {
             string json = @"{
     ""$type"": ""ChoJSONReaderTest.Program+Person1, ChoJSONReaderTest"",
     ""Profession"": {
-        ""$type"": ""ChoJSONReaderTest.Program+Programming1, ChoJSONReaderTest"",
+        ""$type"": ""ChoJSONReaderTest.Program+Programming, ChoJSONReaderTest"",
         ""JobTitle"": ""Software Developer"",
         ""FavoriteLanguage"": ""C#""
     }
 }";
 
+            Person1 expected = new Person1
+            {
+                Profession = new Programming
+                {
+                    FavoriteLanguage = "C#"
+                }
+            };
+            Person1 actual = null;
             foreach (var rec in ChoJSONReader<Person1>.LoadText(json)
                 .Configure(c => c.UseJSONSerialization = true)
                 .Configure(c => c.JsonSerializerSettings.TypeNameHandling = TypeNameHandling.Objects)
                 .UseDefaultContractResolver()
                 .Configure(c => c.UnknownType = typeof(Programming))
                 )
-                Console.WriteLine(rec.Dump());
+            {
+                actual = rec;
+                break;
+            }
+            Assert.AreEqual(actual.GetType(), expected.GetType());
         }
 
-        static void DateTimeAsStringTest()
+        [Test]
+        public static void DateTimeAsStringTest()
         {
             string json = @"[
   {
@@ -2283,13 +2720,20 @@ K,L,M,N,O,P,Q,R,S,T";
     ""Created Date"": """"
   }
 ]";
+            List<string> expected = new List<string>()
+            {
+                "2014-04-30T14:39:12.2397769Z",
+                "",
+            };
+            List<string> actual = new List<string>();
             using (var r = ChoJSONReader.LoadText(json)
                 .JsonSerializationSettings(j => j.DateParseHandling = DateParseHandling.None)
                 )
             {
                 foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec["Created Date"]);
             }
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         public class ImdbJsonPerson
@@ -2308,18 +2752,30 @@ K,L,M,N,O,P,Q,R,S,T";
             //public string[] Creator { get; set; }
         }
 
-        static void ArrayOrSingleNodeTest()
+        [Test]
+        public static void ArrayOrSingleNodeTest()
         {
-
+            ImdbJsonMovie expected = null;
+            ImdbJsonMovie actual = null;
             using (var r = new ChoJSONReader<ImdbJsonMovie>("sample37.json"))
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                actual = r.FirstOrDefault();
+
+                expected = JsonConvert.DeserializeObject<ImdbJsonMovie>(JsonConvert.SerializeObject(actual));
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
             }
+            CompareLogic compareLogic = new CompareLogic();
+            ComparisonResult result = compareLogic.Compare(expected, actual);
+            Assert.AreEqual(true, result.AreEqual);
         }
 
-        static void Json2CSV1()
+        [Test]
+        public static void Json2CSV1()
         {
+            string expected = @"attr1,attr2,attr3
+val1,val2,val3";
+
             string json = @"{
                 'attr1': 'val1',
                 'attr2': 'val2',
@@ -2335,10 +2791,12 @@ K,L,M,N,O,P,Q,R,S,T";
                     w.Write(r);
             }
 
-            Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Json2CSV2()
+        [Test]
+        public static void Json2CSV2()
         {
             string json = @" {id: 1, name: ""Tom"", friends: [""Dick"", ""Harry""]}";
 
@@ -2358,16 +2816,25 @@ K,L,M,N,O,P,Q,R,S,T";
 
         public class FileInfo
         {
-            public IList<string> filenames { get; set; }
+            public List<string> filenames { get; set; }
             public int? cluster_number { get; set; }
-            public IList<string> Top_Terms { get; set; }
+            public List<string> Top_Terms { get; set; }
         }
 
-        static void Sample38Test()
+        [Test]
+        public static void Sample38Test()
         {
+            string expected = @"filename,cluster_number,top_terms
+a.txt,0,would
+b.txt,0,get
+c.txt,0,like
+a.txt,1,would
+b.txt,1,get
+c.txt,1,like";
+
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader<FileInfo>("sample38.json")
-                .WithJSONPath("$..^")
+                .WithJSONPath("$..^", flattenIfJArrayWhenReading: false)
                 .WithField(f => f.filenames, jsonPath: "Value[*].filenames")
                 .WithField(f => f.cluster_number, jsonPath: "Value[*].cluster_number")
                 .WithField(f => f.Top_Terms, jsonPath: "Value[*].Top_Terms")
@@ -2401,10 +2868,12 @@ K,L,M,N,O,P,Q,R,S,T";
                 //    //    Console.WriteLine(rec.Dump());
             }
 
-            Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void DefaultValueTest()
+        [Test]
+        public static void DefaultValueTest()
         {
             string json = @"
     [
@@ -2420,6 +2889,19 @@ K,L,M,N,O,P,Q,R,S,T";
         }
     ]";
 
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Polo"",
+    ""Name1"": ""Test""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""328"",
+    ""Name1"": ""Test""
+  }
+]";
+
             using (var r = ChoJSONReader.LoadText(json)
                 .WithField("Id")
                 .WithField("Name")
@@ -2427,11 +2909,13 @@ K,L,M,N,O,P,Q,R,S,T";
                 .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+
+                var actual = JsonConvert.SerializeObject(r.ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-        static void FallbackValueTest()
+        [Test]
+        public static void FallbackValueTest()
         {
             string json = @"
     [
@@ -2447,16 +2931,28 @@ K,L,M,N,O,P,Q,R,S,T";
         }
     ]";
 
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Polo"",
+    ""Name1"": ""Test""
+  },
+  {
+    ""Id"": 100,
+    ""Name"": ""328"",
+    ""Name1"": ""Test""
+  }
+]";
             using (var r = ChoJSONReader.LoadText(json)
                 .WithField("Id", fieldType: typeof(int), fallbackValue: 100)
                 .WithField("Name")
                 .WithField("Name1", defaultValue: "Test")
                 .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
-                //.ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r.ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -2466,7 +2962,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public ChoCurrency Salary { get; set; }
         }
 
-        static void CurrencyTest()
+        [Test]
+        public static void CurrencyTest()
         {
             string json = @"
     [
@@ -2482,30 +2979,68 @@ K,L,M,N,O,P,Q,R,S,T";
         }
     ]";
 
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Salary"": 2000.0
+  },
+  {
+    ""Id"": 2,
+    ""Salary"": 10000.0
+  }
+]";
             using (var r = ChoJSONReader.LoadText(json)
-                .WithField("Id")
+                .WithField("Id", fieldType: typeof(int))
                 .WithField("Salary", fieldType: typeof(ChoCurrency))
-                .WithMaxScanNodes(1)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r.ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
+        }
+
+        [Test]
+        public static void CurrencyTestWithPOCO()
+        {
+            string json = @"
+    [
+        {
+            ""Id"": ""1"",
+            ""Name"": ""Polo"",
+            ""Salary"": ""$2000""
+        },
+        {
+            ""Id"": ""2"",
+            ""Name"": ""328"",
+            ""Salary"": ""$10,000""
+        }
+    ]";
+
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Salary"": 2000.0
+  },
+  {
+    ""Id"": 2,
+    ""Salary"": 10000.0
+  }
+]";
 
             using (var r = ChoJSONReader<EmpWithCurrency>.LoadText(json)
                 //.WithField("Id")
                 //.WithField("Salary", fieldType: typeof(decimal))
-                //.WithMaxScanNodes(1)
+                .WithMaxScanNodes(1)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r.ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
         }
-
-        static void CurrencyDynamicTest()
+        [Test]
+        public static void CurrencyDynamicTest()
         {
             string json = @"
     [
@@ -2521,6 +3056,18 @@ K,L,M,N,O,P,Q,R,S,T";
         }
     ]";
 
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Polo"",
+    ""Salary"": 2000.0
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""328"",
+    ""Salary"": 10000.0
+  }
+]";
             //ChoTypeConverterFormatSpec.Instance.TreatCurrencyAsDecimal = false;
             using (var r = ChoJSONReader.LoadText(json)
                 //.WithField("Id")
@@ -2528,8 +3075,8 @@ K,L,M,N,O,P,Q,R,S,T";
                 .WithMaxScanNodes(2)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r.ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
         }
@@ -2540,7 +3087,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public float value { get; set; }
         }
 
-        static void LoadDictValuesTest()
+        [Test]
+        public static void LoadDictValuesTest()
         {
             string json = @"{
   ""AE"": {
@@ -2557,16 +3105,32 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 }";
 
+
+            string expected = @"[
+  {
+    ""amount"": 0.0,
+    ""value"": 0.0
+  },
+  {
+    ""amount"": 0.0,
+    ""value"": 0.0
+  },
+  {
+    ""amount"": 0.09670332,
+    ""value"": 3.74814
+  }
+]";
             using (var r = ChoJSONReader<Balance>.LoadText(json)
                 .WithJSONPath("$..^")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r.ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-        static void LoadDictKeysTest()
+        [Test]
+        public static void LoadDictKeysTest()
         {
             string json = @"{
   ""1"": {
@@ -2583,16 +3147,24 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 }";
 
-            using (var r = ChoJSONReader<string>.LoadText(json)
-                .WithJSONPath("$..^")
+
+            string expected = @"[
+  1,
+  2,
+  3
+]";
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$..~")
+                .WithField("Id", fieldName: "Value", fieldType: typeof(int))
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r.Select(rec => rec.Id).ToArray(), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-        static void LoadDictTest()
+        [Test]
+        public static void LoadDictTest()
         {
             string json = @"{
   ""AE"": {
@@ -2608,13 +3180,30 @@ K,L,M,N,O,P,Q,R,S,T";
     ""value"": ""3.74814004""
   }
 }";
+            string expected = @"[
+  {
+    ""AE"": {
+      ""amount"": 0.0,
+      ""value"": 0.0
+    },
+    ""AR"": {
+      ""amount"": 0.0,
+      ""value"": 0.0
+    },
+    ""BC"": {
+      ""amount"": 0.09670332,
+      ""value"": 3.74814
+    }
+  }
+]";
 
             using (var r = ChoJSONReader<IDictionary<string, Balance>>.LoadText(json)
+                .UseJsonSerialization()
                 //.WithJSONPath("$", true)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -2624,33 +3213,46 @@ K,L,M,N,O,P,Q,R,S,T";
             public int Age { get; set; }
             public Gender Gender { get; set; }
         }
-
-        static void EnumTest()
+        [Test]
+        public static void EnumTest()
         {
             string json = @"{ ""Age"": 35, ""Gender"": ""Male"" }";
 
+            string expected = @"[
+  {
+    ""Age"": 35,
+    ""Gender"": 0
+  }
+]";
             using (var r = ChoJSONReader<Employee>.LoadText(json))
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-        static void DynamicEnumTest()
+        [Test]
+        public static void DynamicEnumTest()
         {
             string json = @"{ ""Age"": 35, ""Gender"": ""Male"" }";
 
+            string expected = @"[
+  {
+    ""Age"": 35,
+    ""Gender"": 0
+  }
+]";
             using (var r = ChoJSONReader.LoadText(json)
                 .WithField("Age")
                 .WithField("Gender", fieldType: typeof(Gender))
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void JSON2XmlTest()
+        [Test]
+        public static void JSON2XmlTest()
         {
             string json = @"[
   {
@@ -2663,6 +3265,16 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 ]
 ";
+            string expected = @"<Emps xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
+  <Emp>
+    <Id>1</Id>
+    <Name>Mark</Name>
+  </Emp>
+  <Emp>
+    <Id>2</Id>
+    <Name>Tom</Name>
+  </Emp>
+</Emps>";
             StringBuilder xml = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
@@ -2673,6 +3285,8 @@ K,L,M,N,O,P,Q,R,S,T";
                     w.Write(r);
             }
             Console.WriteLine(xml.ToString());
+            var actual = xml.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class UserInfo
@@ -2683,11 +3297,11 @@ K,L,M,N,O,P,Q,R,S,T";
             public string teamname { get; set; }
             [ChoJSONRecordField(JSONPath = "$.email")]
             public string email { get; set; }
-            [ChoJSONRecordField(JSONPath = "$.players1")]
+            [ChoJSONRecordField(JSONPath = "$.players")]
             public string[] players { get; set; }
         }
-
-        static void ReadSelectNodeTest()
+        [Test]
+        public static void ReadSelectNodeTest()
         {
             string json = @"
 {
@@ -2698,13 +3312,24 @@ K,L,M,N,O,P,Q,R,S,T";
         ""players"": [""1"", ""2""]
     }
 }";
-
+            string expected = @"[
+  {
+    ""name"": ""asdf"",
+    ""teamname"": ""b"",
+    ""email"": ""c"",
+    ""players"": [
+      ""1"",
+      ""2""
+    ]
+  }
+]";
             using (var r = ChoJSONReader<UserInfo>.LoadText(json)
                 .WithJSONPath("$.user")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -2712,21 +3337,83 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             public string Src { get; set; }
         }
-
-        static void Sample39Test()
+        [Test]
+        public static void Sample39Test()
         {
-            var tokens = JObject.Load(new JsonTextReader(new StreamReader(ChoPath.GetFullPath("sample39.json")))).SelectTokens("$..queryresult.pods[*].subpods[*].img")
-                .Select(t => JsonConvert.DeserializeObject<Image>(t.ToString()));
-            foreach (var rec in tokens)
-                Console.WriteLine(rec.Dump());
+            //var tokens = JObject.Load(new JsonTextReader(new StreamReader(ChoPath.GetFullPath("sample39.json")))).SelectTokens("$..queryresult.pods[*].subpods[*].img")
+            //    .Select(t => JsonConvert.DeserializeObject<Image>(t.ToString()));
+            //foreach (var rec in tokens)
+            //    Console.WriteLine(rec.Dump());
 
-            return;
+            //return;
+            string expected = @"[
+  {
+    ""src"": ""https://www5a.myWebsite.com/Calculate/MSP/MSP362523b9dc107h895b640000214gh7dcb3c6e027?MSPStoreType=image/gif&s=54"",
+    ""alt"": ""3 + 3"",
+    ""title"": ""3 + 3"",
+    ""width"": 30,
+    ""height"": 18,
+    ""type"": ""Default"",
+    ""themes"": ""1,2,3,4,5,6,7,8,9,10,11,12"",
+    ""colorinvertable"": true
+  },
+  {
+    ""src"": ""https://www5a.myWebsite.com/Calculate/MSP/MSP362623b9dc107h895b6400005d6ad57aedd6f604?MSPStoreType=image/gif&s=54"",
+    ""alt"": ""6"",
+    ""title"": ""6"",
+    ""width"": 8,
+    ""height"": 18,
+    ""type"": ""Default"",
+    ""themes"": ""1,2,3,4,5,6,7,8,9,10,11,12"",
+    ""colorinvertable"": true
+  },
+  {
+    ""src"": ""https://www5a.myWebsite.com/Calculate/MSP/MSP362723b9dc107h895b6400001971f69egfe5ac57?MSPStoreType=image/gif&s=54"",
+    ""alt"": ""Number line"",
+    ""title"": """",
+    ""width"": 330,
+    ""height"": 54,
+    ""type"": ""1DMathPlot_2"",
+    ""themes"": ""1,2,3,4,5,6,7,8,9,10,11,12"",
+    ""colorinvertable"": true
+  },
+  {
+    ""src"": ""https://www5a.myWebsite.com/Calculate/MSP/MSP362823b9dc107h895b6400004b2i72a35885f8hf?MSPStoreType=image/gif&s=54"",
+    ""alt"": ""six"",
+    ""title"": ""six"",
+    ""width"": 18,
+    ""height"": 18,
+    ""type"": ""Default"",
+    ""themes"": ""1,2,3,4,5,6,7,8,9,10,11,12"",
+    ""colorinvertable"": true
+  },
+  {
+    ""src"": ""https://www5a.myWebsite.com/Calculate/MSP/MSP362923b9dc107h895b64000055i4die93dg45fa5?MSPStoreType=image/gif&s=54"",
+    ""alt"": ""| + | | = | \n3 | | 3 | | 6"",
+    ""title"": ""| + | | = | \n3 | | 3 | | 6"",
+    ""width"": 130,
+    ""height"": 56,
+    ""type"": ""Default"",
+    ""themes"": ""1,2,3,4,5,6,7,8,9,10,11,12"",
+    ""colorinvertable"": true
+  },
+  {
+    ""src"": ""https://www5a.myWebsite.com/Calculate/MSP/MSP363023b9dc107h895b6400002hcc1ibbc04h11de?MSPStoreType=image/gif&s=54"",
+    ""alt"": ""age 6: 3.2 seconds | age 8: 1.8 seconds | age 10: 1.2 seconds | \nage 18: 0.83 seconds\n(ignoring concentration, repetition, variations in education, etc.)"",
+    ""title"": ""age 6: 3.2 seconds | age 8: 1.8 seconds | age 10: 1.2 seconds | \nage 18: 0.83 seconds\n(ignoring concentration, repetition, variations in education, etc.)"",
+    ""width"": 449,
+    ""height"": 64,
+    ""type"": ""Grid"",
+    ""themes"": ""1,2,3,4,5,6,7,8,9,10,11,12"",
+    ""colorinvertable"": true
+  }
+]";
             using (var r = new ChoJSONReader("sample39.json")
                 .WithJSONPath("$..queryresult.pods[*].subpods[*].img", true)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -2746,8 +3433,8 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             public string Skill { get; set; }
         }
-
-        static void DeserializeDifferentObjects()
+        [Test]
+        public static void DeserializeDifferentObjects()
         {
             string json = @"[
   {
@@ -2768,7 +3455,25 @@ K,L,M,N,O,P,Q,R,S,T";
     ""LastName"": ""LastName3""
   }
 ]";
-
+            string expected = @"[
+  {
+    ""Department"": ""Department1"",
+    ""JobTitle"": ""JobTitle1"",
+    ""FirstName"": ""FirstName1"",
+    ""LastName"": ""LastName1""
+  },
+  {
+    ""Department"": ""Department2"",
+    ""JobTitle"": ""JobTitle2"",
+    ""FirstName"": ""FirstName2"",
+    ""LastName"": ""LastName2""
+  },
+  {
+    ""Skill"": ""Painter"",
+    ""FirstName"": ""FirstName3"",
+    ""LastName"": ""LastName3""
+  }
+]";
             using (var r = ChoJSONReader<Person2>.LoadText(json)
                 .WithCustomRecordSelector(o =>
                 {
@@ -2782,10 +3487,8 @@ K,L,M,N,O,P,Q,R,S,T";
                 })
                 )
             {
-                foreach (var rec in r)
-                {
-                    Console.WriteLine(rec.Dump());
-                }
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -2796,7 +3499,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public DateTime CreatedDate { get; set; }
             public IList<string> Roles { get; set; }
         }
-        static void DeserializeObject()
+        [Test]
+        public static void DeserializeObject()
         {
             string json = @"{
   'Email': 'james@example.com',
@@ -2810,19 +3514,28 @@ K,L,M,N,O,P,Q,R,S,T";
 
             Account account = ChoJSONReader.DeserializeText<Account>(json).FirstOrDefault();
 
-            Console.WriteLine(account.Email);
+            Assert.AreEqual(account.Email, "james@example.com");
         }
 
-        static void DeserializeCollection()
+        [Test]
+        public static void DeserializeCollection()
         {
             string json = @"['Starcraft','Halo','Legend of Zelda']";
 
             List<string> videogames = ChoJSONReader.DeserializeText<string>(json).ToList();
 
+            string expected = @"[
+  ""Starcraft"",
+  ""Halo"",
+  ""Legend of Zelda""
+]";
             Console.WriteLine(string.Join(", ", videogames.ToArray()));
+            var actual = JsonConvert.SerializeObject(videogames, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
 
-        static void DeserializeDictionary()
+        [Test]
+        public static void DeserializeDictionary()
         {
             string json = @"{
   'href': '/account/login.aspx',
@@ -2831,38 +3544,22 @@ K,L,M,N,O,P,Q,R,S,T";
 
             Dictionary<string, string> htmlAttributes = ChoJSONReader.DeserializeText<Dictionary<string, string>>(json).FirstOrDefault();
 
-            Console.WriteLine(htmlAttributes["href"]);
-            // /account/login.aspx
-
-            Console.WriteLine(htmlAttributes["target"]);
-        }
-
-        static void DeserializeAnonymousTYpe()
-        {
-            string json = @"{
-  'href': '/account/login.aspx',
-  'target': '_blank'
-}";
-
-            var dt = ChoJSONReader.LoadText(json).AsDataTable();
-
-            Dictionary<string, string> htmlAttributes = ChoJSONReader.DeserializeText<Dictionary<string, string>>(json).FirstOrDefault();
-
-            Console.WriteLine(htmlAttributes["href"]);
-            // /account/login.aspx
-
-            Console.WriteLine(htmlAttributes["target"]);
+            Assert.AreEqual(htmlAttributes["href"], "/account/login.aspx");
+            Assert.AreEqual(htmlAttributes["target"], "_blank");
         }
 
         public class Movie
         {
-            public string Name { get; set; }
+            public string Title { get; set; }
             public int Year { get; set; }
         }
 
-        static void DeserializeFromFile()
+        [Test]
+        public static void DeserializeFromFile()
         {
             Movie movie1 = ChoJSONReader.Deserialize<Movie>("movie.json").FirstOrDefault();
+            Assert.AreEqual(movie1.Title, "They Shall Not Grow Old");
+            Assert.AreEqual(movie1.Year, 2018);
         }
 
         public class Person3
@@ -2878,7 +3575,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public string JobTitle { get; set; }
         }
 
-        static void CustomCreationTest()
+        [Test]
+        public static void CustomCreationTest()
         {
             string json = @"{
   'Department': 'Furniture',
@@ -2888,33 +3586,97 @@ K,L,M,N,O,P,Q,R,S,T";
   'BirthDate': '1983-02-02T00:00:00'
 }";
 
-            ChoActivator.Factory = (type, args) =>
-            {
-                if (type == typeof(Person3))
-                    return new Employee3();
-                else
-                    return null;
-            };
             //var dt = ChoJSONReader.LoadText(json).AsDataTable();
             Person3 person = ChoJSONReader.DeserializeText<Person3>(json).FirstOrDefault();
-            Console.WriteLine(person.GetType().Name);
+            Assert.AreEqual(person.GetType(), typeof(Employee3));
+            Assert.AreEqual(person.FirstName, "John");
         }
-
-        static void ToDataTable()
+        [Test]
+        public static void ToDataTable()
         {
             string json = @"[
 {""id"":""10"",""name"":""User"",""add"":false,""edit"":true,""authorize"":true,""view"":true},
 { ""id"":""11"",""name"":""Group"",""add"":true,""edit"":false,""authorize"":false,""view"":true},
 { ""id"":""12"",""name"":""Permission"",""add"":true,""edit"":true,""authorize"":true,""view"":true}
 ]";
-
+            string expected = @"[
+  {
+    ""id"": ""10"",
+    ""name"": ""User"",
+    ""add"": false,
+    ""edit"": true,
+    ""authorize"": true,
+    ""view"": true
+  },
+  {
+    ""id"": ""11"",
+    ""name"": ""Group"",
+    ""add"": true,
+    ""edit"": false,
+    ""authorize"": false,
+    ""view"": true
+  },
+  {
+    ""id"": ""12"",
+    ""name"": ""Permission"",
+    ""add"": true,
+    ""edit"": true,
+    ""authorize"": true,
+    ""view"": true
+  }
+]";
             using (var r = ChoJSONReader.LoadText(json))
             {
                 var dt = r.AsDataTable();
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
+            //using (var r = new ChoJSONReader("sample7.json"))
+            //{
+            //    var dt = r.AsDataTable(); //.Select(f => f.Flatten()).AsDataTable();
+            //}
+        }
+
+        [Test]
+        public static void ToDataTableComplexJson()
+        {
+            string expected = @"[
+  {
+    ""fathers_0_id"": 0,
+    ""fathers_0_married"": true,
+    ""fathers_0_name"": ""John Lee"",
+    ""fathers_0_sons_0_age"": 15,
+    ""fathers_0_sons_0_name"": ""Ronald"",
+    ""fathers_0_sons_0_address_street"": ""abc street"",
+    ""fathers_0_sons_0_address_city"": ""edison"",
+    ""fathers_0_sons_0_address_state"": ""NJ"",
+    ""fathers_0_daughters_0_age"": 7,
+    ""fathers_0_daughters_0_name"": ""Amy"",
+    ""fathers_0_daughters_1_age"": 29,
+    ""fathers_0_daughters_1_name"": ""Carol"",
+    ""fathers_0_daughters_2_age"": 14,
+    ""fathers_0_daughters_2_name"": ""Barbara"",
+    ""fathers_1_id"": 1,
+    ""fathers_1_married"": false,
+    ""fathers_1_name"": ""Kenneth Gonzalez"",
+    ""fathers_2_id"": 2,
+    ""fathers_2_married"": false,
+    ""fathers_2_name"": ""Larry Lee"",
+    ""fathers_2_sons_0_age"": 4,
+    ""fathers_2_sons_0_name"": ""Anthony"",
+    ""fathers_2_sons_1_age"": 2,
+    ""fathers_2_sons_1_name"": ""Donald"",
+    ""fathers_2_daughters_0_age"": 7,
+    ""fathers_2_daughters_0_name"": ""Elizabeth"",
+    ""fathers_2_daughters_1_age"": 15,
+    ""fathers_2_daughters_1_name"": ""Betty""
+  }
+]";
             using (var r = new ChoJSONReader("sample7.json"))
             {
                 var dt = r.AsDataTable(); //.Select(f => f.Flatten()).AsDataTable();
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -2929,25 +3691,32 @@ K,L,M,N,O,P,Q,R,S,T";
             [ChoJSONRecordField(FormatText = "dd-MM-yyyy")]
             public DateTime BirthDate { get; set; }
         }
-
-        static void CustomDateTimeFormatTest()
+        [Test]
+        public static void CustomDateTimeFormatTest()
         {
             string json = @"{
+  'BirthDate': '30-12-2003',
   'Department': 'Furniture',
   'JobTitle': 'Carpenter',
   'FirstName': 'John',
   'LastName': 'Joinery',
-  'BirthDate': '30-12-2003'
 }";
-
+            string expected = @"[
+  {
+    ""BirthDate"": ""2003-12-30T00:00:00"",
+    ""Department"": ""Furniture"",
+    ""JobTitle"": ""Carpenter""
+  }
+]";
             using (var r = ChoJSONReader.LoadText(json)
+                .WithField("BirthDate", fieldType: typeof(DateTime), formatText: "dd-MM-yyyy")
                 .WithField("Department")
                 .WithField("JobTitle")
-                .WithField("BirthDate", fieldType: typeof(DateTime), formatText: "dd-MM-yyyy")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
             return;
 
@@ -2958,10 +3727,37 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
         }
+        [Test]
+        public static void CustomDateTimeFormatPOCOTest()
+        {
+            string json = @"{
+  'BirthDate': '30-12-2003',
+  'Department': 'Furniture',
+  'JobTitle': 'Carpenter',
+  'FirstName': 'John',
+  'LastName': 'Joinery',
+}";
+            string expected = @"[
+  {
+    ""Department"": ""Furniture"",
+    ""JobTitle"": ""Carpenter"",
+    ""BirthDate"": ""2003-12-30T00:00:00""
+  }
+]";
+            using (var r = ChoJSONReader<Employee4>.LoadText(json))
+            {
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
 
-        static void Sample41Test()
+        }
+        [Test]
+        public static void Sample41Test()
         {
             StringBuilder csv = new StringBuilder();
+            string expected = @"startTime,endTime,id,iCalUId,isAllDay,isCancelled,isOrganizer,isOnlineMeeting,onlineMeetingProvider,type,location,locationType,organizer,recurrence,attendees
+3/15/2019,3/15/2019,AAMkAGViNDU7zAAAAA7zAAAZb2ckAAA=,040000008200E641B4C,False,False,True,False,unknown,singleInstance,,default,Megan Bowen,,1";
 
             using (var w = new ChoCSVWriter(csv)
                 .WithFirstLineHeader()
@@ -2989,7 +3785,8 @@ K,L,M,N,O,P,Q,R,S,T";
                 }
             }
 
-            Console.WriteLine(csv.ToString());
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class fooString : IChoNotifyRecordFieldRead
@@ -3006,7 +3803,7 @@ K,L,M,N,O,P,Q,R,S,T";
             {
                 if (propName == nameof(data1m))
                 {
-                    ((fooString)target).data1m = JsonConvert.DeserializeObject<List<double[]>>(value.ToString());
+                    ((fooString)target).data1m = JsonConvert.DeserializeObject<List<double[]>>(value.FirstOrDefaultEx().ToString());
                     return false;
                 }
                 return true;
@@ -3017,21 +3814,75 @@ K,L,M,N,O,P,Q,R,S,T";
                 return true;
             }
         }
-
-        static void TestArray()
+        [Test]
+        public static void TestJArrayAsTextInElement()
         {
             string json = @"{
   ""time"": 20200526, 
   ""data1m"": ""[[1590451620,204.73,204.81,204.73,204.81,1.00720100],[1590451680,204.66,204.66,204.58,204.58,1.00000000],[1590452280,204.65,204.83,204.65,204.83,13.74186800],[1590452820,203.75,203.75,203.75,203.75,0.50000000],[1590452880,203.47,203.47,203,203,1.60000000],[1590453000,203.06,203.06,203.06,203.06,4.00000000]]""
 }";
-
+            string expected = @"[
+  {
+    ""time"": ""20200526"",
+    ""data1m"": [
+      [
+        1590451620.0,
+        204.73,
+        204.81,
+        204.73,
+        204.81,
+        1.007201
+      ],
+      [
+        1590451680.0,
+        204.66,
+        204.66,
+        204.58,
+        204.58,
+        1.0
+      ],
+      [
+        1590452280.0,
+        204.65,
+        204.83,
+        204.65,
+        204.83,
+        13.741868
+      ],
+      [
+        1590452820.0,
+        203.75,
+        203.75,
+        203.75,
+        203.75,
+        0.5
+      ],
+      [
+        1590452880.0,
+        203.47,
+        203.47,
+        203.0,
+        203.0,
+        1.6
+      ],
+      [
+        1590453000.0,
+        203.06,
+        203.06,
+        203.06,
+        203.06,
+        4.0
+      ]
+    ]
+  }
+]";
             using (var r = ChoJSONReader<fooString>.LoadText(json)
                 //.WithField("time")
                 //.WithField("data1m", valueConverter: o => JsonConvert.DeserializeObject<List<double[]>>(o as string))
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -3045,9 +3896,23 @@ K,L,M,N,O,P,Q,R,S,T";
             public double GW { get; set; }
             public List<Packaging> Packaging { get; set; }
         }
-
-        static void CustomResolverTest()
+        [Test]
+        public static void CustomResolverTest()
         {
+            string expected = @"[
+  {
+    ""Ref"": ""ABC123456"",
+    ""GW"": 123.45,
+    ""Packaging"": [
+      {
+        ""Qty"": ""5M""
+      },
+      {
+        ""Qty"": ""7M""
+      }
+    ]
+  }
+]";
             using (var r = new ChoJSONReader<Company1>("sample16.json")
                 .WithField(f => f.Ref)
                 .WithFieldForType<Packaging>(f => f.Qty/*, fieldName: "qty"*/, valueConverter: o => o.ToNString() + "M", customSerializer: o =>
@@ -3066,17 +3931,19 @@ K,L,M,N,O,P,Q,R,S,T";
                 })
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-        static void Json2CSVContainsNewLine()
+        [Test]
+        public static void Json2CSVContainsNewLine()
         {
             string json = @"{
 ""comment"": ""this is a test line \n \n but still value for this record""
 }";
-
+            string expected = @"comment
+this is a test line   but still value for this record";
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
@@ -3088,11 +3955,13 @@ K,L,M,N,O,P,Q,R,S,T";
                     w.Write(r);
                 }
             }
-
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void FlattenJSONTest()
+        [Test]
+        public static void FlattenJSONTest()
         {
             string json = @"{
   ""Library"": null,
@@ -3129,15 +3998,46 @@ K,L,M,N,O,P,Q,R,S,T";
   ""FavoriteQuote"": ""FavoriteQuote1"",
   ""NumberPoems"": 1,
 }";
-
+            string expected = @"[
+  {
+    ""Library"": null,
+    ""LibraryNumber"": 5,
+    ""Year"": null,
+    ""Address"": null,
+    ""LastName"": null,
+    ""WonNYBestSeller"": false,
+    ""NumberofBooks"": 0,
+    ""SelfPublished"": false,
+    ""NumberofPets"": 0,
+    ""NumberofCars"": 0,
+    ""PlaceofBirth"": null,
+    ""WrittenChildrenBook"": false,
+    ""Biography"": null,
+    ""Age"": 32,
+    ""NumberBestSellers"": 0,
+    ""NumberMovies"": 1,
+    ""AuthorLuckyNumber"": 24,
+    ""SearchKeys/0"": ""Alice"",
+    ""SearchKeys/1"": ""AuthorX"",
+    ""Website"": null,
+    ""FirstPublication"": 1,
+    ""LastPublication"": 1,
+    ""FavoriteQuote"": ""FavoriteQuote1"",
+    ""NumberPoems"": 1
+  }
+]";
+            List<object> output = new List<object>();
             using (var r = ChoJSONReader.LoadText(json))
             {
                 foreach (var rec in r)
-                    Console.WriteLine(rec.ConvertToFlattenObject('/', true).Dump());
+                    output.Add(rec.ConvertToFlattenObject('/', null, null, true));
             }
-        }
 
-        static void DictTest5()
+            string actual = JsonConvert.SerializeObject(output, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void DictTest5()
         {
             string json = @"{
 ""Id"": 1,
@@ -3145,22 +4045,30 @@ K,L,M,N,O,P,Q,R,S,T";
 }";
             using (var r = ChoJSONReader<IDictionary>.LoadText(json))
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var rec = r.FirstOrDefault();
+                Assert.AreEqual(rec["Id"], 1);
+                Assert.AreEqual(rec["Name"], "Tom");
             }
         }
 
-        static void ArrayTest1()
+        [Test]
+        public static void ArrayTest1()
         {
             string json = @"[1, 2]";
+
+            string expected = @"[
+  1,
+  2
+]";
             using (var r = ChoJSONReader<int>.LoadText(json))
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-        static void JSON2XmlArrayTest()
+        [Test]
+        public static void JSON2XmlArrayTest()
         {
             string json = @"{
    ""userName"":[
@@ -3171,11 +4079,23 @@ K,L,M,N,O,P,Q,R,S,T";
    ""responseCode"":""00"",
    ""responseDesc"":""Success.""
 }";
-
+            //ChoDynamicObjectSettings.XmlArrayQualifier = (x, y) => true;
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
+  <XElement>
+    <userNames>
+      <userName>user1</userName>
+      <userName>user2</userName>
+    </userNames>
+    <referenceNumber>098784866589157763</referenceNumber>
+    <responseCode>00</responseCode>
+    <responseDesc>Success.</responseDesc>
+  </XElement>
+</Root>";
             StringBuilder xml = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
                 using (var w = new ChoXmlWriter(xml)
+                    .Configure(c => c.XmlArrayQualifier = (x, y) => true)
                     //.WithField("userName", m => m.Configure(c => c.IsArray = false))
                     //.WithField("referenceNumber")
                     )
@@ -3183,6 +4103,8 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
             Console.WriteLine(xml.ToString());
+            var actual = xml.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public abstract class Enumeration : IComparable
@@ -3309,8 +4231,8 @@ K,L,M,N,O,P,Q,R,S,T";
                     return Inactive;
             }
         }
-
-        static void DeserializeEnumClass()
+        [Test]
+        public static void DeserializeEnumClass()
         {
             string json = @"[
 {
@@ -3318,59 +4240,91 @@ K,L,M,N,O,P,Q,R,S,T";
     ""CardType"": ""Amex""
 }
 ]";
+            string expected = @"{
+  ""Name"": ""Tom"",
+  ""CardType"": {
+    ""Name"": ""Amex"",
+    ""Id"": 1
+  }
+}";
             var x = ChoJSONReader.DeserializeText<Dto>(json).FirstOrDefault();
+
+            var actual = JsonConvert.SerializeObject(x, Newtonsoft.Json.Formatting.Indented);
             Console.WriteLine(x.Dump());
+            Assert.AreEqual(expected, actual);
         }
 
-        public class MoreData
+        [JsonConverter(typeof(ChoJSONPathConverter))]
+        public class MoreDataObj
         {
-            //[ChoJSONPath("MoreData1.Field3")]
+            [ChoJSONPath("MoreData1.Field3")]
+            public int InnerField3 { get; set; }
             public int Field3 { get; set; }
-            public int Field4 { get; set; }
         }
         public class Sample
         {
             public int Field1 { get; set; }
             public int Field2 { get; set; }
-            public MoreData MoreData { get; set; }
+            public MoreDataObj MoreData { get; set; }
             public string Field5 { get; set; }
-            //[JsonProperty("MoreData.MoreData1.Field4")]
-            //public string Field4 { get; set; }
+            [ChoJSONPath("MoreData.MoreData1.Field4")]
+            public string Field4 { get; set; }
         }
-
-        static void JSONPathInInnerObjectTest()
+        [Test]
+        public static void JSONPathInInnerObjectTest()
         {
             string json = @"{
-    ""Field1"": 1234,
-    ""Field2"": 5678,
-    ""MoreData"": {
-                 ""Field3"": 9012,
-                ""Field3"": 3456,
-       ""MoreData1"": {
-                ""Field3"": 19012,
-                ""Field4"": 13456
-            }
+  ""Field1"": 1234,
+  ""Field2"": 5678,
+  ""MoreData"": {
+    ""Field3"": 9012,
+    ""MoreData1"": {
+      ""Field3"": 19012,
+      ""Field4"": 13456
+    }
+  },
+  ""Field5"": ""Test""
+}";
+            string expected = @"{
+  ""Field1"": 1234,
+  ""Field2"": 5678,
+  ""MoreData"": {
+    ""MoreData1"": {
+      ""Field3"": 19012
     },
-   ""Field5"": ""Test""
+    ""Field3"": 9012
+  },
+  ""Field5"": ""Test"",
+  ""Field4"": ""13456""
 }";
             var rec = ChoJSONReader.DeserializeText<Sample>(json).FirstOrDefault();
+            var actual = JsonConvert.SerializeObject(rec, Newtonsoft.Json.Formatting.Indented);
             Console.WriteLine(rec.Dump());
+            Assert.AreEqual(expected, actual);
         }
 
         public abstract class Instrument
         {
+            [JsonProperty("ticker")]
             public string Ticker { get; set; }
+            [JsonProperty("name")]
             public string Name { get; set; }
+            [JsonProperty("market")]
             public string Market { get; set; }
+            [JsonProperty("locale")]
             public string Locale { get; set; }
+            [JsonProperty("currency")]
             public string Currency { get; set; }
+            [JsonProperty("active")]
             public bool Active { get; set; }
+            [JsonProperty("primaryExch")]
             public string PrimaryExch { get; set; }
             public DateTimeOffset Updated { get; set; }
         }
-
+        [JsonConverter(typeof(ChoJsonPathJsonConverter))]
         public class Stock : Instrument
         {
+            [JsonProperty("type")]
             public string Type { get; set; }
             [ChoJSONPath("$.codes.cik")]
             public string CIK { get; set; }
@@ -3384,13 +4338,15 @@ K,L,M,N,O,P,Q,R,S,T";
             public string FIGI { get; set; }
         }
 
+        [JsonConverter(typeof(ChoJsonPathJsonConverter))]
         public class ForeignExchange : Instrument
         {
             [ChoJSONPath("$.attrs.base")]
             public string BaseCurrency { get; set; }
         }
 
-        static void DesrializeMultipleTypes()
+        [Test]
+        public static void DesrializeMultipleTypes()
         {
             string json = @"[
   {
@@ -3430,6 +4386,35 @@ K,L,M,N,O,P,Q,R,S,T";
     ""url"": ""https://api.polygon.io/v2/tickers/$AEDAUD""
   },
 ]";
+            string expected = @"[
+  {
+    ""type"": ""cs"",
+    ""CIK"": ""0000320193"",
+    ""FIGIUID"": ""EQ0010169500001000"",
+    ""SCFIGI"": ""BBG001S5N8V8"",
+    ""CFIGI"": ""BBG000B9XRY4"",
+    ""FIGI"": ""BBG000B9Y5X2"",
+    ""ticker"": ""AAPL"",
+    ""name"": ""Apple Inc."",
+    ""market"": ""STOCKS"",
+    ""locale"": ""US"",
+    ""currency"": ""USD"",
+    ""active"": true,
+    ""primaryExch"": ""NGS"",
+    ""Updated"": ""0001-01-01T00:00:00+00:00""
+  },
+  {
+    ""BaseCurrency"": ""AED"",
+    ""ticker"": ""$AEDAUD"",
+    ""name"": ""United Arab Emirates dirham - Australian dollar"",
+    ""market"": ""FX"",
+    ""locale"": ""G"",
+    ""currency"": ""AUD"",
+    ""active"": true,
+    ""primaryExch"": ""FX"",
+    ""Updated"": ""0001-01-01T00:00:00+00:00""
+  }
+]";
             using (var r = ChoJSONReader<Instrument>.LoadText(json)
                 .WithCustomRecordSelector(o =>
                 {
@@ -3441,8 +4426,9 @@ K,L,M,N,O,P,Q,R,S,T";
                 })
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -3456,10 +4442,11 @@ K,L,M,N,O,P,Q,R,S,T";
         public class Class2
         {
             public int Id { get; set; }
-            public int Data1 { get; set; }
+            public double Data1 { get; set; }
         }
 
-        static void ConditionalSelectionsOfNodes()
+        [Test]
+        public static void CustomNodeSelectorTest()
         {
             string json = @"[
 {
@@ -3491,91 +4478,286 @@ K,L,M,N,O,P,Q,R,S,T";
   ]
 }
 ]";
+            string expected = @"[
+  {
+    ""Id"": 5,
+    ""Name"": ""test"",
+    ""Details"": [
+      {
+        ""Id"": 12,
+        ""Data1"": 0.25
+      },
+      {
+        ""Id"": 0,
+        ""Data1"": 0.0
+      }
+    ]
+  }
+]";
             using (var r = ChoJSONReader<CTest>.LoadText(json)
-                .RegisterNodeConverterForType<CTest>(o => ((int)((dynamic)o).id) > 0 ? o : null)
+            .WithCustomNodeSelector(o => o["id"].CastTo<int>() > 0 ? o : null)
+            )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void ConditionalSelectionsOfNodes()
+        {
+            string json = @"[
+{
+  ""id"":5,
+  ""name"":""test"",
+  ""details"":[
+    {
+      ""id"":12,
+      ""data1"":0.25
+    },
+    {
+      ""id"":0,
+      ""data1"":0.0
+    },
+  ]
+},
+{
+  ""id"":0,
+  ""name"":""test"",
+  ""details"":[
+    {
+      ""id"":12,
+      ""data1"":0.25
+    },
+    {
+      ""id"":0,
+      ""data1"":0.0
+    },
+  ]
+}
+]";
+            string expected = @"[
+  {
+    ""Id"": 5,
+    ""Name"": ""test"",
+    ""Details"": [
+      {
+        ""Id"": 12,
+        ""Data1"": 0.25
+      },
+      {
+        ""Id"": 0,
+        ""Data1"": 0.0
+      }
+    ]
+  },
+  {
+    ""Id"": 0,
+    ""Name"": ""test"",
+    ""Details"": [
+      {
+        ""Id"": 12,
+        ""Data1"": 0.25
+      },
+      {
+        ""Id"": 0,
+        ""Data1"": 0.0
+      }
+    ]
+  }
+]";
+            using (var r = ChoJSONReader<CTest>.LoadText(json)
                 .RegisterNodeConverterForType<List<Class2>>(o =>
                 {
-                    dynamic x = o as dynamic;
+                    var value = o as JToken[];
                     var list = new List<Class2>();
-
-                    while (x.reader.Read() && x.reader.TokenType != JsonToken.EndArray)
+                    foreach (var item in value.OfType<JArray>())
                     {
-                        if (x.reader.TokenType == JsonToken.StartObject)
-                        {
-                            var item = x.serializer.Deserialize<Class2>(x.reader);
-                            if (item.Id != 0)
-                                list.Add(item);
-                        }
+                        list.AddRange(item.ToObject<Class2[]>());
                     }
+
                     return list;
                 })
             //.WithCustomNodeSelector(o => o["id"].CastTo<int>() > 0 ? o : null)
             )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void JSON2DataTable2()
+        [Test]
+        public static void ConditionalSelectionsOfNodes_1()
+        {
+            string json = @"[
+{
+  ""id"":5,
+  ""name"":""test"",
+  ""details"":[
+    {
+      ""id"":12,
+      ""data1"":0.25
+    },
+    {
+      ""id"":0,
+      ""data1"":0.0
+    },
+  ]
+},
+{
+  ""id"":0,
+  ""name"":""test"",
+  ""details"":[
+    {
+      ""id"":12,
+      ""data1"":0.25
+    },
+    {
+      ""id"":0,
+      ""data1"":0.0
+    },
+  ]
+}
+]";
+            string expected = @"[
+  {
+    ""Id"": 5,
+    ""Name"": ""test"",
+    ""Details"": [
+      {
+        ""Id"": 12,
+        ""Data1"": 0.25
+      },
+      {
+        ""Id"": 0,
+        ""Data1"": 0.0
+      }
+    ]
+  },
+  {
+    ""Id"": 0,
+    ""Name"": ""test"",
+    ""Details"": [
+      {
+        ""Id"": 12,
+        ""Data1"": 0.25
+      },
+      {
+        ""Id"": 0,
+        ""Data1"": 0.0
+      }
+    ]
+  }
+]";
+            using (var r = ChoJSONReader<CTest>.LoadText(json)
+                .RegisterNodeConverterForType<CTest>(o =>
+                {
+                    var value = ((dynamic)o).value as JToken;
+                    return value.ToObject<CTest>();
+                })
+            //.WithCustomNodeSelector(o => o["id"].CastTo<int>() > 0 ? o : null)
+            )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+        [Test]
+        public static void JSON2DataTable2()
         {
             string json = @"{
-    ""data"": {
-        ""utime"": ""2020-07-22 16:02:39.628"",
-        ""record"": [
-            {
-                ""samt"": 0.0,
-                ""itms"": [
-                    {
-                        ""num"": 1.0,
-                        ""itm_det"": {
-                            ""samt"": 0.0,
-                            ""csamt"": 0.5,
-                            ""rt"": 18.0,
-                            ""txval"": 15000.0,
-                            ""camt"": 0.0,
-                            ""iamt"": 2700.0
-                        }
-                    }
-                ],
-                ""val"": 20000.01,
-                ""txval"": 15000.0,
-                ""camt"": 0.0,
-                ""inum"": ""Manjusha-GSTR1"",
-                ""iamt"": 2700.0,
-                ""csamt"": 0.5,
-                ""inv_typ"": ""R"",
-                ""pos"": ""12"",
-                ""idt"": ""16-07-2017"",
-                ""rchrg"": ""N"",
-                ""chksum"": ""23bd7b0296c66900d9b89a7af16facf08bd68a9aa7e0ddb7c7f9aa8d5dd1431e"",
-                ""ctin"": ""27GSPMH0781G1ZK"",
-                ""cfs"": ""Y""
+  ""data"": {
+    ""utime"": ""2020-07-22 16:02:39.628"",
+    ""record"": [
+      {
+        ""samt"": 0.0,
+        ""itms"": [
+          {
+            ""num"": 1.0,
+            ""itm_det"": {
+              ""samt"": 0.0,
+              ""csamt"": 0.5,
+              ""rt"": 18.0,
+              ""txval"": 15000.0,
+              ""camt"": 0.0,
+              ""iamt"": 2700.0
             }
+          }
         ],
-        ""ttl_record"": 8,
-        ""fp"": ""062018"",
-        ""gstin"": ""33AIYPV3847J1ZC""
-    },
-    ""meta"": {
-        ""form"": ""6a"",
-        ""level"": ""L2"",
-        ""fp"": ""062018"",
-        ""section"": ""b2b"",
-        ""gstin"": ""33AIYPV3847J1ZC"",
-        ""flush"": ""false""
-    }
+        ""val"": 20000.01,
+        ""txval"": 15000.0,
+        ""camt"": 0.0,
+        ""inum"": ""Manjusha-GSTR1"",
+        ""iamt"": 2700.0,
+        ""csamt"": 0.5,
+        ""inv_typ"": ""R"",
+        ""pos"": ""12"",
+        ""idt"": ""16-07-2017"",
+        ""rchrg"": ""N"",
+        ""chksum"": ""23bd7b0296c66900d9b89a7af16facf08bd68a9aa7e0ddb7c7f9aa8d5dd1431e"",
+        ""ctin"": ""27GSPMH0781G1ZK"",
+        ""cfs"": ""Y""
+      }
+    ],
+    ""ttl_record"": 8,
+    ""fp"": ""062018"",
+    ""gstin"": ""33AIYPV3847J1ZC""
+  },
+  ""meta"": {
+    ""form"": ""6a"",
+    ""level"": ""L2"",
+    ""fp"": ""062018"",
+    ""section"": ""b2b"",
+    ""gstin"": ""33AIYPV3847J1ZC"",
+    ""flush"": ""false""
+  }
 }";
-
+            string expected = @"[
+  {
+    ""data_utime"": ""2020-07-22 16:02:39.628"",
+    ""data_record_0_samt"": 0.0,
+    ""data_record_0_itms_0_num"": 1.0,
+    ""data_record_0_itms_0_itm_det_samt"": 0.0,
+    ""data_record_0_itms_0_itm_det_csamt"": 0.5,
+    ""data_record_0_itms_0_itm_det_rt"": 18.0,
+    ""data_record_0_itms_0_itm_det_txval"": 15000.0,
+    ""data_record_0_itms_0_itm_det_camt"": 0.0,
+    ""data_record_0_itms_0_itm_det_iamt"": 2700.0,
+    ""data_record_0_val"": 20000.01,
+    ""data_record_0_txval"": 15000.0,
+    ""data_record_0_camt"": 0.0,
+    ""data_record_0_inum"": ""Manjusha-GSTR1"",
+    ""data_record_0_iamt"": 2700.0,
+    ""data_record_0_csamt"": 0.5,
+    ""data_record_0_inv_typ"": ""R"",
+    ""data_record_0_pos"": ""12"",
+    ""data_record_0_idt"": ""16-07-2017"",
+    ""data_record_0_rchrg"": ""N"",
+    ""data_record_0_chksum"": ""23bd7b0296c66900d9b89a7af16facf08bd68a9aa7e0ddb7c7f9aa8d5dd1431e"",
+    ""data_record_0_ctin"": ""27GSPMH0781G1ZK"",
+    ""data_record_0_cfs"": ""Y"",
+    ""data_ttl_record"": 8,
+    ""data_fp"": ""062018"",
+    ""data_gstin"": ""33AIYPV3847J1ZC"",
+    ""meta_form"": ""6a"",
+    ""meta_level"": ""L2"",
+    ""meta_fp"": ""062018"",
+    ""meta_section"": ""b2b"",
+    ""meta_gstin"": ""33AIYPV3847J1ZC"",
+    ""meta_flush"": ""false""
+  }
+]";
             var dt = ChoJSONReader.LoadText(json).AsDataTable();
-            dt.Print();
+
+            var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
 
-        public class GeographyPoint
+        public struct GeographyPoint
         {
             public int Latitude { get; }
             public int Longitude { get; }
 
+            [JsonConstructor]
             public GeographyPoint(int lat, int lon)
             {
                 Latitude = lat;
@@ -3595,7 +4777,7 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
-                return new GeographyPoint(1, 1);
+                return new GeographyPoint((int)((JObject)value)["Latitude"], (int)((JObject)value)["Longitude"]);
             }
 
             public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -3603,7 +4785,8 @@ K,L,M,N,O,P,Q,R,S,T";
                 throw new NotImplementedException();
             }
         }
-        static void CustomObjectInstance()
+        [Test]
+        public static void CustomObjectInstance_1()
         {
             string json = @"{
     ""Id"": ""123"",
@@ -3613,25 +4796,109 @@ K,L,M,N,O,P,Q,R,S,T";
       }
   }";
 
-            //ChoActivator.Factory = (t, args) =>
-            //{
-            //    if (t == typeof(GeographyPoint))
-            //        return new GeographyPoint(0, 0);
-            //    else
-            //        return null;
-            //};
-
+            string expected = @"[
+  {
+    ""Id"": ""123"",
+    ""Location"": {
+      ""Latitude"": 1,
+      ""Longitude"": -1
+    }
+  }
+]";
             using (var r = ChoJSONReader<LookUpData>.LoadText(json)
                 //.WithField(f => f.Id)
                 //.WithField(f => f.Location, customSerializer: o => o)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-        static void ProgramaticSetup()
+        public class LookUpData2
+        {
+            [DataMember]
+            public string Id { get; set; }
+            [DataMember]
+            public GeographyPoint Location { get; set; }
+        }
+        [Test]
+        public static void CustomObjectInstance_2()
+        {
+            string json = @"{
+    ""Id"": ""123"",
+    ""Location"": {
+      ""Latitude"": 1,
+      ""Longitude"": -1,
+      }
+  }";
+
+            string expected = @"[
+  {
+    ""Id"": ""123"",
+    ""Location"": {
+      ""Latitude"": 1,
+      ""Longitude"": -1
+    }
+  }
+]";
+            using (var r = ChoJSONReader<LookUpData2>.LoadText(json)
+                .WithField(f => f.Id)
+                .WithField(f => f.Location, customSerializer: o => new GeographyPoint((int)((JObject)o)["Latitude"], (int)((JObject)o)["Longitude"]))
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        public class LookUpData3
+        {
+            [DataMember]
+            public string Id { get; set; }
+            [DataMember]
+            public GeographyPoint3 Location { get; set; }
+        }
+        public struct GeographyPoint3
+        {
+            public int Latitude { get; set; }
+            public int Longitude { get; set; }
+
+            public GeographyPoint3(int lat, int lon)
+            {
+                Latitude = lat;
+                Longitude = lon;
+            }
+        }
+        [Test]
+        public static void CustomObjectInstance_3()
+        {
+            string json = @"{
+    ""Id"": ""123"",
+    ""Location"": {
+      ""Latitude"": 1,
+      ""Longitude"": -1,
+      }
+  }";
+
+            string expected = @"[
+  {
+    ""Id"": ""123"",
+    ""Location"": {
+      ""Latitude"": 1,
+      ""Longitude"": -1
+    }
+  }
+]";
+            using (var r = ChoJSONReader<LookUpData3>.LoadText(json)
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+        [Test]
+        public static void ProgramaticSetup()
         {
             string json = @"{
    ""getUsers"":[
@@ -3667,6 +4934,9 @@ K,L,M,N,O,P,Q,R,S,T";
       }
    ]
 }";
+            string expected = @"Id,FirstName,UserType,primaryState,otherState_0,otherState_1,createdAt
+1111122,*****1,CP,MA,MA,BA,2019-04-21 08:57:53
+3333,*****3,CPP,MPA,KL,TN,";
 
             StringBuilder csv = new StringBuilder();
 
@@ -3676,7 +4946,9 @@ K,L,M,N,O,P,Q,R,S,T";
 
             config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("Id"));
             config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("FirstName"));
-            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("UserType", "$.UserType.name"));
+            var userTypeRC = new ChoJSONRecordFieldConfiguration("UserType", "$.UserType.name");
+            userTypeRC.IsArray = false;
+            config.JSONRecordFieldConfigurations.Add(userTypeRC);
             config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("primaryState"));
             config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("otherState", "$.otherState[*]") { FieldType = typeof(string[]) });
             config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("createdAt"));
@@ -3684,14 +4956,14 @@ K,L,M,N,O,P,Q,R,S,T";
             using (var r = ChoJSONReader.LoadText(json, config))
             {
                 using (var w = new ChoCSVWriter(csv).WithFirstLineHeader()
-                    .UseNestedKeyFormat(false)
+                    .UseNestedKeyFormat(true)
                     )
                     w.Write(r);
             }
 
             Console.WriteLine(csv.ToString());
-
-
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class InsertIntoDbEntity
@@ -3710,7 +4982,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public Dictionary<string, string> columnsValues { get; set; }
         }
 
-        static void JSONTest1()
+        [Test]
+        public static void JSONTest1()
         {
             string json = @"{
     ""tableName"": ""ApiTestTbl"",
@@ -3719,7 +4992,17 @@ K,L,M,N,O,P,Q,R,S,T";
         ""column2"": ""value2""
     }
 }";
-
+            string expected = @"[
+  {
+    ""tableName"": ""ApiTestTbl"",
+    ""columnsValues"": {
+      ""columnsValues"": {
+        ""test1"": ""value1"",
+        ""column2"": ""value2""
+      }
+    }
+  }
+]";
             var config = new ChoJSONRecordConfiguration<InsertIntoDbEntity>();
             config.Map(f => f.tableName);
             config.Map(f => f.columnsValues.columnsValues, "$..columnsValues");
@@ -3728,12 +5011,12 @@ K,L,M,N,O,P,Q,R,S,T";
                 //.WithField(f => f.columnsValues.columnsValues, jsonPath: "$..columnsValues")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void JSON2CSV2()
+        [Test]
+        public static void JSON2CSV2()
         {
             string json = @"{
 ""GpsLocation"": {
@@ -3755,13 +5038,15 @@ K,L,M,N,O,P,Q,R,S,T";
         ]
     }
 }";
-
+            string expected = @"EquipmentId,InquiryValue,Timestamp
+EQ00001,IV00001,2/1/2020
+EQ00002,IV00002,1/1/2020";
             StringBuilder csv = new StringBuilder();
 
             using (var r = ChoJSONReader.LoadText(json)
                 .WithJSONPath("$.GpsLocation.Equipment")
                 .WithField("EquipmentId")
-                .WithField("InquiryValue", jsonPath: "InquiryValue[0]")
+                .WithField("InquiryValue", jsonPath: "InquiryValue[0]", isArray: false)
                 .WithField("Timestamp", fieldType: typeof(DateTime))
                 )
             {
@@ -3770,6 +5055,8 @@ K,L,M,N,O,P,Q,R,S,T";
                     w.Write(r);
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class OrderSystem
@@ -3831,9 +5118,15 @@ K,L,M,N,O,P,Q,R,S,T";
             [JsonProperty("order")]
             public List<Order> Orders { get; set; }
         }
-
-        static void Sample55Test1()
+        [Test]
+        public static void Sample55Test1()
         {
+            string expected = @"Created;By;Id;OrderID;OrderName;Size;ProductName;ProductId
+2021-08-01T13:33:37.123Z;web;100;22;Soda;33;Coke;999
+2021-08-01T13:33:37.123Z;web;100;22;Soda;66;Fanta;888
+2021-08-01T13:33:37.123Z;web;100;22;Soda;50;Pepsi;444
+2021-08-01T13:33:37.123Z;web;100;23;Beverage;44;Coke;999";
+
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader<OrderRoot>("sample55.json")
                 .UseJsonSerialization()
@@ -3863,9 +5156,18 @@ K,L,M,N,O,P,Q,R,S,T";
                 }
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-        static void Sample55Test2()
+        [Test]
+        public static void Sample55Test2()
         {
+            string expected = @"created;by;id;country;OrderID;OrderName;Size;ProductName;ProductId
+8/1/2021 1:33:37 PM;web;100;DE;22;Soda;33;Coke;999
+8/1/2021 1:33:37 PM;web;100;DE;22;Soda;66;Fanta;888
+8/1/2021 1:33:37 PM;web;100;DE;22;Soda;50;Pepsi;444
+8/1/2021 1:33:37 PM;web;100;DE;23;Beverage;44;Coke;999";
+
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader("sample55.json")
                 .WithField("created", jsonPath: "$..system.created", isArray: false, fieldType: typeof(string))
@@ -3878,6 +5180,7 @@ K,L,M,N,O,P,Q,R,S,T";
                 .WithField("ProductName")
                 .WithField("ProductId")
                 .Configure(c => c.FlattenNode = true)
+                .Configure(c => c.UseNestedKeyFormat = false)
                 )
             {
                 using (var w = new ChoCSVWriter(csv)
@@ -3888,10 +5191,17 @@ K,L,M,N,O,P,Q,R,S,T";
                 }
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void Sample55Test()
+        [Test]
+        public static void Sample55Test()
         {
+            string expected = @"created;by;id;OrderID;OrderName;Size;ProductName;ProductId
+2021-08-01T01:33:37.123Z;web;100;22;Soda;33;Coke;999
+2021-08-01T01:33:37.123Z;web;100;22;Soda;66;Fanta;888
+2021-08-01T01:33:37.123Z;web;100;22;Soda;50;Pepsi;444
+2021-08-01T01:33:37.123Z;web;100;23;Beverage;44;Coke;999";
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader("sample55.json"))
             {
@@ -3901,7 +5211,7 @@ K,L,M,N,O,P,Q,R,S,T";
                 {
                     w.Write(r.SelectMany(root =>
                         ((Array)root.order).Cast<dynamic>()
-                        .SelectMany(order => ((Array)order.OrderArticles).Cast<dynamic>()
+                        .SelectMany(order => ((IList)order.OrderArticles).Cast<dynamic>()
                         .Select(orderarticle => new
                         {
                             created = ((DateTime)root.system.created).ToString("yyyy-MM-ddThh:mm:ss.fffZ"),
@@ -3919,10 +5229,19 @@ K,L,M,N,O,P,Q,R,S,T";
                 }
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void Sample42Test()
+        [Test]
+        public static void Sample42Test()
         {
+            string expected = @"Comment|File_Version|File_FileTransfer_CreateDate|Data_0_DataID|Data_0_Process_StartDate|Data_0_Process_Detail_Type|Data_0_Process_Detail_Result_Success|Data_0_Process_Detail_Result_ExamineBy|Data_0_Process_Detail_Execution_0_Description|Data_0_Process_Detail_Execution_0_ExcecuteBy
+this is json file.|1.0|10-08-2020|A50000|01-07-2020|C|True|Desmond||Alice
+this is json file.|1.0|10-08-2020|A50000|01-07-2020|D|False|Desmond|description here|Alice
+this is json file.|1.0|10-08-2020|A50000|02-07-2020|G|True|Dan||Alice
+this is json file.|1.0|10-08-2020|A50000|02-07-2020|H|True|Dan|description here|Alice
+this is json file.|1.0|10-08-2020|A50000|02-07-2020|J|False|Dan|description here|Alice";
+
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader("sample42.json"))
             {
@@ -3932,8 +5251,8 @@ K,L,M,N,O,P,Q,R,S,T";
                 {
                     w.Write(r.SelectMany(r1 =>
                         ((Array)r1.Data).Cast<dynamic>()
-                        .SelectMany(d => ((Array)d.Process).Cast<dynamic>()
-                        .SelectMany(p => ((Array)p.Detail).Cast<dynamic>()
+                        .SelectMany(d => ((IList)d.Process).Cast<dynamic>()
+                        .SelectMany(p => ((IList)p.Detail).Cast<dynamic>()
                         .Select(d1 => new
                         {
                             r1.Comment,
@@ -3949,6 +5268,8 @@ K,L,M,N,O,P,Q,R,S,T";
                 }
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
         public class CreateRequest
         {
@@ -3965,8 +5286,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public string refe { get; set; }
             public string org_id { get; set; }
         }
-
-        static void DesrializeSelectiveNode()
+        [Test]
+        public static void DesrializeSelectiveNode()
         {
             string json = @"{
     ""objects"": {
@@ -3982,12 +5303,24 @@ K,L,M,N,O,P,Q,R,S,T";
         }
     }
 }";
+            string expected = @"[
+  {
+    ""code"": 1,
+    ""message"": ""created"",
+    ""class"": ""UserRequest"",
+    ""key"": ""567"",
+    ""fields"": {
+      ""ref"": ""R-000567"",
+      ""org_id"": ""4""
+    }
+  }
+]";
             using (var r = ChoJSONReader<CreateRequest>.LoadText(json)
                 .WithJSONPath("$.objects.*", true)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -4007,7 +5340,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public double[] Coords { get; set; }
         }
 
-        static void DesrializeMoreThanOneType1()
+        [Test]
+        public static void DesrializeMoreThanOneType1()
         {
             string polyJson = @"{
   ""geom"": {
@@ -4039,6 +5373,32 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 }
 ";
+            string expected = @"{
+  ""coordinates"": [
+    [
+      [
+        0.076660215854644789,
+        51.493317986323937
+      ],
+      [
+        0.077078640460968031,
+        51.49337476490021
+      ],
+      [
+        0.077175199985504164,
+        51.493154330032041
+      ],
+      [
+        0.076767504215240492,
+        51.493090871311793
+      ],
+      [
+        0.076660215854644789,
+        51.493317986323937
+      ]
+    ]
+  ]
+}";
             var config = new ChoJSONRecordConfiguration()
                 .Configure(c => c.JSONPath = "$.geom")
                 .Configure(c => c.SupportsMultiRecordTypes = true)
@@ -4057,6 +5417,20 @@ K,L,M,N,O,P,Q,R,S,T";
             object rec = ChoJSONReader.DeserializeText(polyJson, null, config).FirstOrDefault();
             Console.WriteLine(rec.Dump());
 
+            var actual = JsonConvert.SerializeObject(rec, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void DesrializeMoreThanOneType2()
+        {
+            string expected = @"{
+  ""coordinates"": [
+    -0.00203667,
+    51.51020028
+  ]
+}";
+
             string pointJson = @"{
     ""geom"": {
         ""coordinates"": [
@@ -4066,12 +5440,25 @@ K,L,M,N,O,P,Q,R,S,T";
         ""type"": ""Point""
     }
 }";
+            var config = new ChoJSONRecordConfiguration()
+                .Configure(c => c.JSONPath = "$.geom")
+                .Configure(c => c.SupportsMultiRecordTypes = true)
+                .Configure(c => c.RecordTypeSelector = o =>
+                {
+                    var tuple = o as Tuple<long, JObject>;
+                    var jObj = tuple.Item2;
 
-            rec = ChoJSONReader.DeserializeText(pointJson, null, config).FirstOrDefault();
-            Console.WriteLine(rec.Dump());
+                    if (jObj["type"].ToString() == "Polygon")
+                        return typeof(Polygon);
+                    else
+                        return typeof(Point);
+                })
+                ;
 
+            var rec = ChoJSONReader.DeserializeText(pointJson, null, config).FirstOrDefault();
+            var actual = JsonConvert.SerializeObject(rec, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
-
         public class Geom
         {
             //[JsonProperty("coordinates")]
@@ -4080,8 +5467,8 @@ K,L,M,N,O,P,Q,R,S,T";
             [JsonProperty("type")]
             public string Type { get; set; }
         }
-
-        static void DesrializeMoreThanOneType()
+        [Test]
+        public static void DesrializeMoreThanOneType3()
         {
             string polyJson = @"{
   ""geom"": {
@@ -4113,6 +5500,22 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 }
 ";
+
+            string expected = @"{
+  ""Coords"": [
+    0.076660215854644789,
+    51.493317986323937,
+    0.077078640460968031,
+    51.49337476490021,
+    0.077175199985504164,
+    51.493154330032041,
+    0.076767504215240492,
+    51.493090871311793,
+    0.076660215854644789,
+    51.493317986323937
+  ],
+  ""type"": ""Polygon""
+}";
             var config = new ChoJSONRecordConfiguration<Geom>()
                 .Configure(c => c.JSONPath = "$.geom")
                 .Map(f => f.Coords, m => m.CustomSerializer(o =>
@@ -4129,6 +5532,66 @@ K,L,M,N,O,P,Q,R,S,T";
                 ;
             object rec = ChoJSONReader.DeserializeText<Geom>(polyJson, null, config).FirstOrDefault();
             Console.WriteLine(rec.Dump());
+            var actual = JsonConvert.SerializeObject(rec, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void DesrializeMoreThanOneType4()
+        {
+            string polyJson = @"{
+  ""geom"": {
+    ""coordinates"": [
+      [
+        [
+          0.07666021585464479,
+          51.49331798632394
+        ],
+        [
+          0.07707864046096803,
+          51.49337476490021
+        ],
+        [
+          0.07717519998550416,
+          51.49315433003204
+        ],
+        [
+          0.07676750421524049,
+          51.49309087131179
+        ],
+        [
+          0.07666021585464479,
+          51.49331798632394
+        ]
+      ]
+    ],
+    ""type"": ""Polygon""
+  }
+}
+";
+
+            string expected = @"{
+  ""Coords"": [
+    -0.00203667,
+    51.51020028
+  ],
+  ""type"": ""Point""
+}";
+            var config = new ChoJSONRecordConfiguration<Geom>()
+                .Configure(c => c.JSONPath = "$.geom")
+                .Map(f => f.Coords, m => m.CustomSerializer(o =>
+                {
+                    var jObj = o as JObject;
+                    var type = jObj["type"].ToString();
+
+                    if (type == "Polygon")
+                        return jObj["coordinates"].ToObject<double[][][]>().SelectMany(x1 => x1.SelectMany(x2 => x2)).ToArray();
+                    else
+                        return jObj["coordinates"].ToObject<double[]>();
+                })
+                    )
+                ;
+
 
             string pointJson = @"{
     ""geom"": {
@@ -4140,11 +5603,10 @@ K,L,M,N,O,P,Q,R,S,T";
     }
 }";
 
-            rec = ChoJSONReader.DeserializeText<Geom>(pointJson, null, config).FirstOrDefault();
-            Console.WriteLine(rec.Dump());
-
+            var rec = ChoJSONReader.DeserializeText<Geom>(pointJson, null, config).FirstOrDefault();
+            var actual = JsonConvert.SerializeObject(rec, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
-
         public class StaticCar
         {
             public static StaticCar Instance = new StaticCar();
@@ -4158,8 +5620,8 @@ K,L,M,N,O,P,Q,R,S,T";
 
             }
         }
-
-        static void StaticClassSerialization()
+        [Test]
+        public static void StaticClassSerialization()
         {
             string carJson = @"
     [
@@ -4174,13 +5636,27 @@ K,L,M,N,O,P,Q,R,S,T";
             ""Brand"": ""BMW""
         }
     ]";
-            ChoActivator.Factory = (t, args) =>
-            {
-                return StaticCar.Instance;
-            };
-
+            string expected1 = @"{
+  ""Id"": 1,
+  ""Name"": ""Polo"",
+  ""Brand"": ""Volkswagen""
+}";
+            string expected2 = @"{
+  ""Id"": 2,
+  ""Name"": ""328"",
+  ""Brand"": ""BMW""
+}";
+            int index = 0;
             foreach (var c in ChoJSONReader.DeserializeText(carJson).Select(o => o.ConvertToObject(typeof(StaticCar))))
-                Console.WriteLine(ChoUtility.Dump(c));
+            {
+                var actual = JsonConvert.SerializeObject(c, Newtonsoft.Json.Formatting.Indented);
+                if (index == 0)
+                    Assert.AreEqual(expected1, actual);
+                else
+                    Assert.AreEqual(expected2, actual);
+
+                index++;
+            }
         }
 
         public class Item1
@@ -4190,8 +5666,8 @@ K,L,M,N,O,P,Q,R,S,T";
             [ChoJSONPath("$.Value.[1][0]")]
             public string Value { get; set; }
         }
-
-        static void DeseializeArrayToObjects()
+        [Test]
+        public static void DeseializeArrayToObjects()
         {
             string json = @"[
   [
@@ -4213,9 +5689,27 @@ K,L,M,N,O,P,Q,R,S,T";
     ]
   ]
 ]";
-            var recs = ChoJSONReader.DeserializeText<Item1>(json);
+            string expected = @"[
+  {
+    ""Key"": ""NameA"",
+    ""Value"": ""AAA""
+  },
+  {
+    ""Key"": ""NameB"",
+    ""Value"": ""BBB""
+  },
+  {
+    ""Key"": ""NameC"",
+    ""Value"": ""CCC""
+  }
+]";
+            var recs = ChoJSONReader.DeserializeText<Item1>(json).ToArray();
             foreach (var rec in recs)
                 Console.WriteLine(rec.Dump());
+
+            var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
+            return;
 
             using (var r = ChoJSONReader<Item1>.LoadText(json)
                 )
@@ -4251,8 +5745,8 @@ K,L,M,N,O,P,Q,R,S,T";
             [ChoJSONPath("row_count")]
             public int RowCount { get; set; }
         }
-
-        static void DeserializeInnerArrayToObjects()
+        [Test]
+        public static void DeserializeInnerArrayToObjects1()
         {
             string json = @"{
 ""database_id"": 9,
@@ -4276,22 +5770,242 @@ K,L,M,N,O,P,Q,R,S,T";
     ]
   }
 }";
-
+            string expected = @"[
+  {
+    ""DbRows"": [
+      {
+        ""Item1"": ""242376_dpi65990"",
+        ""Item2"": ""ppo"",
+        ""Item3"": ""8/1/2020 12:00:00 AM"",
+        ""Item4"": 8,
+        ""Item5"": 8
+      },
+      {
+        ""Item1"": ""700328_dpi66355"",
+        ""Item2"": ""ppo"",
+        ""Item3"": ""8/1/2020 12:00:00 AM"",
+        ""Item4"": 9,
+        ""Item5"": 6
+      }
+    ],
+    ""DbId"": 9,
+    ""RowCount"": 2
+  }
+]";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader<DbObject>.LoadText(json)
                 //.WithField(f => f.DbRows, m => m.Configure(c  => c.UseJSONSerialization = true))
                 //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)).Configure(c => c.JSONPath = "data.rows[*]"))
                 )
             {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
                 //foreach (var rec in r)
                 //    Console.WriteLine(rec.Dump());
                 //return;
-                using (var w = new ChoJSONWriter<DbObject>(Console.Out)
+                //using (var w = new ChoJSONWriter<DbObject>(jsonOut)
+                //    //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
+                //    )
+                //    w.Write(r);
+            }
+
+        }
+
+        public class DbObject2
+        {
+            [ChoJSONPath("data.rows[*]")]
+            public DbRowObject[] DbRows { get; set; }
+            [ChoJSONPath("database_id")]
+            public int DbId { get; set; }
+            [ChoJSONPath("row_count")]
+            public int RowCount { get; set; }
+        }
+        [Test]
+        public static void DeserializeInnerArrayToObjects2()
+        {
+            string json = @"{
+""database_id"": 9,
+""row_count"": 2,
+""data"": {
+    ""rows"": [
+        [
+            ""242376_dpi65990"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            8,
+            8
+        ],
+        [
+            ""700328_dpi66355"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            9,
+            6
+        ]
+    ]
+  }
+}";
+            string expected = @"[
+  {
+    ""DbRows"": [
+      {
+        ""Item1"": ""242376_dpi65990"",
+        ""Item2"": ""ppo"",
+        ""Item3"": ""8/1/2020 12:00:00 AM"",
+        ""Item4"": 8,
+        ""Item5"": 8
+      },
+      {
+        ""Item1"": ""700328_dpi66355"",
+        ""Item2"": ""ppo"",
+        ""Item3"": ""8/1/2020 12:00:00 AM"",
+        ""Item4"": 9,
+        ""Item5"": 6
+      }
+    ],
+    ""DbId"": 9,
+    ""RowCount"": 2
+  }
+]";
+            StringBuilder jsonOut = new StringBuilder();
+            using (var r = ChoJSONReader<DbObject2>.LoadText(json)
+                //.WithField(f => f.DbRows, m => m.Configure(c  => c.UseJSONSerialization = true))
+                .WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)).Configure(c => c.JSONPath = "data.rows[*]"))
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                //return;
+                //using (var w = new ChoJSONWriter<DbObject>(jsonOut)
+                //    //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
+                //    )
+                //    w.Write(r);
+            }
+
+        }
+        [Test]
+        public static void DeserializeInnerArrayToObjects3()
+        {
+            string json = @"{
+""database_id"": 9,
+""row_count"": 2,
+""data"": {
+    ""rows"": [
+        [
+            ""242376_dpi65990"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            8,
+            8
+        ],
+        [
+            ""700328_dpi66355"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            9,
+            6
+        ]
+    ]
+  }
+}";
+            string expected = @"[
+  {
+    ""DbRows"": [
+      [
+        ""242376_dpi65990"",
+        ""ppo"",
+        ""8/1/2020 12:00:00 AM"",
+        8,
+        8
+      ],
+      [
+        ""700328_dpi66355"",
+        ""ppo"",
+        ""8/1/2020 12:00:00 AM"",
+        9,
+        6
+      ]
+    ],
+    ""DbId"": 9,
+    ""RowCount"": 2
+  }
+]";
+            StringBuilder jsonOut = new StringBuilder();
+            using (var r = ChoJSONReader<DbObject>.LoadText(json)
+                )
+            {
+                using (var w = new ChoJSONWriter<DbObject>(jsonOut)
                     //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
                     )
                     w.Write(r);
             }
-        }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
 
+        }
+        [Test]
+        public static void DeserializeInnerArrayToObjects4()
+        {
+            string json = @"{
+""database_id"": 9,
+""row_count"": 2,
+""data"": {
+    ""rows"": [
+        [
+            ""242376_dpi65990"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            8,
+            8
+        ],
+        [
+            ""700328_dpi66355"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            9,
+            6
+        ]
+    ]
+  }
+}";
+            string expected = @"[
+  {
+    ""DbRows"": [
+      [
+        ""242376_dpi65990"",
+        ""ppo"",
+        ""8/1/2020 12:00:00 AM"",
+        8,
+        8
+      ],
+      [
+        ""700328_dpi66355"",
+        ""ppo"",
+        ""8/1/2020 12:00:00 AM"",
+        9,
+        6
+      ]
+    ],
+    ""DbId"": 9,
+    ""RowCount"": 2
+  }
+]";
+            StringBuilder jsonOut = new StringBuilder();
+            using (var r = ChoJSONReader<DbObject2>.LoadText(json)
+                .WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)).Configure(c => c.SourceType = typeof(object[])))
+                )
+            {
+                using (var w = new ChoJSONWriter<DbObject2>(jsonOut)
+                    .WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)).Configure(c => c.SourceType = typeof(object[])))
+                    )
+                    w.Write(r);
+            }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
+
+        }
         public class Data
         {
             public int Sts { get; set; }
@@ -4311,8 +6025,8 @@ K,L,M,N,O,P,Q,R,S,T";
             public string SKUId { get; set; }
             public int Q { get; set; }
         }
-
-        static void DesrializeSomeMembersToCollection()
+        [Test]
+        public static void DesrializeSomeMembersToCollection()
         {
             string json = @"{
   ""Sts"": 1,
@@ -4336,30 +6050,57 @@ K,L,M,N,O,P,Q,R,S,T";
     ""Q"": 1
   }
 }";
-
+            string expected = @"[
+  {
+    ""Sts"": 1,
+    ""TMtd"": 2,
+    ""SId"": 215,
+    ""T"": 1599453168,
+    ""CCSr"": 98972,
+    ""TId"": 492,
+    ""UId"": 1687,
+    ""NPro"": 3,
+    ""PValues"": [
+      {
+        ""SKUId"": ""006920180209601"",
+        ""Q"": 1
+      },
+      {
+        ""SKUId"": ""006954767430522"",
+        ""Q"": 1
+      },
+      {
+        ""SKUId"": ""006954767410623"",
+        ""Q"": 1
+      }
+    ]
+  }
+]";
             using (var r = ChoJSONReader<Data>.LoadText(json)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
 
         public class Data1
         {
-            //public int Sts { get; set; }
-            //public int TMtd { get; set; }
-            //public int SId { get; set; }
-            //public int T { get; set; }
-            //public int CCSr { get; set; }
-            //public int TId { get; set; }
-            //public int UId { get; set; }
-            //public int NPro { get; set; }
+            public int Sts { get; set; }
+            public int TMtd { get; set; }
+            public int SId { get; set; }
+            public int T { get; set; }
+            public int CCSr { get; set; }
+            public int TId { get; set; }
+            public int UId { get; set; }
+            public int NPro { get; set; }
             public List<Element> P1 { get; set; }
         }
-
-        static void DesrializeListOrObject()
+        [Test]
+        public static void DesrializeListOrObject()
         {
             string json = @"{
   ""P1"":[],
@@ -4372,17 +6113,35 @@ K,L,M,N,O,P,Q,R,S,T";
   ""UId"": 1687,
   ""NPro"": 3,
 }";
-
+            string expected = @"[
+  {
+    ""Sts"": 1,
+    ""TMtd"": 2,
+    ""SId"": 215,
+    ""T"": 1599453168,
+    ""CCSr"": 98972,
+    ""TId"": 492,
+    ""UId"": 1687,
+    ""NPro"": 3,
+    ""P1"": []
+  }
+]";
             using (var r = ChoJSONReader<Data1>.LoadText(json)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
         public class Location1
         {
+            public Location1()
+            {
+                Locations = new LocationList();
+            }
             public string Name { get; set; }
             public LocationList Locations { get; set; }
         }
@@ -4397,12 +6156,17 @@ K,L,M,N,O,P,Q,R,S,T";
 
         public class RootViewModel
         {
+            public RootViewModel()
+            {
+                RootLocations = new LocationList();
+            }
+
             public string Test { get; set; }
             [JsonProperty("RootLocations")]
             public LocationList RootLocations { get; set; }
         }
-
-        static void DeserializeNestedObjectOfList()
+        [Test]
+        public static void DeserializeNestedObjectOfList()
         {
             string json = @"{
     ""Test"": ""x"",
@@ -4411,7 +6175,7 @@ K,L,M,N,O,P,Q,R,S,T";
     ""Locations"": [
       {
         ""Name"": ""Main Residence"",
-        ""Locations"": {
+        ""Locations"": [{
           ""IsExpanded"": false,
           ""Locations"": [
             {
@@ -4419,61 +6183,109 @@ K,L,M,N,O,P,Q,R,S,T";
               ""Locations"": null
             }
           ]
-        }
+        }]
       }
     ]
   }
 }";
+            string expected = @"[
+  {
+    ""Test"": ""x"",
+    ""RootLocations"": [
+      {
+        ""Name"": ""Main Residence"",
+        ""Locations"": [
+          {
+            ""Name"": null,
+            ""Locations"": [
+              {
+                ""Name"": ""First Floor"",
+                ""Locations"": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]";
             ChoJSONRecordConfiguration config = new ChoJSONRecordConfiguration();
             config.JsonSerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 
             using (var r = ChoJSONReader<RootViewModel>.LoadText(json, config)
+                .Configure(c => c.MapRecordFieldsForType<LocationList>())
+                .Configure(c => c.MapRecordFieldsForType<Location1>())
                               .RegisterNodeConverterForType<LocationList>(s =>
                               {
                                   dynamic input = s as dynamic;
-                                  var reader = input.reader;
+                                  /*
                                   var serializer = input.serializer;
+                                  IDictionary<string, object> dict = input as IDictionary<string, object>;
 
                                   var locationList = new LocationList();
-                                  var jLocationList = ((JToken[])input.value)[0] as JObject;
 
-                                  try
+                                  JObject jLocationList = null;
+                                  if (!dict.ContainsKey("value"))
                                   {
-                                      locationList.IsExpanded = (bool)(jLocationList["IsExpanded"] ?? false);
-                                      var jLocations = jLocationList["Locations"] as JArray;
-                                      if (jLocations != null)
-                                      {
-                                          locationList.AddRange(jLocations.ToObject<List<Location1>>());
+                                      JsonReader reader = input.reader as JsonReader;
 
-                                          //foreach (var jLocation in jLocations)
-                                          //{
-                                          //    var location = jLocation.ToObject<Location>();// serializer.Deserialize<Location>(new JTokenReader(jLocation));
-                                          //    locationList.Add(location);
-                                          //}
+                                      if (reader.TokenType == JsonToken.StartArray)
+                                      {
+                                          var jarr = JArray.Load(input.reader) as JArray;
+                                          jLocationList = jarr.FirstOrDefault() as JObject;
                                       }
                                   }
-                                  catch { return null; }
+                                  else
+                                      jLocationList = ((JToken[])input.value)[0] as JObject;
+                                  */
+                                  var locationList = new LocationList();
+                                  JObject jLocationList = ((JToken[])input)[0] as JObject;
+                                  if (jLocationList != null)
+                                  {
+                                      try
+                                      {
+                                          locationList.IsExpanded = (bool)(jLocationList["IsExpanded"] ?? false);
+                                          var jLocations = jLocationList["Locations"] as JArray;
+                                          if (jLocations != null)
+                                          {
+                                              locationList.AddRange(jLocations.ToObject<List<Location1>>(/*serializer*/));
+
+                                              //foreach (var jLocation in jLocations)
+                                              //{
+                                              //    var location = jLocation.ToObject<Location>();// serializer.Deserialize<Location>(new JTokenReader(jLocation));
+                                              //    locationList.Add(location);
+                                              //}
+                                          }
+                                      }
+                                      catch { return null; }
+                                  }
 
                                   return locationList;
                               }))
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
         }
-
-        static void BigIntTest()
+        [Test]
+        public static void BigIntTest()
         {
             string json = @"[{ ""column_one"": ""value"", ""column_two"": 200, ""column_three"": 3000000000, ""column_four"": ""value_2"" }]";
 
+            string expected = @"column_one,column_two,column_three,column_four
+value,200,3000000000,value_2";
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json)
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
                 {
                     if (e.PropertyName == "column_three")
                     {
-                        e.Source = (int)((JValue)e.Source).Value;
+                        e.Source = (long)((JValue)e.Source).Value;
                     }
                 })
                 )
@@ -4485,8 +6297,11 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-        static void DiscoverHeaderTest()
+        [Test]
+        public static void DiscoverHeaderTest()
         {
             string json = @"[
 {
@@ -4500,7 +6315,9 @@ K,L,M,N,O,P,Q,R,S,T";
 ""column_c"": 33
 }
 ]";
-
+            string expected = @"column_a,column_b,column_c,column_x
+1,2,3,
+11,,33,not present in first item";
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json)
                 .UseJsonSerialization()
@@ -4515,10 +6332,23 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void JSON2CSV3()
+        [Test]
+        public static void JSON2CSV3_1()
         {
+            string expected = @"File Name,page,text,words,confidence
+file.json,1,The quick brown fox jumps,The,0.958
+file.json,1,The quick brown fox jumps,quick,0.57
+file.json,1,The quick brown fox jumps,brown,0.799
+file.json,1,The quick brown fox jumps,fox,0.442
+file.json,1,The quick brown fox jumps,jumps,0.878
+file.json,1,over,over,0.37
+file.json,1,the lazy dog!,the,0.909
+file.json,1,the lazy dog!,lazy,0.853
+file.json,1,the lazy dog!,dog!,0.41";
+
             StringBuilder csv = new StringBuilder();
             using (var p = new ChoJSONReader("sample43.json")
                 .WithJSONPath("$..readResults")
@@ -4534,7 +6364,7 @@ K,L,M,N,O,P,Q,R,S,T";
                     )
                 {
                     w.Write(p
-                        .SelectMany(r1 => ((dynamic[])r1.lines).SelectMany(r2 => ((dynamic[])r2.words).Select(r3 => new
+                        .SelectMany(r1 => ((dynamic[])r1.lines).SelectMany(r2 => ((IList)r2.words).OfType<dynamic>().Select(r3 => new
                         {
                             FileName = "file.json",
                             r1.page,
@@ -4546,7 +6376,18 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
             Console.WriteLine(csv.ToString());
-            return;
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void JSON2CSV3_2()
+        {
+            string expected = @"page,text,words,confidence
+1,The quick brown fox jumps,""The,quick,brown,fox,jumps"",0.7294
+1,over,over,0.37
+1,the lazy dog!,""the,lazy,dog!"",0.724";
+
+            StringBuilder csv = new StringBuilder();
 
             using (var p = new ChoJSONReader("sample43.json")
                 .WithJSONPath("$..readResults")
@@ -4562,17 +6403,22 @@ K,L,M,N,O,P,Q,R,S,T";
                         {
                             r1.page,
                             r2.text,
-                            words = String.Join(",", ((dynamic[])r2.words).Select(s1 => s1.text)),
-                            confidence = ((dynamic[])r2.words).Select(s1 => (double)s1.confidence).Average()
+                            words = String.Join(",", ((IList)r2.words).OfType<dynamic>().Select(s1 => s1.text)),
+                            confidence = ((IList)r2.words).OfType<dynamic>().Select(s1 => (double)s1.confidence).Average()
                         })));
                 }
             }
 
             Console.WriteLine(csv.ToString());
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void JSON2CSV4()
+        [Test]
+        public static void JSON2CSV4()
         {
+            string expected = @"Field Name,Page,Practice Name,Owner FullName,Owner Email
+file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
+
             StringBuilder csv = new StringBuilder();
             using (var p = new ChoJSONReader("sample44.json")
                 .WithJSONPath("$..readResults")
@@ -4605,13 +6451,24 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
             Console.WriteLine(csv.ToString());
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void ReadSpacedHeaderCSV()
+        [Test]
+        public static void ReadSpacedHeaderCSV()
         {
             string csv = @"Field Name,Page,Practice Name,Owner FullName,Owner Email
 file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
+            string expected = @"[
+  {
+    ""FileName"": ""file1.json"",
+    ""Page"": ""1"",
+    ""PracticeName"": ""Some Practice Name"",
+    ""OwnerFullName"": ""Bob Lee"",
+    ""OwnerEmail"": ""bob@gmail.com""
+  }
+]";
             using (var r = ChoCSVReader.LoadText(csv)
                     .WithField("FileName", fieldName: "Field Name")
                     .WithField("Page", fieldName: "Page")
@@ -4620,12 +6477,12 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     .WithField("OwnerEmail", fieldName: "Owner Email")
                 .WithFirstLineHeader())
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void JArray2CSV()
+        [Test]
+        public static void JArray2CSV()
         {
             string json = @"[
 {
@@ -4639,6 +6496,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 ""column_c"": 31
 }
 ]";
+            string expected = @"column_a,column_b,column_c
+1,2,3
+11,21,31";
 
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadJTokens(JArray.Parse(json)))
@@ -4650,6 +6510,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class Sample45
@@ -4692,8 +6554,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
-                return ((IEnumerable)value).OfType<Transaction>().ToList();
-                throw new NotImplementedException();
+                var itemType = targetType.GetUnderlyingType().GetItemType();
+                if (value is JObject jobj)
+                    return jobj.ToObject(itemType);
+
+                return null;
             }
 
             public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -4702,8 +6567,78 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
-        static void Sample45Test()
+        [Test]
+        public static void Sample45Test()
         {
+            string expected = @"[
+  {
+    ""TransactionsDict"": {
+      ""success"": 1,
+      ""method"": ""getTrades"",
+      ""5183"": {
+        ""buy_amount"": ""0.00455636"",
+        ""buy_currency"": ""BTC""
+      },
+      ""6962"": {
+        ""buy_amount"": ""52.44700000"",
+        ""buy_currency"": ""IOT""
+      },
+      ""6963"": {
+        ""buy_amount"": ""383.54300000"",
+        ""buy_currency"": ""TNT""
+      },
+      ""6964"": {
+        ""buy_amount"": ""3412.50000000"",
+        ""buy_currency"": ""FUN""
+      },
+      ""6965"": {
+        ""buy_amount"": ""539.45000000"",
+        ""buy_currency"": ""XLM""
+      }
+    },
+    ""success"": 1,
+    ""method"": ""getTrades"",
+    ""TransactionsKeys"": [
+      ""success"",
+      ""method"",
+      ""5183"",
+      ""6962"",
+      ""6963"",
+      ""6964"",
+      ""6965""
+    ],
+    ""Transactions"": [
+      {
+        ""buy_amount"": null,
+        ""buy_currency"": null
+      },
+      {
+        ""buy_amount"": null,
+        ""buy_currency"": null
+      },
+      {
+        ""buy_amount"": 0.00455636,
+        ""buy_currency"": ""BTC""
+      },
+      {
+        ""buy_amount"": 52.44700000,
+        ""buy_currency"": ""IOT""
+      },
+      {
+        ""buy_amount"": 383.54300000,
+        ""buy_currency"": ""TNT""
+      },
+      {
+        ""buy_amount"": 3412.50000000,
+        ""buy_currency"": ""FUN""
+      },
+      {
+        ""buy_amount"": 539.45000000,
+        ""buy_currency"": ""XLM""
+      }
+    ]
+  }
+]";
             using (var r = new ChoJSONReader<Sample45>("sample45.json")
                 .WithField(f => f.TransactionsDict, jsonPath: "$.*")
                 .WithField(f => f.TransactionsKeys, jsonPath: "~*")
@@ -4719,13 +6654,17 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 })
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void Sample46Test()
+        [Test]
+        public static void Sample46Test()
         {
+            string expected = @"DigiKeyPartNumber,Packaging,Part_Status,Type,Protocol,Number_of_Drivers_Receivers,Duplex,Receiver_Hysteresis,Data_Rate,Voltage_Supply,Operating_Temperature,Mounting_Type,Package_Case,Supplier_Device_Package,Base_Part_Number,Capacitance,Tolerance,Voltage_Rated,ESR_Equivalent_Series_Resistance_,Lifetime_Temp_,Polarization,Ratings,Applications,Ripple_Current_Low_Frequency,Impedance,Lead_Spacing,Size_Dimension,Height_Seated_Max_,Surface_Mount_Land_Size
+296-19853-1-ND,Tape & Reel (TR),Active,Transceiver,RS232,2/2,Full,300mV,250kbps,3V ~ 5.5V,-40°C ~ 85°C,Surface Mount,""16-SSOP (0.209"""", 5.30mm Width)"",16-SSOP,MAX323,,,,,,,,,,,,,,
+495-77678-ND,Bulk,Active,,,,,,,,-40°C ~ 85°C,Chassis Mount,""Radial, Can - Screw Terminals"",,,47000µF,±20%,40V,12mOhm @ 100Hz,12000 Hrs @ 85°C,Polar,-,General Purpose,13A @ 100Hz,10 mOhms,0.874"" (22.20mm),2.032"" Dia (51.60mm),3.177"" (80.70mm),-";
+
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader("sample46.json")
                 .UseJsonSerialization()
@@ -4740,6 +6679,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class TO_JsonPunches
@@ -4747,8 +6688,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string EmployeeID { get; set; }
             public string MatchedDateTime { get; set; }
         }
-
-        static void Sample46ATest()
+        [Test]
+        public static void Sample46ATest()
         {
             string json = @"
 [
@@ -4774,13 +6715,22 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 ]";
 
             //var results = ChoJSONReader<TO_JsonPunches>.LoadText(json).WithJSONPath("$.ResponseData").ToArray();
-
+            string expected = @"[
+  {
+    ""EmployeeID"": ""1824"",
+    ""MatchedDateTime"": ""20 Oct 2020 06:41:45 AM""
+  },
+  {
+    ""EmployeeID"": ""1214"",
+    ""MatchedDateTime"": ""20 Oct 2020 06:05:03 AM""
+  }
+]";
             using (var r = ChoJSONReader<TO_JsonPunches>.LoadText(json)
                 .WithJSONPath("$..ResponseData[*]", true)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -4803,14 +6753,37 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [ChoArrayIndex(2)]
             public decimal quantity { get; set; }
         }
-
-        static void Sample47Test()
+        [Test]
+        public static void Sample47Test()
         {
+            string expected = @"[
+  {
+    ""orderNo"": ""AO1234"",
+    ""customerNo"": ""C0129999"",
+    ""items"": [
+      {
+        ""itemId"": 255,
+        ""price"": 1.65,
+        ""quantity"": 20951.6
+      },
+      {
+        ""itemId"": 266,
+        ""price"": 1.8,
+        ""quantity"": 20000.0
+      },
+      {
+        ""itemId"": 277,
+        ""price"": 1.9,
+        ""quantity"": 0.5
+      }
+    ]
+  }
+]";
             using (var r = new ChoJSONReader<Order1>("sample47.json")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -4819,37 +6792,57 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Id { get; set; }
             public Dictionary<string, string> Foo { get; set; }
         }
-
-        static void DesrializeStringifiedText()
+        [Test]
+        public static void DesrializeStringifiedText()
         {
+            string expected = @"[
+  {
+    ""Id"": ""abcd1234"",
+    ""Foo"": {
+      ""field1"": ""abc"",
+      ""field2"": ""def""
+    }
+  }
+]";
             using (var r = new ChoJSONReader<StringifiedModel>("sample48.json")
                 .WithField(f => f.Id)
                 .WithField(f => f.Foo, valueConverter: o => JsonConvert.DeserializeObject((o as string).Replace(@"\""", @""""), typeof(Dictionary<string, string>)))
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void DesrializeStringifiedText1()
+        [Test]
+        public static void DesrializeStringifiedText1()
         {
+            string expected = @"[
+  {
+    ""Id"": ""abcd1234"",
+    ""Foo"": {
+      ""field1"": ""abc"",
+      ""field2"": ""def""
+    }
+  }
+]";
             using (var r = new ChoJSONReader<StringifiedModel>("sample48.json")
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
                 {
                     if (e.PropertyName == nameof(StringifiedModel.Foo))
                     {
-                        e.Source = new JValue(e.Source.ToString().Replace(@"\""", @""""));
+                        var txt = e.Source.ToString().Replace(@"\""", @"""");
+                        txt = txt.Substring(1, txt.Length - 2);
+                        e.Source = JObject.Parse(txt);
                     }
                 })
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void JSON2CSVViceVersa()
+        [Test]
+        public static void JSON2CSVViceVersa()
         {
             string json = @"
 {
@@ -4877,7 +6870,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     true
   ]
 }";
-
+            string expected = @"str1,num1,boolean1,object1.str2,object1.num2,object1.boolean2,list1_0,list1_1,list1_2,list2_0,list2_1,list2_2,list3_0,list3_1,list3_2
+aaa,1,True,bbb,2,False,ccc,ddd,eee,1,2,3,True,False,True";
             StringBuilder csv = new StringBuilder();
             using (var p = ChoJSONReader.LoadText(json)
                 .UseJsonSerialization()
@@ -4893,8 +6887,36 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
 
-
+            string expected1 = @"[
+  {
+    ""str1"": ""aaa"",
+    ""num1"": 1,
+    ""boolean1"": true,
+    ""object1"": {
+      ""str2"": ""bbb"",
+      ""num2"": ""2"",
+      ""boolean2"": ""False""
+    },
+    ""list1"": [
+      ""ccc"",
+      ""ddd"",
+      ""eee""
+    ],
+    ""list2"": [
+      1,
+      2,
+      3
+    ],
+    ""list3"": [
+      true,
+      false,
+      true
+    ]
+  }
+]";
             StringBuilder json1 = new StringBuilder();
             using (var r = ChoCSVReader.LoadText(csv.ToString())
                 .WithFirstLineHeader()
@@ -4906,10 +6928,13 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 using (var w = new ChoJSONWriter(json1)
                     )
                 {
-                    w.Write(r);
+                    var recs = r.ToArray();
+                    w.Write(recs);
                 }
             }
             Console.WriteLine(json1.ToString());
+            var actual1 = json1.ToString();
+            Assert.AreEqual(expected1, actual1);
         }
 
         public static void CreateLargeJSONFile()
@@ -5008,19 +7033,62 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
         }
-
-        static void Sample49Test()
+        [Test]
+        public static void Sample49Test()
         {
+            string expected = @"[
+  {
+    ""Abstände"": ""Eingangslager"",
+    ""Eingangslager"": 0,
+    ""Zone A"": 20,
+    ""Zone B"": 32,
+    ""Zone C"": 44,
+    ""Zone D"": 45,
+    ""Zone E"": 50,
+    ""Zone F"": 45,
+    ""Zone G"": 35,
+    ""Zone H"": 10,
+    ""Ausgangslager"": 40
+  },
+  {
+    ""Abstände"": ""Zone A"",
+    ""Eingangslager"": 20,
+    ""Zone A"": 0,
+    ""Zone B"": 12,
+    ""Zone C"": 24,
+    ""Zone D"": 35,
+    ""Zone E"": 40,
+    ""Zone F"": 30,
+    ""Zone G"": 24,
+    ""Zone H"": 12,
+    ""Ausgangslager"": 30
+  },
+  {
+    ""Abstände"": ""Zone B"",
+    ""Eingangslager"": 32,
+    ""Zone A"": 12,
+    ""Zone B"": 0,
+    ""Zone C"": 12,
+    ""Zone D"": 22,
+    ""Zone E"": 30,
+    ""Zone F"": 24,
+    ""Zone G"": 30,
+    ""Zone H"": 17,
+    ""Ausgangslager"": 45
+  }
+]";
             using (var r = new ChoJSONReader("sample49.json")
                 .WithJSONPath("$.LocationDistance.Body")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Zone_A);
+                string actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Zone_A);
             }
         }
-
-        static void DeserializeTest()
+        [Test]
+        public static void DeserializeTest()
         {
             string json = @"
 {
@@ -5063,14 +7131,61 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   ]
 }";
-            foreach (var rec in ChoJSONReader.DeserializeText(json, "$.features"))
-            {
-                Console.WriteLine(rec.Dump());
+            string expected = @"[
+  {
+    ""type"": ""Feature"",
+    ""id"": 0,
+    ""properties"": {
+      ""ID_0"": 136
+    },
+    ""geometry"": {
+      ""type"": ""Polygon"",
+      ""coordinates"": [
+        [
+          [
+            102.91184997558594,
+            1.7636120319367019
+          ],
+          [
+            102.91143035888683,
+            1.763888001442069
+          ]
+        ]
+      ]
+    }
+  },
+  {
+    ""type"": ""Feature"",
+    ""id"": 1,
+    ""properties"": {
+      ""ID_0"": 136
+    },
+    ""geometry"": {
+      ""type"": ""MultiPolygon"",
+      ""coordinates"": [
+        [
+          [
+            [
+              103.55655670166016,
+              1.4554480314255329
+            ],
+            [
+              103.55590057373058,
+              1.455950021743831
+            ]
+          ]
+        ]
+      ]
+    }
+  }
+]";
+            var recs = ChoJSONReader.DeserializeText(json, "$.features").ToArray();
 
-            }
+            var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
-
-        static void ExpandJSON()
+        [Test]
+        public static void ExpandJSON_1()
         {
             string json = @"
 {
@@ -5091,14 +7206,132 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 ""posts/post_date_publication[1]"":""2020-10-27"",
 ""posts/post_content[1]"":""test 2 post.""
 }";
+            //ChoETLSettings.ArrayBracketNotation = ChoArrayBracketNotation.Square;
 
+            string expected = @"[
+  {
+    ""person"": {
+      ""account"": {
+        ""id"": ""01"",
+        ""user_name"": ""admin"",
+        ""last_name"": ""John"",
+        ""first_name"": ""Doe"",
+        ""email"": ""jdoe@emaail.com"",
+        ""access"": [
+          ""admin"",
+          ""regulator"",
+          ""superuser""
+        ]
+      },
+      ""address"": {
+        ""address1"": ""123 Street"",
+        ""address2"": """",
+        ""city"": ""Detroit"",
+        ""state"": ""ST""
+      }
+    },
+    ""posts"": {
+      ""post_id"": [
+        ""1"",
+        ""2""
+      ],
+      ""post_date_publication"": [
+        ""2020-10-27"",
+        ""2020-10-27""
+      ],
+      ""post_content"": [
+        ""test 1 post."",
+        ""test 2 post.""
+      ]
+    }
+  }
+]";
             StringBuilder outJson = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
                 using (var w = new ChoJSONWriter(outJson))
                     w.Write(r.OfType<ChoDynamicObject>().Select(r1 =>
                     {
-                        var rec = r1.ConvertToNestedObject('/');
+                        var rec = r1.ConvertToNestedObject('/', '[', ']');
+                        return new
+                        {
+                            person = rec.person,
+                            posts = rec.posts, //.ExpandArrayToObjects((Func<int, string>)(i => $"I{i}"))
+                        };
+                    }));
+            }
+
+            Console.WriteLine(outJson.ToString());
+            var actual = outJson.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void ExpandJSON_2()
+        {
+            string json = @"
+{
+""person/account/id"":""01"",
+""person/account/user_name"":""admin"",
+""person/account/last_name"":""John"",
+""person/account/first_name"":""Doe"",
+""person/account/email"":""jdoe@emaail.com"",
+""person/account/access"":[""admin"", ""regulator"", ""superuser""],
+""person/address/address1"":""123 Street"",
+""person/address/address2"":"""",
+""person/address/city"":""Detroit"",
+""person/address/state"":""ST"",
+""posts/post_id[0]"":""1"",
+""posts/post_date_publication[0]"":""2020-10-27"",
+""posts/post_content[0]"":""test 1 post."",
+""posts/post_id[1]"":""2"",
+""posts/post_date_publication[1]"":""2020-10-27"",
+""posts/post_content[1]"":""test 2 post.""
+}";
+            //ChoETLSettings.ArrayBracketNotation = ChoArrayBracketNotation.Square;
+
+            string expected = @"[
+  {
+    ""person"": {
+      ""account"": {
+        ""id"": ""01"",
+        ""user_name"": ""admin"",
+        ""last_name"": ""John"",
+        ""first_name"": ""Doe"",
+        ""email"": ""jdoe@emaail.com"",
+        ""access"": [
+          ""admin"",
+          ""regulator"",
+          ""superuser""
+        ]
+      },
+      ""address"": {
+        ""address1"": ""123 Street"",
+        ""address2"": """",
+        ""city"": ""Detroit"",
+        ""state"": ""ST""
+      }
+    },
+    ""posts"": {
+      ""I0"": {
+        ""post_id"": ""1"",
+        ""post_date_publication"": ""2020-10-27"",
+        ""post_content"": ""test 1 post.""
+      },
+      ""I1"": {
+        ""post_id"": ""2"",
+        ""post_date_publication"": ""2020-10-27"",
+        ""post_content"": ""test 2 post.""
+      }
+    }
+  }
+]";
+            StringBuilder outJson = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoJSONWriter(outJson))
+                    w.Write(r.OfType<ChoDynamicObject>().Select(r1 =>
+                    {
+                        var rec = r1.ConvertToNestedObject('/', '[', ']');
                         return new
                         {
                             person = rec.person,
@@ -5108,9 +7341,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(outJson.ToString());
+            var actual = outJson.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void JSON2CSV_Issue120()
+        [Test]
+        public static void JSON2CSV_Issue120()
         {
             string json = @"{
 	""name"": ""Fruits"",
@@ -5135,7 +7370,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 		},
 	}
 }";
-
+            string expected = @"""name"",""date"",""counts"",""reports__|"",""reports__|_name"",""reports__|_reportName"",""reports__|_fruitNumber"",""reports__|_date"",""reports__|_status"",""reports__|_fresh""
+""Fruits"",""2020-05-26"",""2"",""Fruit days (4344) 05-26-2020"",""Orange, Fresh"",""Oranges 4344 05-26-2020"",""4344"",""05-26-2020"",""on sale"",""True""
+"""","""","""",""Fruit days (2821) 05-28-2020"",""Apple, Fresh"",""Apples 2821 05-26-2020"",""2821"",""05-28-2020"",""on sale"",""True""";
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
@@ -5179,6 +7416,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class ResultData
@@ -5195,8 +7434,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Name { get; set; }
             public string Value { get; set; }
         }
-
-        static void JSON2CSV5()
+        [Test]
+        public static void JSON2CSV5()
         {
             string json = @"{
   ""Id"": ""839c0a09-f2d0-4f29-9cce-bc022d3511b5"",
@@ -5211,6 +7450,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   ]
 }";
+            string expected = @"Id,ABC,CDE
+839c0a09-f2d0-4f29-9cce-bc022d3511b5,5,2";
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json)
                 .UseJsonSerialization()
@@ -5230,9 +7471,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void JSON2CSV6()
+        [Test]
+        public static void JSON2CSV6()
         {
             string json = @"{
   ""Id"": ""839c0a09-f2d0-4f29-9cce-bc022d3511b5"",
@@ -5247,6 +7490,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   ]
 }";
+            string expected = @"Id,ABC,CDE
+839c0a09-f2d0-4f29-9cce-bc022d3511b5,5,2";
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader<ResultData>.LoadText(json)
                 .UseJsonSerialization()
@@ -5266,6 +7511,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            string actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class ResultDataX
@@ -5287,8 +7534,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         {
 
         }
-
-        static void InterfaceTest1()
+        [Test]
+        public static void InterfaceTest1()
         {
             string json = @"{
   ""Id"": ""839c0a09-f2d0-4f29-9cce-bc022d3511b5"",
@@ -5303,36 +7550,58 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   ]
 }";
+            string expected = @"[
+  {
+    ""Id"": ""839c0a09-f2d0-4f29-9cce-bc022d3511b5"",
+    ""Results"": [
+      {
+        ""Name"": ""ABC"",
+        ""Value"": ""5""
+      },
+      {
+        ""Name"": ""CDE"",
+        ""Value"": ""2""
+      }
+    ]
+  }
+]";
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader<ResultDataX>.LoadText(json)
                 .WithField(f => f.Results, itemConverter: o => o)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
-
         }
-
-        static void CustomeDictKeyTypeTest()
+        [Test]
+        public static void CustomeDictKeyTypeTest()
         {
             string json = @"
 {
   ""7:00AM"": 1,
   ""8:00AM"": 2,
-  ""9:00AM"": 3.
+  ""9:00AM"": 3,
 }";
-
+            string expected = @"[
+  {
+    ""07:00AM"": 1,
+    ""08:00AM"": 2,
+    ""09:00AM"": 3
+  }
+]";
             using (var r = ChoJSONReader<Dictionary<DateTime, int>>.LoadText(json)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r.Select(rec => rec.ToDictionary(kvp => kvp.Key.ToString("HH:mmtt"), kvp => kvp.Value)), Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
         }
-
-        static void DeserializeAnonymousType()
+        [Test]
+        public static void DeserializeAnonymousType()
         {
             string json = @"
 {
@@ -5358,16 +7627,46 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 ],
 ""Success"":true
 }";
-            var x = new { Data = default(DataTable), Success = false };
+            string expected = @"[
+  {
+    ""Data"": [
+      {
+        ""Customer"": ""C1"",
+        ""ID"": ""11111"",
+        ""Desc"": ""Row 1"",
+        ""Price"": ""123456""
+      },
+      {
+        ""Customer"": ""C2"",
+        ""ID"": ""22222"",
+        ""Desc"": ""Row 2"",
+        ""Price"": ""789012""
+      },
+      {
+        ""Customer"": ""C3"",
+        ""ID"": ""33333"",
+        ""Desc"": ""Row 3"",
+        ""Price"": ""345678""
+      }
+    ],
+    ""Success"": true
+  }
+]";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
-                foreach (var rec in r)
-                    Console.WriteLine(new { Data = ((IEnumerable)rec.data).AsDataTable(), Success = rec.Success }.Dump());
+                using (var w = new ChoJSONWriter(jsonOut))
+                {
+                    foreach (var rec in r)
+                        w.Write(new { Data = ((IEnumerable)rec.data), Success = rec.Success });
+                }
             }
-
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void JSON2CSV7()
+        [Test]
+        public static void JSON2CSV7()
         {
             string json = @"
 {
@@ -5392,6 +7691,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   ]
 }
 ";
+            string expected = @"email,financial_status,name,title,quantity,price
+email@email.com,paid,#CCC94440,item0,3,1.00
+email@email.com,paid,#CCC94440,item1,2,1.00";
 
             StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
@@ -5404,11 +7706,67 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                         r1.financial_status,
                         r1.name,
                         r2.title,
+                        r2.quantity,
                         price = ((dynamic[])r1.shipping_lines)[0].price
                     }
                     )));
             }
-            Console.WriteLine(csv.ToString());
+
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void JSON2CSV10()
+        {
+            string json = @"
+[
+  {
+    ""id"": 1,
+    ""name"": ""Mike"",
+    ""features"": {
+      ""colors"": [
+        ""blue""
+      ],
+      ""sizes"": [
+        ""big""
+      ]
+    }
+  },
+  {
+    ""id"": 1,
+    ""name"": ""Jose"",
+    ""features"": {
+      ""colors"": [
+        ""blue"",
+        ""red""
+      ],
+      ""sizes"": [
+        ""big"",
+        ""small""
+      ]
+    }
+  }
+]";
+            string expected = @"id,name,features_colors_0,features_colors_1,features_sizes_0,features_sizes_1
+1,Mike,blue,,big,
+1,Jose,blue,red,big,small";
+
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .WithMaxScanRows(2)
+                    .ThrowAndStopOnMissingField(false)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+            string actual = csv.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
         [ChoJSONPath("$.error")]
@@ -5420,21 +7778,42 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public long? qty { get; set; }
 
         }
-        static void StringToLongTest()
+        [Test]
+        public static void StringToLongTest()
         {
-            string json = @"
-{""error"":[{""id"":""15006"",""code"":""Error CODE"",""message"":""Error Message"",""qty"":""""}]}";
+            string json = @"{
+  ""error"": [
+    {
+      ""id"": ""15006"",
+      ""code"": ""Error CODE"",
+      ""message"": ""Error Message"",
+      ""qty"": """"
+    }
+  ]
+}";
 
+            string expected = @"{
+  ""id"": 15006,
+  ""code"": ""Error CODE"",
+  ""message"": ""Error Message"",
+  ""qty"": null
+}";
             var err = ChoJSONReader.DeserializeText<Error2>(json).FirstOrDefault();
-            Console.WriteLine(err.Dump());
-        }
 
-        static void JSON2CSV8()
+            Console.WriteLine(err.Dump());
+            string actual = JsonConvert.SerializeObject(err, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void JSON2CSV8()
         {
+            string expected = @"billing_profile_definition,billing_profile_id,contact_id,create_timestamp,external_id,id,invoice_email_template_id,invoice_template_id,max_subscribers,modify_timestamp,passreset_email_template_id,profile_package_id,status,subscriber_email_template_id,terminate_timestamp,type,vat_rate
+id,6,8,2021-02-15 16:31:49,125125,6,15,1,,2021-02-19 09:30:38,14,,active,13,,sipaccount,21
+id,6,11,2021-02-19 14:34:00,125124,8,13,1,,2021-02-19 15:34:00,13,,active,13,,sipaccount,21";
+
             var sampleJson = File.ReadAllText(@"klant.json");
 
             StringBuilder csv = new StringBuilder();
-
             using (var custData = ChoJSONReader.LoadText(sampleJson)
                 .WithJSONPath("$.._embedded.ngcp:customers")
                 .WithFields(new string[] {
@@ -5470,9 +7849,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void DumpDict()
+        public static void DumpDict()
         {
             IDictionary<string, object> dict = new Dictionary<string, object>();
             dict.Add("1", "2");
@@ -5489,7 +7869,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
             public object ItemConvert(string propName, object value)
             {
-                return new PersonX();
+                var jobj = value as JObject;
+                if (jobj.ContainsKey("Type"))
+                    return jobj.ToObject<ItemX>();
+                else
+                    return jobj.ToObject<PersonX>();
             }
         }
         interface IBarX
@@ -5511,27 +7895,73 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public int Year { get; set; }
         }
 
-        static void ConditionalDeserializationOfItems()
+        [Test]
+        public static void ConditionalDeserializationOfItems()
         {
             string json = @"{
   ""Foo"": ""Whatever"",
   ""Bar"": [
-   { ""Name"": ""Enrico"", ""Age"": 33, ""Country"": ""Italy"" }, { ""Type"": ""Video"", ""Year"": 2004 },
-   { ""Name"": ""Sam"", ""Age"": 18, ""Country"": ""USA"" }, { ""Type"": ""Book"", ""Year"": 1980 }
+    {
+      ""Name"": ""Enrico"",
+      ""Age"": 33,
+      ""Country"": ""Italy""
+    },
+    {
+      ""Type"": ""Video"",
+      ""Year"": 2004
+    },
+    {
+      ""Name"": ""Sam"",
+      ""Age"": 18,
+      ""Country"": ""USA""
+    },
+    {
+      ""Type"": ""Book"",
+      ""Year"": 1980
+    }
   ]
 }";
-
+            string expected = @"[
+  {
+    ""Foo"": ""Whatever"",
+    ""Bar"": [
+      {
+        ""Type"": ""Person"",
+        ""Name"": ""Enrico"",
+        ""Age"": 33,
+        ""Country"": ""Italy""
+      },
+      {
+        ""Type"": ""Video"",
+        ""Year"": 2004
+      },
+      {
+        ""Type"": ""Person"",
+        ""Name"": ""Sam"",
+        ""Age"": 18,
+        ""Country"": ""USA""
+      },
+      {
+        ""Type"": ""Book"",
+        ""Year"": 1980
+      }
+    ]
+  }
+]";
             using (var r = ChoJSONReader<ClassToDeserialize>.LoadText(json)
                 .WithField(f => f.Foo)
                 .WithField(f => f.Bar, jsonPath: "$.Bar[*]")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void JSON2CSV9()
+        [Test]
+        public static void JSON2CSV9()
         {
             string json = @"
 [
@@ -5562,7 +7992,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   }
 ]";
-
+            string expected = @"id,name,features_colors_0,features_colors_1,features_sizes_0,features_sizes_1
+1,Mike,blue,,big,
+1,Jose,blue,red,big,small";
             StringBuilder csv = new StringBuilder();
 
             using (var r = ChoJSONReader.LoadText(json)
@@ -5578,6 +8010,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class fooRoot1
@@ -5597,8 +8031,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [ChoArrayIndex(1)]
             public double prop2 { get; set; }
         }
-
-        static void ArrayToObjects1()
+        [Test]
+        public static void ArrayToObjects1()
         {
             string json = @"
 [
@@ -5635,7 +8069,20 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
   }
 ]";
-
+            string expected = @"[
+  {
+    ""Value"": [
+      [
+        1618170480000,
+        59594.6
+      ],
+      [
+        1618170540000,
+        59595.05
+      ]
+    ]
+  }
+]";
             StringBuilder jsonOutput = new StringBuilder();
             using (var r = ChoJSONReader<fooRoot1>.LoadText(json)
                 //.UseJsonSerialization()
@@ -5654,9 +8101,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(jsonOutput.ToString());
+            var actual = jsonOutput.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void ArrayToObjects()
+        [Test]
+        public static void ArrayToObjects()
         {
             string json = @"
 [
@@ -5679,6 +8128,16 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
 ]";
 
+            string expected = @"[
+  [
+    1618170480000,
+    59594.6
+  ],
+  [
+    1618170540000,
+    0.0
+  ]
+]";
             StringBuilder jsonOutput = new StringBuilder();
             using (var r = ChoJSONReader<foo1>.LoadText(json)
                 //.UseJsonSerialization()
@@ -5697,10 +8156,15 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(jsonOutput.ToString());
+            var actual = jsonOutput.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void Issue141()
+        [Test]
+        public static void Issue141()
         {
+            string expected = @"Latitude,Longitude,Floor ID,Sink,Handdryer,Urinal
+10.00,11.00,FL01,Test,Test,10
+10.00,11.00,FL01,5,Test,Test";
             StringBuilder csv = new StringBuilder();
 
             using (var r = new ChoJSONReader("sample141.json")
@@ -5718,7 +8182,13 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
+
             csv.Clear();
+
+            string expected1 = @"Latitude,Longitude,Floor ID,Floor Level,Floor Name,Desk Type,Foot Rest,Separator Type
+10.00,11.00,FL02,Level 2,Floor2,20,30,Test";
             using (var r = new ChoJSONReader("sample141.json")
                       .IgnoreField("Elevator")
                     .UseJsonSerialization()
@@ -5734,7 +8204,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual1 = csv.ToString();
+            Assert.AreEqual(expected1, actual1);
+
             csv.Clear();
+
+            string expected2 = @"Number,Led Light_Number
+Elevator1,
+Elevator2,123";
             using (var r = new ChoJSONReader("sample141.json")
                 .WithJSONPath("$..Elevator")
                 .UseJsonSerialization()
@@ -5749,10 +8226,19 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual2 = csv.ToString();
+            Assert.AreEqual(expected2, actual2);
         }
-
-        static void Issue141x()
+        [Test]
+        public static void Issue141x()
         {
+            string expected = @"Latitude,Longitude,Floor ID,Sink,Handdryer,Urinal,Floor Level,Floor Name,Desk Type,Foot Rest,Separator Type,Number,Led Light_Number
+10.00,11.00,FL01,Test,Test,10,,,,,,,
+10.00,11.00,FL01,5,Test,Test,,,,,,,
+10.00,11.00,FL02,,,,Level 2,Floor2,20,30,Test,,
+,,,,,,,,,,,Elevator1,
+,,,,,,,,,,,Elevator2,123";
+
             string jsonFilePath = "sample141.json";
             List<dynamic> objs = new List<dynamic>();
             using (var r = new ChoJSONReader(jsonFilePath)
@@ -5792,6 +8278,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public enum ResponseStatus { ok, fail };
@@ -5808,8 +8296,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Name { get; set; }
             public string BookingDate { get; set; }
         }
-
-        static void CustomDateTimeReadTest()
+        [Test]
+        public static void CustomDateTimeReadTest()
         {
             string json = @"
 {
@@ -5834,20 +8322,129 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   ]
 }";
-
+            string expected = @"[
+  {
+    ""ResponseStatus"": 0,
+    ""NumberOfPages"": 4,
+    ""Data"": [
+      {
+        ""Name"": ""user1"",
+        ""BookingDate"": ""24/05/2019""
+      },
+      {
+        ""Name"": ""user2"",
+        ""BookingDate"": ""24/05/2019""
+      },
+      {
+        ""Name"": ""user3"",
+        ""BookingDate"": ""4/03/2020""
+      },
+      {
+        ""Name"": ""user4"",
+        ""BookingDate"": ""00:00""
+      }
+    ]
+  }
+]";
             using (var r = ChoJSONReader<JsonJsonStatusReport>.LoadText(json)
                 .UseJsonSerialization()
                 .WithFieldForType<JsonJsonStatusReportData>(f => f.BookingDate, formatText: "dd/MM/yyyy")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
         }
-
-        static void Json2Xml50()
+        [Test]
+        public static void Json2Xml50()
         {
+            string expected = @"<InvoicesDoc xmlns=""http://www.aade.gr/myDATA/invoice/v1.0"" xmlns:xml=""http://www.w3.org/XML/1998/namespace"" xmlns:icls=""https://www.aade.gr/myDATA/incomeClassificaton/v1.0"" xmlns:ecls=""https://www.aade.gr/myDATA/expensesClassificaton/v1.0"" xmlns:schemaLocation=""http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd"">
+  <invoice>
+    <issuer>
+      <vatNumber>888888888</vatNumber>
+      <country>GR</country>
+      <branch>1</branch>
+    </issuer>
+    <counterpart>
+      <vatNumber>999999999</vatNumber>
+      <country>GR</country>
+      <branch>0</branch>
+      <address>
+        <postalCode>12345</postalCode>
+        <city>TEST</city>
+      </address>
+    </counterpart>
+    <invoiceHeader>
+      <series>A</series>
+      <aa>101</aa>
+      <issueDate>2021-04-27</issueDate>
+      <invoiceType>1.1</invoiceType>
+      <currency>EUR</currency>
+    </invoiceHeader>
+    <paymentMethods>
+      <paymentMethodDetails>
+        <type>3</type>
+        <amount>1760.00</amount>
+        <paymentMethodInfo>Payment Method Info...</paymentMethodInfo>
+      </paymentMethodDetails>
+    </paymentMethods>
+    <invoiceDetails>
+      <lineNumber>1</lineNumber>
+      <netValue>1000.00</netValue>
+      <vatCategory>1</vatCategory>
+      <vatAmount>240.00</vatAmount>
+      <discountOption>true</discountOption>
+      <incomeClassification>
+        <icls:classificationType>E3_561_001</icls:classificationType>
+        <icls:classificationCategory>category1_2</icls:classificationCategory>
+        <icls:amount>1000.00</icls:amount>
+      </incomeClassification>
+    </invoiceDetails>
+    <invoiceDetails>
+      <lineNumber>2</lineNumber>
+      <netValue>500.00</netValue>
+      <vatCategory>1</vatCategory>
+      <vatAmount>120.00</vatAmount>
+      <discountOption>true</discountOption>
+      <incomeClassification>
+        <icls:classificationType>E3_561_001</icls:classificationType>
+        <icls:classificationCategory>category1_3</icls:classificationCategory>
+        <icls:amount>500.00</icls:amount>
+      </incomeClassification>
+    </invoiceDetails>
+    <taxesTotals>
+      <taxes>
+        <taxType>1</taxType>
+        <taxCategory>2</taxCategory>
+        <underlyingValue>500.00</underlyingValue>
+        <taxAmount>100.00</taxAmount>
+      </taxes>
+    </taxesTotals>
+    <invoiceSummary>
+      <totalNetValue>1500.00</totalNetValue>
+      <totalVatAmount>360.00</totalVatAmount>
+      <totalWithheldAmount>100.00</totalWithheldAmount>
+      <totalFeesAmount>0.00</totalFeesAmount>
+      <totalStampDutyAmount>0.00</totalStampDutyAmount>
+      <totalOtherTaxesAmount>0.00</totalOtherTaxesAmount>
+      <totalDeductionsAmount>0.00</totalDeductionsAmount>
+      <totalGrossValue>1760.00</totalGrossValue>
+      <incomeClassification>
+        <icls:classificationType>E3_561_001</icls:classificationType>
+        <icls:classificationCategory>category1_2</icls:classificationCategory>
+        <icls:amount>1000.00</icls:amount>
+      </incomeClassification>
+      <incomeClassification>
+        <icls:classificationType>E3_561_001</icls:classificationType>
+        <icls:classificationCategory>category1_3</icls:classificationCategory>
+        <icls:amount>500.00</icls:amount>
+      </incomeClassification>
+    </invoiceSummary>
+  </invoice>
+</InvoicesDoc>";
             StringBuilder xml = new StringBuilder();
             using (var r = new ChoJSONReader("sample50.json"))
             {
@@ -5856,10 +8453,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     .IgnoreNodeName()
                     .WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
                     .WithXmlNamespace("", "http://www.aade.gr/myDATA/invoice/v1.0")
-                    .WithXmlNamespace("", "http://www.aade.gr/myDATA/invoice/v1.0")
                     .WithXmlNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0")
                     .WithXmlNamespace("ecls", "https://www.aade.gr/myDATA/expensesClassificaton/v1.0")
-                    .WithXmlNamespace("xsi:schemaLocation", "http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd")
+                    .WithXmlNamespace("schemaLocation", "http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd")
                     )
                     w.Write(r.Select(r1 =>
                     {
@@ -5876,6 +8472,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(xml.ToString());
+            var actual = xml.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class Customer2
@@ -5885,8 +8483,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [ChoJSONPath("$..CustomerCurrencyID.value")]
             public string CustomerCurrencyID { get; set; }
         }
-
-        static void JSONTest2()
+        [Test]
+        public static void JSONTest2()
         {
             string json = @"
 {
@@ -5897,20 +8495,30 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         ""value"": ""USD""
     }
 }";
-
+            string expected = @"{
+  ""CustomerID"": ""EXAMPLE"",
+  ""CustomerCurrencyID"": ""USD""
+}";
             var rec = ChoJSONReader.DeserializeText<Customer2>(json).FirstOrDefault();
             Console.WriteLine(rec.Dump());
+
+            var actual = JsonConvert.SerializeObject(rec, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
 
         public class PropertyModel
         {
+            [JsonProperty("name")]
             public string Name { get; set; }
+            [JsonProperty("isConfigProperty")]
             public bool IsConfigProperty { get; set; }
+            [JsonProperty("displayProperty")]
             public bool DisplayProperty { get; set; }
+            [JsonProperty("default")]
             public string Default { get; set; }
         }
-
-        static void SerializeZeroToNullIssue()
+        [Test]
+        public static void SerializeZeroToNullIssue()
         {
             string json = @"
 {
@@ -5919,13 +8527,22 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   ""displayProperty"":false,
   ""default"":""0""
 }";
-
+            string expected = @"[
+  {
+    ""name"": ""Some name"",
+    ""isConfigProperty"": true,
+    ""displayProperty"": false,
+    ""default"": ""0""
+  }
+]";
             using (var r = ChoJSONReader<PropertyModel>.LoadText(json)
                 .UseJsonSerialization()
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -5945,9 +8562,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Value3 { get; set; }
         }
 
-        static void ReadJsonOneItemAtATime()
+        public static void ReadJsonOneItemAtATime()
         {
-            using (var r = new ChoJSONReader<Result51>("sample51.json")
+            string expected = null;
+            using (var r = new ChoJSONReader<Result51>("sample53.json")
                 .WithJSONPath("$..d.results")
                 )
             {
@@ -5955,9 +8573,45 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     Console.WriteLine(rec.Dump());
             }
         }
-
-        static void Sample53Test()
+        [Test]
+        public static void Sample53Test()
         {
+            string expected = @"[
+  {
+    ""__metadata/uri"": ""myuri.com"",
+    ""__metadata/type"": ""String"",
+    ""jobNumber"": ""123456789"",
+    ""numberVacancy"": ""1"",
+    ""some_obj/__metadata/uri"": ""myuri.com"",
+    ""some_obj/__metadata/type"": ""String"",
+    ""some_obj/code"": ""000012356"",
+    ""anothernested/results/0/__metadata/uri"": ""myuri.com"",
+    ""anothernested/results/0/__metadata/type"": ""String"",
+    ""anothernested/results/0/picklistLabels/results/0/__metadata/uri"": ""myuri.com"",
+    ""anothernested/results/0/picklistLabels/results/0/__metadata/type"": ""String"",
+    ""anothernested/results/0/picklistLabels/results/0/label"": ""Casual"",
+    ""anothernested/results/0/picklistLabels/results/1/__metadata/uri"": ""myuri.com"",
+    ""anothernested/results/0/picklistLabels/results/1/__metadata/type"": ""String"",
+    ""anothernested/results/0/picklistLabels/results/1/label"": ""Casual""
+  },
+  {
+    ""__metadata/uri"": ""myuri.com"",
+    ""__metadata/type"": ""String"",
+    ""jobNumber"": ""987654321"",
+    ""numberVacancy"": ""1"",
+    ""some_obj/__metadata/uri"": ""myuri.com"",
+    ""some_obj/__metadata/type"": ""String"",
+    ""some_obj/code"": ""000012356"",
+    ""anothernested/results/0/__metadata/uri"": ""myuri.com"",
+    ""anothernested/results/0/__metadata/type"": ""String"",
+    ""anothernested/results/0/picklistLabels/results/0/__metadata/uri"": ""myuri.com"",
+    ""anothernested/results/0/picklistLabels/results/0/__metadata/type"": ""String"",
+    ""anothernested/results/0/picklistLabels/results/0/label"": ""Casual"",
+    ""anothernested/results/0/picklistLabels/results/1/__metadata/uri"": ""myuri.com"",
+    ""anothernested/results/0/picklistLabels/results/1/__metadata/type"": ""String"",
+    ""anothernested/results/0/picklistLabels/results/1/label"": ""Casual""
+  }
+]";
             using (var r = new ChoJSONReader("sample53.json")
                 .WithJSONPath("$..d.results")
                 .Configure(c => c.NestedColumnSeparator = '/')
@@ -5965,10 +8619,13 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             {
                 var dt = r.AsDataTable();
                 Console.WriteLine(dt.Dump());
+
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void Xml2JSONWithSingleOrArrayNode()
+        [Test]
+        public static void Xml2JSONWithSingleOrArrayNode()
         {
             string xml = @"
 <export_person>
@@ -5982,6 +8639,16 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 </person>
 </export_person>";
 
+            string expected = @"[
+  {
+    ""fname"": ""James"",
+    ""lname"": ""Williams"",
+    ""dept_details"": {
+      ""name"": ""Engineering"",
+      ""address"": ""117, street""
+    }
+  }
+]";
             StringBuilder json = new StringBuilder();
             using (var r = ChoXmlReader.LoadText(xml)
                 //.Configure(c => c.UseXmlArray = false)
@@ -5998,6 +8665,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(json.ToString());
+            var actual = json.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class RECORD_PHOTO
@@ -6006,8 +8675,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string ALBUMID { get; set; }
             public string LINK { get; set; }
         }
-
-        static void SortAndDatatable()
+        [Test]
+        public static void SortAndDatatable()
         {
             string json = @"{
   ""RECORDS"": [
@@ -6027,7 +8696,23 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
       ""LINK"": ""https://...3""
     }]
 }";
-
+            string expected = @"[
+  {
+    ""ROWW"": ""279164"",
+    ""ALBUMID"": ""2"",
+    ""LINK"": ""https://...3""
+  },
+  {
+    ""ROWW"": ""279165"",
+    ""ALBUMID"": ""1"",
+    ""LINK"": ""https://...2""
+  },
+  {
+    ""ROWW"": ""279166"",
+    ""ALBUMID"": ""3"",
+    ""LINK"": ""https://...1""
+  }
+]";
             using (var r = ChoJSONReader<RECORD_PHOTO>.LoadText(json)
                 .WithJSONPath("$..RECORDS")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
@@ -6035,6 +8720,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             {
                 var dt = r.OrderBy(rec => rec.ROWW).AsDataTable();
                 Console.WriteLine(dt.Dump());
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -6050,8 +8737,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Title { get; set; }
             public string AnswerType { get; set; }
         }
-
-        static void MultipleValues()
+        [Test]
+        public static void MultipleValues()
         {
             string json = @"[
   {
@@ -6077,16 +8764,43 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ""AnswerType"": ""Option""
   }
 ]";
-
+            string expected = @"[
+  {
+    ""Answer"": true,
+    ""QuestionId"": 55,
+    ""Title"": ""Are you Married?"",
+    ""AnswerType"": ""Boolean""
+  },
+  {
+    ""Answer"": {
+      ""Id"": ""1"",
+      ""Description"": ""Female"",
+      ""Reference"": ""F"",
+      ""ArchiveDate"": null,
+      ""ParentId"": null,
+      ""OptionType"": {
+        ""Id"": 40,
+        ""Type"": ""dropdown""
+      }
+    },
+    ""QuestionId"": 778,
+    ""Title"": ""Gender"",
+    ""AnswerType"": ""Option""
+  }
+]";
             using (var r = ChoJSONReader<Class1>.LoadText(json)
                 )
             {
-                foreach (var rec in r)
+                var recs = r.ToArray();
+                foreach (var rec in recs)
                 {
                     Console.WriteLine(rec.Answer.GetType());
 
                     Console.WriteLine(rec.Dump());
                 }
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
         public class PlayersDTO
@@ -6096,9 +8810,23 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Players { get; set; }
             public string Team { get; set; }
         }
-
-        static void JSONIssue147()
+        [Test]
+        public static void JSONIssue147()
         {
+            string expected = @"[
+  {
+    ""Extra"": ""extra"",
+    ""Players"": ""a,b"",
+    ""Substitute"": null,
+    ""Team"": ""Title""
+  },
+  {
+    ""Extra"": null,
+    ""Players"": ""a,b,c"",
+    ""Substitute"": ""d,e"",
+    ""Team"": ""Title""
+  }
+]";
             using (var r = new ChoJSONReader("issue147.json")
                 .WithField("Extra")
                 .WithField("Players", valueConverter: o => String.Join(",", (IEnumerable<object>)o), jsonPath: "$..Players[*].player")
@@ -6109,6 +8837,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             {
                 var dt = r.AsDataTable();
                 Console.WriteLine(dt.Dump());
+
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
                 return;
                 foreach (var rec in r)
                 {
@@ -6197,7 +8928,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [JsonProperty("experiment_id_list1")]
             public int[] ExperimentIdList1 { get; set; }
         }
-        static void ReadJsonWithTypeIn()
+        [Test]
+        public static void ReadJsonWithTypeIn()
         {
             string json = @"
 [
@@ -6227,7 +8959,35 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   }
 ]";
-
+            string expected = @"[
+  {
+    ""key"": null,
+    ""value"": {
+      ""session_id"": ""pFEe0KByL/Df:3170:5"",
+      ""title_id_type"": ""server"",
+      ""event_step"": 8,
+      ""country"": ""US"",
+      ""event_params"": {
+        ""cdur"": ""416"",
+        ""gdur"": ""416"",
+        ""sdur"": ""416"",
+        ""tdur"": ""0"",
+        ""type"": ""challenge"",
+        ""percent"": ""100"",
+        ""status"": ""expired""
+      },
+      ""device_id_map"": {},
+      ""experiment_id_list"": [
+        ""a"",
+        ""b""
+      ],
+      ""experiment_id_list1"": [
+        1,
+        2
+      ]
+    }
+  }
+]";
             using (var r = ChoJSONReader<Root1>.LoadText(json)
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
                 {
@@ -6243,8 +9003,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 })
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -6339,16 +9101,44 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [JsonProperty("premodern")]
             public string Premodern { get; set; }
         }
-
-        static void Issue148a()
+        [Test]
+        public static void Issue148a()
         {
-            ChoETLSettings.NestedKeySeparator = '.';
+            string expected = @"[
+  {
+    ""Lang"": ""en"",
+    ""Set"": ""lea"",
+    ""SetName"": ""Limited Edition Alpha"",
+    ""CollectorNumber"": ""142"",
+    ""Name"": ""Dwarven Demolition Team"",
+    ""Legalities.Standard"": ""not_legal"",
+    ""Legalities.Future"": ""not_legal"",
+    ""Legalities.Historic"": ""not_legal"",
+    ""Legalities.Gladiator"": ""not_legal"",
+    ""Legalities.Pioneer"": ""not_legal"",
+    ""Legalities.Modern"": ""legal"",
+    ""Legalities.Legacy"": ""legal"",
+    ""Legalities.Pauper"": ""not_legal"",
+    ""Legalities.Vintage"": ""legal"",
+    ""Legalities.Penny"": ""not_legal"",
+    ""Legalities.Commander"": ""legal"",
+    ""Legalities.Brawl"": ""not_legal"",
+    ""Legalities.Duel"": ""legal"",
+    ""Legalities.Oldschool"": ""legal"",
+    ""Legalities.Premodern"": ""not_legal""
+  }
+]";
+            //ChoETLSettings.NestedKeySeparator = '.';
             using (var r = new ChoJSONReader<CardLegalities>("issue148a.json")
                 .WithFieldForType<Legalities>(f => f.Standard, fieldName: "standard")
+                .Configure(c => c.NestedColumnSeparator = '.')
                 )
             {
                 var dt = r.AsDataTable();
                 Console.WriteLine(dt.Dump());
+
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -6368,8 +9158,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string LINK { get; set; }
         }
 
-
-        static void ExcludePropertyAtRuntime1()
+        [Test]
+        public static void ExcludePropertyUsingMetaType()
         {
             string json = @"{
   ""RECORDS"": [
@@ -6389,7 +9179,23 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
       ""LINK"": ""https://...3""
     }]
 }";
-
+            string expected = @"[
+  {
+    ""ROWW"": ""279164"",
+    ""ALBUMID"": ""2"",
+    ""LINK"": null
+  },
+  {
+    ""ROWW"": ""279165"",
+    ""ALBUMID"": ""1"",
+    ""LINK"": null
+  },
+  {
+    ""ROWW"": ""279166"",
+    ""ALBUMID"": ""3"",
+    ""LINK"": null
+  }
+]";
             using (var r = ChoJSONReader<RECORD_PHOTO1>.LoadText(json)
                 .WithJSONPath("$..RECORDS")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
@@ -6397,6 +9203,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             {
                 var dt = r.OrderBy(rec => rec.ROWW).AsDataTable();
                 Console.WriteLine(dt.Dump());
+
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -6406,8 +9215,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string ALBUMID { get; set; }
             public string LINK { get; set; }
         }
-
-        static void MapFieldNameDynamically()
+        [Test]
+        public static void MapFieldNameDynamically()
         {
             string json = @"{
   ""RECORDS"": [
@@ -6427,6 +9236,23 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
       ""LINK"": ""https://...3""
     }]
 }";
+            string expected = @"[
+  {
+    ""ROWW"": ""279164"",
+    ""ALBUMID"": ""2"",
+    ""LINK"": ""https://...3""
+  },
+  {
+    ""ROWW"": ""279165"",
+    ""ALBUMID"": ""1"",
+    ""LINK"": ""https://...2""
+  },
+  {
+    ""ROWW"": ""279166"",
+    ""ALBUMID"": ""3"",
+    ""LINK"": ""https://...1""
+  }
+]";
 
             var cfg = new ChoJSONRecordConfiguration<RECORD_PHOTO2>();
             cfg.Map(r => r.ROWW, fieldName: "ROW");
@@ -6437,11 +9263,17 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             {
                 var dt = r.OrderBy(rec => rec.ROWW).AsDataTable();
                 Console.WriteLine(dt.Dump());
+
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void Issue148()
+        [Test]
+        public static void Issue148()
         {
+            string expected = @"ItemInternalId|SyncJobId|ExternalJobIdentifier|Status|ErrorMessage|Operation|Entity|RecordCount|Processed|Errored|Queued|SyncType|FilelogId|Inserted|Updated|InsertedBy|UpdatedBy|EditCount
+16c1b4cb-dbd5-4fcb-96e2-0fb6f3ac49db|363|7500n000007X8CsAAK|UploadComplete|InvalidBatch : InvalidBatch : Field name not found : MMC_MaretingEmailAddress__c|upsert|ExportSCCompany|0|0|0|0|S|168960|7/19/2021|7/19/2021|BBAKER-XPSTOWER-MMCGROUP\bbaker|BBAKER-XPSTOWER-MMCGROUP\bbaker|1
+a3cc4aaf-d4a3-4838-8205-7f2de6a8bad0|372||UploadComplete|||ExportSCMergedCompany|0|0|0|0|S|169181|7/21/2021|7/21/2021|BBAKER-XPSTOWER-MMCGROUP\bbaker|BBAKER-XPSTOWER-MMCGROUP\bbaker|1";
             StringBuilder csv = new StringBuilder();
 
             var csvRecordConfiguration = new ChoCSVRecordConfiguration
@@ -6478,6 +9310,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public struct D3Point //: IEquatable<D3Point>
@@ -6495,8 +9329,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 Z = coordinateZ;
             }
         }
-
-        static void StructDeserialization()
+        [Test]
+        public static void StructDeserialization()
         {
             string json = @"
 {
@@ -6504,7 +9338,13 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   ""Y"": -25972.229375190014,
   ""Z"": -299.99999999999994
 }";
-
+            string expected = @"[
+  {
+    ""X"": 1262.6051066219518,
+    ""Y"": -25972.229375190014,
+    ""Z"": -299.99999999999994
+  }
+]";
             using (var r = ChoJSONReader<D3Point>.LoadText(json)
                 .RegisterNodeConverterForType<D3Point>(o =>
                 {
@@ -6517,23 +9357,40 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 })
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                var recs = r.ToArray();
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
-
-        static void FlattenJSON1()
+        [Test]
+        public static void FlattenJSON1()
         {
+            string expected = @"student,subjectssubjectname,subjectsmarkstype,subjectsmarksgrade
+Bob,English,essay,A
+Bob,English,vocabulary,B
+Bob,English,spoken,C
+Bob,French,essay,B
+Bob,French,vocabulary,A
+Bob,French,spoken,B
+Mark,Dutch,essay,C
+Mark,Dutch,vocabulary,B
+Mark,Dutch,spoken,A
+Mark,Mandrian,essay,C
+Mark,Mandrian,vocabulary,C
+Mark,Mandrian,spoken,C";
             StringBuilder csv = new StringBuilder();
 
             using (var r = new ChoJSONReader("sample54.json")
                 .Configure(c => c.FlattenNode = true)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
-                return;
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                //return;
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
                     .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
@@ -6544,6 +9401,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(csv.ToString());
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class ExtDataObj
@@ -6552,8 +9411,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [JsonExtensionData]
             public Dictionary<string, JToken> Others { get; set; }
         }
-
-        static void JsonExtensionDataTest()
+        [Test]
+        public static void JsonExtensionDataTest()
         {
             string json = @"
 {
@@ -6569,25 +9428,41 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ""Q4"": 9
 }
 ";
+
+            string expected = @"{
+  ""SessionId"": ""sesh1"",
+  ""instrumentId"": ""DEMO"",
+  ""clientId"": ""a100"",
+  ""assignedToType"": ""Client"",
+  ""completeDate"": ""2/3/19"",
+  ""answerStyle"": ""byValue"",
+  ""Q1"": ""This is a long test text message of the testering."",
+  ""Q2"": ""2"",
+  ""Q3"": ""2|3|1"",
+  ""Q4"": 9
+}";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader<ExtDataObj>.LoadText(json)
                 .UseJsonSerialization()
                 )
             {
-                using (var w = new ChoJSONWriter<ExtDataObj>(Console.Out)
+                using (var w = new ChoJSONWriter<ExtDataObj>(jsonOut)
                     .UseJsonSerialization()
                     .SupportMultipleContent()
                     .SingleElement()
                     )
                     w.Write(r);
-                return;
-                r.Print();
-                return;
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
-            }
-        }
 
-        static void JsonArrayToSingleCSVColumn()
+                //r.Print();
+                //return;
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+            }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void JsonArrayToSingleCSVColumn()
         {
             string json = @"
 [
@@ -6607,10 +9482,13 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
     }
 ]";
-
+            string expected = @"id,states
+1234,PA-VA
+1235,CA-DE-MD";
+            StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
-                using (var w = new ChoCSVWriter(Console.Out)
+                using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
                     .Configure(c => c.UseNestedKeyFormat = false)
                     .Configure(c => c.ArrayValueSeparator = '-')
@@ -6619,6 +9497,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     w.Write(r);
                 }
             }
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
         public class Rootobject
         {
@@ -6668,9 +9548,84 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string message { get; set; }
             public string code { get; set; }
         }
-
-        static void DeserializeChildrenToConcreteClasses()
+        [Test]
+        public static void DeserializeChildrenToConcreteClasses()
         {
+            string expected = @"[
+  {
+    ""formatVersion"": ""0.0.1"",
+    ""matrix"": [
+      {
+        ""statusCode"": 200,
+        ""response"": {
+          ""routeSummary"": {
+            ""lengthInMeters"": 95028
+          }
+        }
+      },
+      {
+        ""statusCode"": 200,
+        ""response"": {
+          ""routeSummary"": {
+            ""lengthInMeters"": 97955
+          }
+        }
+      },
+      {
+        ""statusCode"": 200,
+        ""response"": {
+          ""routeSummary"": {
+            ""lengthInMeters"": 105077
+          }
+        }
+      },
+      {
+        ""statusCode"": 200,
+        ""response"": {
+          ""routeSummary"": {
+            ""lengthInMeters"": 108004
+          }
+        }
+      },
+      {
+        ""statusCode"": 200,
+        ""response"": {
+          ""routeSummary"": {
+            ""lengthInMeters"": 103661
+          }
+        }
+      },
+      {
+        ""statusCode"": 200,
+        ""response"": {
+          ""routeSummary"": {
+            ""lengthInMeters"": 106588
+          }
+        }
+      },
+      {
+        ""statusCode"": 400,
+        ""response"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+        ""detailedError"": {
+          ""message"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+          ""code"": ""MAP_MATCHING_FAILURE""
+        }
+      },
+      {
+        ""statusCode"": 400,
+        ""response"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+        ""detailedError"": {
+          ""message"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+          ""code"": ""MAP_MATCHING_FAILURE""
+        }
+      }
+    ],
+    ""summary"": {
+      ""successfulRoutes"": 6,
+      ""totalRoutes"": 8
+    }
+  }
+]";
             using (var r = new ChoJSONReader<Rootobject>("sample56.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 //.WithField(f => f.formatVersion)
@@ -6689,14 +9644,51 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //.UseJsonSerialization()
                 )
             {
-                r.Print();
+                //r.Print();
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void DeserializeToConcreteClasses()
+        [Test]
+        public static void DeserializeToConcreteClasses()
         {
+            string expected = @"[
+  {
+    ""statusCode"": 200,
+    ""response"": {
+      ""routeSummary"": {
+        ""lengthInMeters"": 95028
+      }
+    }
+  },
+  {
+    ""statusCode"": 200,
+    ""response"": {
+      ""routeSummary"": {
+        ""lengthInMeters"": 97955
+      }
+    }
+  },
+  {
+    ""statusCode"": 400,
+    ""response"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+    ""detailedError"": {
+      ""message"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+      ""code"": ""MAP_MATCHING_FAILURE""
+    }
+  },
+  {
+    ""statusCode"": 400,
+    ""response"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+    ""detailedError"": {
+      ""message"": ""Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)"",
+      ""code"": ""MAP_MATCHING_FAILURE""
+    }
+  }
+]";
             using (var r = new ChoJSONReader<IMatrix>("sample57.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .Configure(c => c.SupportsMultiRecordTypes = true)
                 .Configure(c => c.RecordTypeSelector = o =>
                 {
                     dynamic dobj = o as dynamic;
@@ -6708,10 +9700,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                             return typeof(Matrix2);
                     }
                 })
-                .Configure(c => c.SupportsMultiRecordTypes = true)
                 )
             {
-                r.Print();
+                //r.Print();
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -6737,9 +9730,36 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string id { get; set; }
             public string link { get; set; }
         }
-
-        static void DeserializeToConcreteClasses1()
+        [Test]
+        public static void DeserializeToConcreteClasses1()
         {
+            string expected = @"[
+  {
+    ""id"": ""OUHDm"",
+    ""title"": ""My most recent drawing. Spent over 100 hours."",
+    ""is_album"": false
+  },
+  {
+    ""images_count"": 3,
+    ""images"": [
+      {
+        ""id"": ""24nLu"",
+        ""link"": ""http://i.imgur.com/24nLu.jpg""
+      },
+      {
+        ""id"": ""Ziz25"",
+        ""link"": ""http://i.imgur.com/Ziz25.jpg""
+      },
+      {
+        ""id"": ""9tzW6"",
+        ""link"": ""http://i.imgur.com/9tzW6.jpg""
+      }
+    ],
+    ""id"": ""lDRB2"",
+    ""title"": ""Imgur Office"",
+    ""is_album"": true
+  }
+]";
             using (var r = new ChoJSONReader<IGalleryItem>("Issue151.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 .Configure(c => c.RecordTypeSelector = o =>
@@ -6756,8 +9776,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 .Configure(c => c.SupportsMultiRecordTypes = true)
                 )
             {
-                foreach (var rec in r)
-                    Console.Write(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.Write(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -6793,35 +9815,125 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             //[JsonConverter(typeof(ChoKnownTypeConverter<IGalleryItemX>))]
             public List<IGalleryItemX> albums { get; set; }
         }
-
-        static void DeserializeToConcreteClasses2()
+        [Test]
+        public static void DeserializeToConcreteClasses2()
         {
+            string expected = @"[
+  {
+    ""id"": ""123-22"",
+    ""albums"": [
+      {
+        ""id"": ""OUHDm"",
+        ""title"": ""My most recent drawing. Spent over 100 hours."",
+        ""is_album"": false
+      },
+      {
+        ""images_count"": 3,
+        ""images"": [
+          {
+            ""id"": ""24nLu"",
+            ""link"": ""http://i.imgur.com/24nLu.jpg""
+          },
+          {
+            ""id"": ""Ziz25"",
+            ""link"": ""http://i.imgur.com/Ziz25.jpg""
+          },
+          {
+            ""id"": ""9tzW6"",
+            ""link"": ""http://i.imgur.com/9tzW6.jpg""
+          }
+        ],
+        ""id"": ""lDRB2"",
+        ""title"": ""Imgur Office"",
+        ""is_album"": true
+      }
+    ]
+  }
+]";
             using (var r = new ChoJSONReader<RootAlblumX>("Issue152.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 //.UseJsonSerialization()
                 //.JsonSerializationSettings(s => s.Converters.Add(Activator.CreateInstance<ChoKnownTypeConverter<IGalleryItemX>>()))
                 )
             {
-                foreach (var rec in r)
-                    Console.Write(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.Write(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void DeserializeToConcreteClasses4()
+        [Test]
+        public static void DeserializeToConcreteClasses4()
         {
+            string expected = @"[
+  {
+    ""id"": ""OUHDm"",
+    ""title"": ""My most recent drawing. Spent over 100 hours."",
+    ""is_album"": false
+  },
+  {
+    ""images_count"": 3,
+    ""images"": [
+      {
+        ""id"": ""24nLu"",
+        ""link"": ""http://i.imgur.com/24nLu.jpg""
+      },
+      {
+        ""id"": ""Ziz25"",
+        ""link"": ""http://i.imgur.com/Ziz25.jpg""
+      },
+      {
+        ""id"": ""9tzW6"",
+        ""link"": ""http://i.imgur.com/9tzW6.jpg""
+      }
+    ],
+    ""id"": ""lDRB2"",
+    ""title"": ""Imgur Office"",
+    ""is_album"": true
+  }
+]";
             using (var r = new ChoJSONReader<IGalleryItemX>("Issue151.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 //.Configure(c => c.KnownTypeDiscriminator = "is_album")
                 .Configure(c => c.SupportsMultiRecordTypes = true)
                 )
             {
-                foreach (var rec in r)
-                    Console.Write(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.Write(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void DeserializeToConcreteClasses3()
+        [Test]
+        public static void DeserializeToConcreteClasses3()
         {
+            string expected = @"[
+  {
+    ""id"": ""OUHDm"",
+    ""title"": ""My most recent drawing. Spent over 100 hours."",
+    ""is_album"": false
+  },
+  {
+    ""images_count"": 3,
+    ""images"": [
+      {
+        ""id"": ""24nLu"",
+        ""link"": ""http://i.imgur.com/24nLu.jpg""
+      },
+      {
+        ""id"": ""Ziz25"",
+        ""link"": ""http://i.imgur.com/Ziz25.jpg""
+      },
+      {
+        ""id"": ""9tzW6"",
+        ""link"": ""http://i.imgur.com/9tzW6.jpg""
+      }
+    ],
+    ""id"": ""lDRB2"",
+    ""title"": ""Imgur Office"",
+    ""is_album"": true
+  }
+]";
             using (var r = new ChoJSONReader<IGalleryItemX>("Issue151.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 .Configure(c => c.KnownTypeDiscriminator = "is_album")
@@ -6831,11 +9943,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 .Configure(c => c.SupportsMultiRecordTypes = true)
                 )
             {
-                foreach (var rec in r)
-                    Console.Write(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.Write(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-        static void LoadDuplicateKeys()
+        [Test]
+        public static void LoadDuplicateKeys()
         {
             string json = @"
 {
@@ -6848,16 +9963,26 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         }
     }
 }";
-
+            string expected = @"[
+  {
+    ""Quotes"": {
+      ""Quote"": {
+        ""Text"": ""Hello""
+      }
+    }
+  }
+]";
             using (var r = ChoJSONReader.LoadText(json)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void FlattenJSON()
+        [Test]
+        public static void FlattenJSON()
         {
             string json = @"
 {
@@ -6870,13 +9995,26 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         ""Designation"" : ""Senior Engineer""
     }
 }";
+            string expected = @"[
+  {
+    ""First Name"": ""Steve"",
+    ""Last Name"": ""Williams"",
+    ""Age"": 20,
+    ""Organization"": ""Google"",
+    ""SalaryReceived"": 25000,
+    ""Designation"": ""Senior Engineer""
+  }
+]";
 
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json)
                 )
             {
-                using (var w = new ChoJSONWriter(Console.Out))
+                using (var w = new ChoJSONWriter(jsonOut))
                     w.Write(r.FlattenBy("Employement Details"));
             }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class ProductRoot
@@ -6916,8 +10054,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         {
             public string ConditionType { get; set; }
         }
-
-        static void TokenReplacementTest()
+        [Test]
+        public static void TokenReplacementTest()
         {
             string json = @"
 {
@@ -6932,6 +10070,20 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   }
 }";
+
+            string expected = @"{
+  ""Product"": {
+    ""SKU"": ""{mappingKey1}"",
+    ""StandardProductID"": {
+      ""Type"": ""{mappingKey2}"",
+      ""Value"": ""{mappingKey3}""
+    },
+    ""Condition"": {
+      ""ConditionType"": ""{mappingKey4}""
+    }
+  }
+}";
+            StringBuilder jsonOut = new StringBuilder();
 
             Dictionary<string, string> dict = new Dictionary<string, string> { { "mappingKey1", "mappingValue1" }, { "mappingKey2", "mappingValue2" }, { "mappingKey3", "mappingValue3" }, { "mappingKey4", "mappingValue4" } };
             Dictionary<string, string> dictOut = new Dictionary<string, string>
@@ -6956,7 +10108,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //})
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
                 {
-                    var v = e.Source as string;
+                    var v = e.Source.ToNString();
                     if (v.StartsWith("{") && v.EndsWith("}"))
                     {
                         v = v.Substring(1, v.Length - 2);
@@ -6969,14 +10121,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             {
                 //r.Print();
 
-                using (var w = new ChoJSONWriter<ProductRoot>(Console.Out)
+                using (var w = new ChoJSONWriter<ProductRoot>(jsonOut)
                     .SupportMultipleContent()
                     .SingleElement()
                     .UseJsonSerialization()
                     .UseDefaultContractResolver()
                     .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
                     {
-                        var v = e.Source as string;
+                        var v = e.Source.ToString();
                         if (dictOut.ContainsKey(v))
                             e.Source = $"{{{dictOut[v]}}}";
                     })
@@ -6985,8 +10137,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     w.Write(r);
                 }
             }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
+        [Test]
         public static void Json2Xml51()
         {
             string json = @"
@@ -7035,9 +10189,50 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
 ]
 ";
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
+  <XElement>
+    <firstName>John</firstName>
+    <lastName>Smith</lastName>
+    <age>25</age>
+    <address>
+      <streetAddress>21 2nd Street</streetAddress>
+      <city>New York</city>
+      <state>NY</state>
+      <postalCode>10021</postalCode>
+    </address>
+    <phoneNumber>
+      <type>home</type>
+      <number>212 555-1234</number>
+    </phoneNumber>
+    <phoneNumber>
+      <type>fax</type>
+      <number>646 555-4567</number>
+    </phoneNumber>
+  </XElement>
+  <XElement>
+    <firstName>Tom</firstName>
+    <lastName>Mark</lastName>
+    <age>50</age>
+    <address>
+      <streetAddress>10 Main Street</streetAddress>
+      <city>Edison</city>
+      <state>NJ</state>
+      <postalCode>08837</postalCode>
+    </address>
+    <phoneNumber>
+      <type>home</type>
+      <number>732 555-1234</number>
+    </phoneNumber>
+    <phoneNumber>
+      <type>fax</type>
+      <number>609 555-4567</number>
+    </phoneNumber>
+  </XElement>
+</Root>";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json))
             {
-                using (var w = new ChoXmlWriter(Console.Out)
+                using (var w = new ChoXmlWriter(jsonOut)
                     .UseXmlSerialization()
                     .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                        )
@@ -7046,6 +10241,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
 
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
 
@@ -7118,7 +10315,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             /// The Unix Msec timestamp for the start of the aggregate window.
             /// </summary>
             [JsonProperty("t")]
-            public long StartTime { get; set; }
+            public double StartTime { get; set; }
 
             /// <summary>
             /// The number of transactions in the aggregate window.
@@ -7160,8 +10357,39 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             decimal Close { get; }
             decimal Volume { get; }
         }
-        static void MapToDifferentType()
+        [Test]
+        public static void MapToDifferentType()
         {
+            string expected = @"[
+  {
+    ""ticker"": ""AAPL"",
+    ""queryCount"": 2,
+    ""resultsCount"": 2,
+    ""adjusted"": true,
+    ""results"": [
+      {
+        ""t"": 1234,
+        ""o"": 74.06,
+        ""h"": 75.15,
+        ""l"": 73.7975,
+        ""c"": 75.0875,
+        ""v"": 135647456.0
+      },
+      {
+        ""t"": 1234,
+        ""o"": 74.2875,
+        ""h"": 75.145,
+        ""l"": 74.125,
+        ""c"": 74.3575,
+        ""v"": 146535512.0
+      }
+    ],
+    ""status"": ""OK"",
+    ""request_id"": ""6a7e466379af0a71039d60cc78e72282"",
+    ""count"": 0
+  }
+]";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = new ChoJSONReader<Aggregates>("sample58.json")
                 //.UseJsonSerialization()
                 .WithField(f => f.Aggregatelist, fieldTypeSelector: o => typeof(List<Quote>))
@@ -7171,12 +10399,13 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     return dtDateTime.AddMilliseconds(o.CastTo<long>()).ToLocalTime();
                 })
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null)
                 )
             {
                 var x = r.ToArray();
                 x.Print();
 
-                using (var w = new ChoJSONWriter(Console.Out)
+                using (var w = new ChoJSONWriter(jsonOut)
                         .WithFieldForType<Quote>(f => f.Date, valueConverter: o =>
                         {
                             return 1234;
@@ -7184,6 +10413,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     )
                     w.Write(x);
             }
+
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class GraphItem
@@ -7193,8 +10425,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [JsonExtensionData]
             public Dictionary<string, JToken> Fields { get; set; }
         }
-
-        static void ConvertAdditionalFieldToPOCO()
+        [Test]
+        public static void ConvertAdditionalFieldToPOCO()
         {
             string json = @"[
   {
@@ -7216,11 +10448,33 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   }
 ]
 ";
+            string expected = @"[
+  {
+    ""id"": 1001,
+    ""fields"": {
+      ""Column"": ""true"",
+      ""Column2"": ""value2"",
+      ""Column3"": ""65""
+    },
+    ""name"": ""Tom""
+  },
+  {
+    ""id"": 1002,
+    ""fields"": {
+      ""Column"": ""true"",
+      ""Column2"": ""value2"",
+      ""Column3"": ""65""
+    }
+  }
+]";
             using (var r = ChoJSONReader<GraphItem>.LoadText(json)
                 .UseJsonSerialization()
                 )
             {
-                r.Print();
+                //r.Print();
+            
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
 
         }
@@ -7254,16 +10508,26 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [JsonProperty]
             public SofT<decimal> TestStructDecimal { get; set; }
         }
-
+        [Test]
         public static void ImplicitValueCoversion()
         {
-            var json = "{ \"TestStructInt\" : \"12\", \"TestStructDecimal\" : \"3.45\"}";
+            var json = @"{
+  ""TestStructInt"": ""12"",
+  ""TestStructDecimal"": ""3.45""
+}";
+            string expected = @"[
+  {
+    ""TestStructInt"": ""12"",
+    ""TestStructDecimal"": ""3.45""
+  }
+]";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader<Something>.LoadText(json)
                 //    .UseJsonSerialization()
                 //.UseDefaultContractResolver()
                 )
             {
-                using (var w = new ChoJSONWriter<Something>(Console.Out)
+                using (var w = new ChoJSONWriter<Something>(jsonOut)
                     //.UseJsonSerialization()
                     //.UseDefaultContractResolver()
                     .ErrorMode(ChoErrorMode.IgnoreAndContinue)
@@ -7272,13 +10536,15 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
                 //r.Print();
             }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
             return;
             var modelDeserialised = JsonConvert.DeserializeObject<Something>(json);
             var modelReserialised = JsonConvert.SerializeObject(modelDeserialised);
             Console.WriteLine(modelReserialised);
         }
-
-        static void OutputEntireArrayToColumn()
+        [Test]
+        public static void OutputEntireArrayToColumn()
         {
             string json = @"{
   ""FirstName"": ""something"",
@@ -7288,11 +10554,15 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   ]
 }";
 
+            string expected = @"FirstName,SomeProperties
+something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
+            StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json)
+                .WithField("FirstName")
                 .WithField("SomeProperties", customSerializer: o => o.ToNString().Replace(Environment.NewLine, String.Empty).Replace("  ", String.Empty))
                 )
             {
-                using (var w = new ChoCSVWriter(Console.Out)
+                using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
                     )
                 {
@@ -7300,6 +10570,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
 
             }
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class Settings
@@ -7334,9 +10606,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             [JsonProperty("duration")]
             public long Duration { get; set; }
         }
-
-        static void DeserializeToContentStruct()
+        [Test]
+        public static void DeserializeToContentStruct()
         {
+            Assert.Ignore();
+
             string json = @"{
     ""id"": ""any_id"",
     ""type"": ""any_type"",
@@ -7346,20 +10620,26 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
 }";
 
+            string expected = @"FirstName,SomeProperties
+something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader<Settings>.LoadText(json)
                 .UseJsonSerialization()
                 .UseDefaultContractResolver()
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
+                var recs = r.ToArray();
                 //r.Print();
                 //return;
-                using (var w = new ChoJSONWriter<Settings>(Console.Out)
+                using (var w = new ChoJSONWriter<Settings>(jsonOut)
                     .UseJsonSerialization()
                     .UseDefaultContractResolver()
                     )
-                    w.Write(r);
+                    w.Write(recs);
             }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class Menu
@@ -7373,8 +10653,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Name { get; set; }
             public string Label { get; set; }
         }
-
-        static void LoadKeyValueToItem()
+        [Test]
+        public static void LoadKeyValueToItem()
         {
             string json = @"{
   ""menu"": {
@@ -7441,7 +10721,85 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
   }
 }";
-
+            string expected = @"[
+  {
+    ""Header"": ""SVG Viewer"",
+    ""Items"": [
+      {
+        ""Name"": ""Open"",
+        ""Label"": null
+      },
+      {
+        ""Name"": ""OpenNew"",
+        ""Label"": ""Open New""
+      },
+      {
+        ""Name"": ""ZoomIn"",
+        ""Label"": ""Zoom In""
+      },
+      {
+        ""Name"": ""ZoomOut"",
+        ""Label"": ""Zoom Out""
+      },
+      {
+        ""Name"": ""OriginalView"",
+        ""Label"": ""Original View""
+      },
+      {
+        ""Name"": ""Quality"",
+        ""Label"": null
+      },
+      {
+        ""Name"": ""Pause"",
+        ""Label"": null
+      },
+      {
+        ""Name"": ""Mute"",
+        ""Label"": null
+      },
+      {
+        ""Name"": ""Find"",
+        ""Label"": ""Find...""
+      },
+      {
+        ""Name"": ""FindAgain"",
+        ""Label"": ""Find Again""
+      },
+      {
+        ""Name"": ""Copy"",
+        ""Label"": null
+      },
+      {
+        ""Name"": ""CopyAgain"",
+        ""Label"": ""Copy Again""
+      },
+      {
+        ""Name"": ""CopySVG"",
+        ""Label"": ""Copy SVG""
+      },
+      {
+        ""Name"": ""ViewSVG"",
+        ""Label"": ""View SVG""
+      },
+      {
+        ""Name"": ""ViewSource"",
+        ""Label"": ""View Source""
+      },
+      {
+        ""Name"": ""SaveAs"",
+        ""Label"": ""Save As""
+      },
+      {
+        ""Name"": ""Help"",
+        ""Label"": null
+      },
+      {
+        ""Name"": ""About"",
+        ""Label"": ""About Adobe CVG Viewer...""
+      }
+    ]
+  }
+]";
             using (var r = ChoJSONReader<Menu>.LoadText(json)
                 .WithJSONPath("$..menu")
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
@@ -7474,7 +10832,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //)
                 )
             {
-                r.Print();
+                //r.Print();
+
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -7488,9 +10849,24 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         {
             public string Name { get; set; }
         }
-
+        [Test]
         public static void JSONToXml()
         {
+            string expected = @"[
+  {
+    ""Objects"": [
+      {
+        ""$type"": ""ChoJSONReaderTest.Program+MyObject, ChoJSONReaderTest"",
+        ""Name"": ""Name1""
+      },
+      {
+        ""$type"": ""ChoJSONReaderTest.Program+MyObject, ChoJSONReaderTest"",
+        ""Name"": ""Name2""
+      }
+    ]
+  }
+]";
+
             var house1 = new House
             {
                 Objects = new MyObject[]
@@ -7526,9 +10902,12 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //r.Print();
             }
             Console.WriteLine(json.ToString());
-        }
 
-        static void Json2Xml3()
+            var actual = json.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void Json2Xml3()
         {
             string json = @"{
   ""$type"": ""Program+House, z3n3gd53"",
@@ -7543,14 +10922,26 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   ]
 }";
-
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:json=""http://james.newtonking.com/projects/json"">
+  <XElement xsi:type=""Program+House, z3n3gd53"">
+    <Objects>
+      <Object xsi:type=""Program+MyObject, z3n3gd53"">
+        <Name>Name1</Name>
+      </Object>
+      <Object xsi:type=""Program+MyObject, z3n3gd53"">
+        <Name>Name2</Name>
+      </Object>
+    </Objects>
+  </XElement>
+</Root>";
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json)
                 //.UseJsonSerialization()
                 )
             {
                 //r.PrintAsJson();
                 //return;
-                using (var w = new ChoXmlWriter(Console.Out)
+                using (var w = new ChoXmlWriter(jsonOut)
                     .Configure(c => c.UseXmlArray = true)
                     .WithXmlNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace)
                     .WithXmlNamespace("json", ChoXmlSettings.JSONSchemaNamespace)
@@ -7559,10 +10950,48 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     )
                     w.Write(r);
             }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void Issue163()
+        [Test]
+        public static void Issue163()
         {
+            string expected = @"[
+  {
+    ""Id"": ""1"",
+    ""name"": ""name"",
+    ""nestedobject"": {
+      ""id"": ""2"",
+      ""name"": ""objName""
+    },
+    ""nestedarray"": [
+      {
+        ""name"": ""namelist10"",
+        ""city"": ""citylist10""
+      },
+      {
+        ""name"": ""namelist11""
+      }
+    ]
+  },
+  {
+    ""Id"": ""2"",
+    ""name"": ""name1"",
+    ""nestedobject"": {
+      ""id"": ""3"",
+      ""name"": ""objName""
+    },
+    ""nestedarray"": [
+      {
+        ""name"": ""namelist20"",
+        ""city"": ""citylist20""
+      },
+      {
+        ""name"": ""namelist21""
+      }
+    ]
+  }
+]";
             string csv = @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
 1,name,2,objName,namelist10, citylist10,namelist11, citylist11
 2,name1,3,objName,namelist20, citylist20,namelist21, citylist21";
@@ -7578,6 +11007,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     w.Write(r);
             }
             Console.WriteLine(json.ToString());
+            var actual = json.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public readonly struct Model
@@ -7590,9 +11021,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 Value = value;
             }
         }
-
-        static void StructTypeTest()
+        [Test]
+        public static void StructTypeTest()
         {
+            string expected = @"[
+  {
+    ""Value"": ""Test""
+  }
+]";
             StringBuilder json = new StringBuilder();
             using (var w = new ChoJSONWriter<Model>(json)
                 .SupportMultipleContent()
@@ -7606,12 +11042,46 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 .UseJsonSerialization()
                 )
             {
-                r.Print();
+                //r.Print();
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void Issue165_1()
+        [Test]
+        public static void Issue165_1()
         {
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""nestedobject"": {
+      ""id"": 2,
+      ""name"": ""objName""
+    },
+    ""nestedarray"": [
+      {
+        ""name"": ""namelist10"",
+        ""city"": ""citylist10""
+      },
+      {
+        ""name"": ""namelist11""
+      }
+    ]
+  },
+  {
+    ""Id"": 2,
+    ""name"": ""name1"",
+    ""nestedobject"": {
+      ""id"": 3,
+      ""name"": ""obj3Nmae""
+    },
+    ""nestedarray"": [
+      {
+        ""name"": ""namelist20"",
+        ""city"": ""citylist20""
+      }
+    ]
+  }
+]";
             string csv =
                 @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
 1,,2,objName,namelist10,citylist10,namelist11,citylist11
@@ -7631,10 +11101,44 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(json.ToString());
+            var actual = json.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void Issue165()
+        [Test]
+        public static void Issue165()
         {
+            string expected = @"[
+  {
+    ""Id"": 1,
+    ""nestedobject"": {
+      ""id"": 2,
+      ""name"": ""objName""
+    },
+    ""nestedarray"": [
+      {
+        ""name"": ""namelist10"",
+        ""city"": ""citylist10""
+      },
+      {
+        ""name"": ""namelist11""
+      }
+    ]
+  },
+  {
+    ""Id"": 2,
+    ""nestedobject"": {
+      ""id"": 3,
+      ""name"": ""obj3Nmae""
+    },
+    ""nestedarray"": [
+      {
+        ""name"": ""namelist20"",
+        ""city"": ""citylist20""
+      }
+    ]
+  }
+]";
+
             string csv =
                 @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
 1,,2,objName,namelist10,citylist10,namelist11,citylist11
@@ -7655,9 +11159,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             Console.WriteLine(json.ToString());
+            var actual = json.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void MaxScanNodesTest()
+        [Test]
+        public static void MaxScanNodesTest()
         {
             string json = @"{
   ""Parts"": [
@@ -7678,6 +11184,16 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     }
   ]
 }";
+            string expected = @"[
+  {
+    ""Col1"": ""Some Text"",
+    ""Col2"": 0
+  },
+  {
+    ""Col1"": ""Some Text 2"",
+    ""Col2"": 1
+  }
+]";
             using (var r = ChoJSONReader.LoadText(json)
                        .WithJSONPath("$..Table").WithMaxScanNodes(2).UseJsonSerialization().ErrorMode(ChoErrorMode.IgnoreAndContinue)
                       )
@@ -7692,6 +11208,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //}
                 var dt = r.AsDataTable();
                 dt.Print();
+
+                var actual = JsonConvert.SerializeObject(dt, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -7772,9 +11291,32 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 return false;
             }
         }
-
-        static void CompositeSerialization()
+        [Test]
+        public static void CompositeSerialization()
         {
+            string expected = @"[
+  {
+    ""children"": [
+      {
+        ""experience"": 0,
+        ""achieved"": false,
+        ""name"": ""First level""
+      },
+      {
+        ""experience"": 0,
+        ""achieved"": false,
+        ""name"": ""Second level""
+      },
+      {
+        ""experience"": 0,
+        ""achieved"": false,
+        ""name"": ""Third level""
+      }
+    ],
+    ""name"": ""Levels""
+  }
+]";
+
             Composite levels = new Composite("Levels");
             Composite firstLevel = new Composite("First level");
             Composite secondLevel = new Composite("Second level");
@@ -7816,7 +11358,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //.JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.Objects)
                 )
             {
-                r.Print();
+                //r.Print();
+
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -7862,9 +11407,30 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
         }
-
-        static void CustomCollectionTest()
+        [Test]
+        public static void CustomCollectionTest()
         {
+            string expected1 = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Tom""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""Mark""
+  }
+]";
+            string expected2 = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Tom""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""Mark""
+  }
+]";
+           
             MyCollectionClass coll = new MyCollectionClass();
             coll.Add(new MyClass2 { Id = 1, Name = "Tom" });
             coll.Add(new MyClass2 { Id = 2, Name = "Mark" });
@@ -7878,6 +11444,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
             json.Print();
+            var actual1 = json.ToString();
+            Assert.AreEqual(expected1, actual1);
 
             MyCollectionClass coll2 = new MyCollectionClass();
             using (var r = ChoJSONReader<MyClass2>.LoadText(json.ToString()))
@@ -7886,9 +11454,12 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     coll2.Add(rec);
             }
             coll2.Print();
-        }
 
-        static void JSON2XmlWithTextAttributeTest()
+            var actual2 = JsonConvert.SerializeObject(coll2, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expected2, actual2);
+        }
+        [Test]
+        public static void JSON2XmlWithTextAttributeTest()
         {
             string json = @"{
 
@@ -7905,53 +11476,91 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
   }
 }";
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
+  <XElement>
+    <properties>
+      <replace name=""firstElement"">
+      11111
+    </replace>
+      <replace name=""secondElement"">
+      2222
+    </replace>
+    </properties>
+  </XElement>
+</Root>";
 
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = ChoJSONReader.LoadText(json.ToString())
                 //.WithJSONPath("$..properties.replace")
                 )
             {
-                using (var w = new ChoXmlWriter(Console.Out).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                using (var w = new ChoXmlWriter(jsonOut).ErrorMode(ChoErrorMode.IgnoreAndContinue)
                     .Configure(c => c.TurnOffXmlFormatting = false)
                     .Configure(c => c.Formatting = System.Xml.Formatting.Indented)
                     )
                     w.Write(r);
             }
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        static void LoadSensorData()
+        [Test]
+        public static void LoadSensorData()
         {
-            using (var r = new ChoJSONReader(@"C:\Projects\GitHub\ChoETL\data\Sensors.json")
+            string expected = @"[
+  {
+    ""Keys"": {
+      ""RecipeStepID"": ""START"",
+      ""StepResult"": ""NormalEnd""
+    }
+  },
+  {
+    ""Keys"": {
+      ""RecipeStepID"": ""END"",
+      ""StepResult"": ""NormalEnd""
+    }
+  }
+]";
+            using (var r = new ChoJSONReader(@"Sensors.json")
                 .WithJSONPath("$..ControlJob.RecipeSteps")
                 )
             {
-                foreach (var rec in r)
-                {
-                    rec.Print();
-                }
+                //foreach (var rec in r)
+                //{
+                //    rec.Print();
+                //}
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
-
-        static void CSV2JSON()
+        [Test]
+        public static void CSV2JSON()
         {
-            string csvFilePath = @"C:\Projects\GitHub\ChoETL\data\XBTUSD.csv";
+            Assert.Ignore();
 
+            string expected = null;
+
+            string csvFilePath = @"XBTUSD.csv";
+
+            StringBuilder jsonOut = new StringBuilder();
             using (var r = new ChoCSVReader(csvFilePath)
                 .NotifyAfter(1000)
                 .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded}".Print())
                 )
             {
-                using (var w = new ChoJSONWriter(@"C:\Projects\GitHub\ChoETL\data\XBTUSD.json"))
-                    w.Write(r.Take(10000));
+                using (var w = new ChoJSONWriter(jsonOut))
+                    w.Write(r.Take(10));
             }
 
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         static void Issue170()
         {
             ChoETLFrxBootstrap.MaxArrayItemsToPrint = 1;
-            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
-            //string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset.json";
-            //ChoJSONExtensions.SplitJsonFile(jsonFilePath, new string[] { "ControlJob", "ProcessJobs", "ProcessRecipes", "RecipeSteps"},
+            string jsonFilePath = @"largetestdata\largetestdata.json";
+            //string jsonFilePath = @"smallsubset.json";
+            //ChoJSONExtensions.SplitJsonFile(jsonFilePath, new string[] { "ControlJob", "ProcessJobs", "ProcessRecipes", "RecipeSteps" },
             //                                 (directory, name, i, ext) => Path.Combine(directory, Path.ChangeExtension(name + $"_fragment_{i}", ext)));
             return;
 
@@ -7981,7 +11590,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //.Configure(c => c.MaxJArrayItemsLoad = 10)
                 .Configure(c => c.CustomJObjectLoader = (sr, s) =>
                 {
-                    string outFilePath = $"C:\\Projects\\GitHub\\ChoETL\\data\\RecipeSteps_{fileCount++}.json";
+                    string outFilePath = $@"RecipeSteps_{fileCount++}.json";
                     using (var jo = new ChoJObjectWriter(outFilePath))
                     {
                         jo.Formatting = Newtonsoft.Json.Formatting.Indented;
@@ -8002,9 +11611,132 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
         }
-        static void Issue171()
+        [Test]
+        public static void Issue171()
         {
-            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset1.json";
+            string expected = @"{
+  ""Jobs"": {
+    ""Keys"": {
+      ""JobID"": ""test123"",
+      ""DeviceID"": ""TEST01""
+    },
+    ""Props"": {
+      ""FileType"": ""Measurements"",
+      ""InstrumentDescriptions"": [
+        {
+          ""InstrumentID"": ""1723007"",
+          ""InstrumentType"": ""Actual1"",
+          ""Name"": ""U"",
+          ""DataType"": ""Double"",
+          ""Units"": ""degC""
+        },
+        {
+          ""InstrumentID"": ""2424009"",
+          ""InstrumentType"": ""Actual2"",
+          ""Name"": ""VG03"",
+          ""DataType"": ""Double"",
+          ""Units"": ""Pa""
+        }
+      ]
+    },
+    ""Steps"": {
+      ""Keys"": {
+        ""StepID"": ""START"",
+        ""StepResult"": ""NormalEnd""
+      },
+      ""InstrumentData"": [
+        {
+          ""Keys"": {
+            ""InstrumentID"": ""1723007""
+          },
+          ""Measurements"": [
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.000"",
+              ""Value"": 540
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.100"",
+              ""Value"": 539
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.200"",
+              ""Value"": 540
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.300"",
+              ""Value"": 540
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.400"",
+              ""Value"": 540
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.500"",
+              ""Value"": 540
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.600"",
+              ""Value"": 540
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.700"",
+              ""Value"": 538
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.800"",
+              ""Value"": 540
+            }
+          ]
+        },
+        {
+          ""Keys"": {
+            ""InstrumentID"": ""2424009""
+          },
+          ""Measurements"": [
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.000"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.100"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.200"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.300"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.400"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.500"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.600"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.700"",
+              ""Value"": 1333.22
+            },
+            {
+              ""DateTime"": ""2021-11-16 21:18:37.800"",
+              ""Value"": 1333.22
+            }
+          ]
+        }
+      ]
+    }
+  }
+}";
+
+            string jsonFilePath = @"smallsubset1.json";
 
             dynamic keys = null;
             dynamic props = null;
@@ -8021,7 +11753,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 props = r.FirstOrDefault();
             }
 
-            int fileCount = 0;
+            StringBuilder jsonOut = new StringBuilder();
             //Loop thro ReceipeSteps, write to individual files
             using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..Job.Steps")
                     .NotifyAfter(1)
@@ -8030,10 +11762,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     //Callback used to hook up to loader, stream the nodes to file (this avoids loading to memory)
                     .Configure(c => c.CustomJObjectLoader = (sr, s) =>
                     {
-                        string outFilePath = $"C:\\Projects\\GitHub\\ChoETL\\data\\Steps_{fileCount++}.json";
-                        $"Writing to `{outFilePath}` file...".Print();
-
-                        using (var topJo = new ChoJObjectWriter(Console.Out))
+                        using (var topJo = new ChoJObjectWriter(jsonOut))
                         {
                             topJo.Formatting = Newtonsoft.Json.Formatting.Indented;
                             using (var jo = new ChoJObjectWriter("Jobs", topJo))
@@ -8052,6 +11781,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             {
                 r.Loop();
             }
+
+            var actual = jsonOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         static void ReadXBTUSDFile()
@@ -9959,15 +13691,15 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   ""WIP_CODE"": []
 }";
             StringBuilder csv = new StringBuilder();
-            using (var r = ChoJSONReader.LoadText(json)) 
-            { 
+            using (var r = ChoJSONReader.LoadText(json))
+            {
                 using (var w = new ChoCSVWriter(csv)
                     .Configure(c => c.NestedColumnSeparator = '/')
                     .Configure(c => c.ArrayIndexSeparator = '_')
-                    .WithFirstLineHeader()) 
-                { 
-                    w.Write(r); 
-                } 
+                    .WithFirstLineHeader())
+                {
+                    w.Write(r);
+                }
             }
 
             csv.Print();
@@ -9980,8 +13712,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 using (var w = new ChoJSONWriter(Console.Out)
                     .SupportMultipleContent()
                     .SingleElement()
- 				  // .WithField("BATCH_CODE", isArray: true)
-				   //.WithField("WIP_CODE", isArray: true)
+                   // .WithField("BATCH_CODE", isArray: true)
+                   //.WithField("WIP_CODE", isArray: true)
                    .Configure(c => c.ThrowAndStopOnMissingField = false)
                    )
                 {
@@ -9990,10 +13722,28 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void CreateLargeCSVFile()
+        {
+            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
+            string csvFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.csv";
+            using (var r = new ChoJSONReader(jsonFilePath)
+                //.WithJSONPath("$..ControlJob.Attributes.SensorDescriptions")
+                .WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps")
+                .NotifyAfter(1)
+                .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded} <- {DateTime.Now}".Print())
+                )
+            {
+                using (var w = new ChoCSVWriter(csvFilePath)
+                    .WithFirstLineHeader())
+                    w.Write(r.First());
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue263();
+            Sample32();
             return;
 
             Issue235();
@@ -10176,7 +13926,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
-        //[Test]
+        [Test]
         public static void DictTest1()
         {
             List<RegistrantInfo> expected = new List<RegistrantInfo>
@@ -10237,13 +13987,13 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public List<string> Categories { get; set; }
         }
 
-        //[Test]
+        [Test]
         public static void SingleOrArrayItemTest()
         {
             List<object> expected = new List<object>
             {
-                new ChoDynamicObject{{"email","john.doe@sendgrid.com"},{"timestamp", (int)1337966815 },{ "category", new object[] { "newuser", "transactional" } }, {"event","open" } },
-                new ChoDynamicObject{{"email", "jane.doe@sendgrid.com" },{"timestamp", (int)1337966815 },{ "category", "olduser" }, {"event","open" } }
+                new ChoDynamicObject{{"email","john.doe@sendgrid.com"},{"timestamp", (int)1337966815 }, { "event", "open" }, { "category", new object[] { "newuser", "transactional" } } },
+                new ChoDynamicObject{{"email", "jane.doe@sendgrid.com" },{"timestamp", (int)1337966815 }, { "event", "open" }, { "category", new object[] { "olduser" } } }
             };
             List<object> actual = new List<object>();
 
@@ -10267,9 +14017,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             foreach (var rec in ChoJSONReader<Item>.LoadText(json))
             {
                 actual.Add(rec);
-                Console.WriteLine(rec.Dump());
             }
 
+            var actualText = JsonConvert.SerializeObject(actual, Newtonsoft.Json.Formatting.Indented);
+            var expectedText = JsonConvert.SerializeObject(expected, Newtonsoft.Json.Formatting.Indented);
+            Assert.AreEqual(expectedText, actualText);
             //CollectionAssert.AreEqual(expected, actual);
         }
 
@@ -10291,7 +14043,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
             public bool RecordFieldDeserialize(object record, long index, string propName, ref object source)
             {
-                JArray array = source as JArray;
+                JArray array = ((JToken[])source)[0] as JArray;
                 source = new Triangle[] { new Triangle { Indices = array.SelectMany(y => ((int[])y.ToObject<int[]>()).Select(z => z)).ToArray() } };
                 return true;
             }
@@ -10318,7 +14070,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 return -131595806 + new ArrayEqualityComparer<Int32>().GetHashCode(Indices);
             }
         }
-        //[Test]
+        [Test]
         public static void Sample50()
         {
             List<object> expected = new List<object>
@@ -10352,7 +14104,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         }
 
-        //[Test]
+        [Test]
         public static void RecordSelectTest()
         {
             List<Vehicle> expected = new List<Vehicle>
@@ -10406,7 +14158,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 var vehicle = obj as Vehicle;
                 return vehicle != null &&
                        OwnerType == vehicle.OwnerType &&
-                       EqualityComparer<JObject>.Default.Equals(Owner, vehicle.Owner);
+                       Enumerable.SequenceEqual(Owner.ToObject<Dictionary<string, object>>(), vehicle.Owner.ToObject<Dictionary<string, object>>());
+                //EqualityComparer<JObject>.Default.Equals(Owner, vehicle.Owner);
             }
 
             public override int GetHashCode()
@@ -10436,7 +14189,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string updated_at { get; set; }
         }
 
-        //[Test]
+        [Test]
         public static void JSON2CSV()
         {
             string expected = @"name,age,cars_car1,cars_car2,cars_car3,cars_Country_0,cars_Country_1
@@ -10460,12 +14213,13 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
 
             StringBuilder csv = new StringBuilder();
             using (var p = ChoJSONReader.LoadText(json)
-                .WithJSONPath("$")
+                .WithJSONPath("$", true)
+                .Configure(c => c.NestedKeySeparator = '_')
                 )
             {
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
-                    //.Configure(c => c.UseNestedKeyFormat = false)
+                    .Configure(c => c.UseNestedKeyFormat = true)
                     //.Configure(c => c.NestedColumnSeparator = '/')
                     //.Configure(c => c.ThrowAndStopOnMissingField = false)
                     )
@@ -10478,7 +14232,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void LargeJSON()
         {
             List<object> expected = new List<object>
@@ -10535,7 +14289,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
         }
 
 
-        //[Test]
+        [Test]
         public static void Sample28_1()
         {
             List<object> expected = new List<object> {
@@ -10574,7 +14328,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Sample27_1()
         {
             List<object> expected = new List<object> {
@@ -10584,11 +14338,12 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             List<object> actual = new List<object>();
 
             foreach (var rec in new ChoJSONReader<Result>(FileNameSample27JSON)
-                .WithJSONPath("results[*]")
+                .WithJSONPath("results[*]", true)
                 )
             {
                 actual.Add(rec);
             }
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         public class MyType
@@ -10615,7 +14370,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
                 return hashCode;
             }
         }
-        //[Test]
+        [Test]
         public static void Sample26_2()
         {
             List<object> expected = new List<object>
@@ -10639,7 +14394,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
 ]";
 
             foreach (var rec in ChoJSONReader<MyType>.LoadText(json)
-                .WithJSONPath("$[*]")
+                .WithJSONPath("$[*]", true)
                 )
             {
                 actual.Add(rec);
@@ -10648,28 +14403,34 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample26_1()
         {
+            List<object> expected = new List<object>()
+            {
+                new ChoDynamicObject{{ "regio", "Hoek van Holland"},{ "temperatureMin", 7.3},{ "temperatureMax", 8.8 } }
+            };
+
+            List<object> actual = new List<object>();
             foreach (var rec in new ChoJSONReader(FileNameSample26JSON)
                 .WithJSONPath("..stationmeasurements")
                 .WithField("regio", jsonPath: "regio", fieldType: typeof(string))
                 .WithField("temperatureMin", jsonPath: "dayhistory.temperatureMin", fieldType: typeof(double))
                 .WithField("temperatureMax", jsonPath: "dayhistory.temperatureMax", fieldType: typeof(double))
-                .Where(r => r.regio == "Hoogeveen")
+                .Where(r => r.regio == "Hoek van Holland")
                 )
-                Console.WriteLine(rec.Dump());
+                actual.Add(rec);
 
-            Assert.Fail("File content looks like not for that sample (maybe Sample26_2). No stationmeasurements, region, dayhistory, temperatureMin, temperatureMax");
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         public struct LevelBonus
         {
-            public int Power;
-            public int Mana;
-            public int Strenght;
-            public int Armor;
-            public int Health;
+            public int Power { get; set; }
+            public int Mana { get; set; }
+            public int Strenght { get; set; }
+            public int Armor { get; set; }
+            public int Health { get; set; }
 
             public override bool Equals(object obj)
             {
@@ -10698,7 +14459,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             }
         }
 
-        //[Test]
+        [Test]
         public static void DictTest()
         {
             List<Dictionary<string, LevelBonus>> expected = new List<Dictionary<string, LevelBonus>> { new Dictionary<string, LevelBonus>() };
@@ -10730,7 +14491,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        // [Test]
         public static void PartialJSONFileTest()
         {
             string json = @"{
@@ -10751,7 +14512,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             Assert.Fail("Not sure, what to test. Throws Newtonsoft-Exception. What should the Parameter ErrorMode do?");
         }
 
-        //[Test]
+        [Test]
         public static void TestCountToppings()
         {
             List<object> expected = new List<object>
@@ -10764,7 +14525,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             List<object> actual = new List<object>();
 
             using (var p = new ChoJSONReader(FileNameSample100JSON)
-                .WithJSONPath("$[*].toppings[*]")
+                .WithJSONPath("$[*].toppings[*]", true)
                 )
             {
                 foreach (var rec in p.GroupBy(g => ((dynamic)g).Value).Select(g => new { g.Key, Count = g.Count() }))
@@ -10801,7 +14562,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
                 return hashCode;
             }
         }
-        //[Test]
+        [Test]
         public static void LoadChildren()
         {
             List<object> expected = new List<object>
@@ -10821,7 +14582,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
     ]
 }";
             using (var p = ChoJSONReader<ActionMessage>.LoadText(json)
-                .WithJSONPath("$.*")
+                .WithJSONPath("$.^")
                 )
             {
                 foreach (var rec in p)
@@ -10868,7 +14629,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             }
         }
 
-        //[Test]
+        [Test]
         public static void GuidTest()
         {
             List<object> expected = new List<object>
@@ -10907,7 +14668,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void ReformatJSON()
         {
             string expected = @"contactName,quantity,description,invoiceNumber
@@ -10950,7 +14711,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Bcp()
         {
             Assert.Ignore("This is not a JSONReader test");
@@ -10975,17 +14736,17 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void XmlTypeTest()
         {
             ChoDynamicObject expected = new ChoDynamicObject {
                 { "Source","WEB"},
-                { "CodePlan",(long)5 },
-                { "PlanSelection",(long)1 },
-                { "PlanAmount",(double)500.01 },
-                { "PlanLimitCount",(long)31 },
-                { "PlanLimitAmount",(double)3000.01 },
-                { "Visible","False" },
+                { "CodePlan", "5" },
+                { "PlanSelection","1" },
+                { "PlanAmount","500.01" },
+                { "PlanLimitCount", "31" },
+                { "PlanLimitAmount","3000.01" },
+                { "Visible","false" },
                 { "Count",null } };
 
             string json = @" {
@@ -10999,19 +14760,19 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         ""Count"": null
      }";
 
-            var r = ChoJSONReader.DeserializeText(json);
+            var r = ChoJSONReader.DeserializeText(json).ToArray();
 
             string xml = ChoXmlWriter.ToText(r.First(), new ChoXmlRecordConfiguration { EmitDataType = false });
             Console.WriteLine(xml);
             var actual = ChoXmlReader.LoadText(xml).First();
 
-            Assert.AreEqual(expected, actual);
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         public class RootObject2
         {
             public string name { get; set; }
-            public Dictionary<string, object> settings { get; set; }
+            public Dictionary<string, object> settings { get; set; } = new Dictionary<string, object>();
 
             public override bool Equals(object obj)
             {
@@ -11029,7 +14790,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        //[Test]
+        [Test]
         public static void StringNodeTest()
         {
             List<object> expected = new List<object>
@@ -11099,7 +14860,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        //[Test]
+        [Test]
         public static void VarySchemas()
         {
             List<object> expected = new List<object>
@@ -11127,7 +14888,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 .WithField(m => m.Msg, customSerializer: (o) =>
                 {
                     List<Error1Message> msg = new List<Error1Message>();
-                    foreach (var e in (JArray)o)
+                    foreach (var e in (JArray)((JToken[])o)[0])
                     {
                         if (e is JValue)
                             msg.Add(new Error1Message { Message = ((JValue)e).Value as string });
@@ -11145,21 +14906,21 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void JSONToDataset()
         {
             DataTable expected1 = new DataTable();
             expected1.Columns.Add("ViewId");
-            expected1.Columns.Add("IsAddAllowed");
-            expected1.Columns.Add("IsEditAllowed");
-            expected1.Columns.Add("IsDeleteAllowed");
+            expected1.Columns.Add("IsAddAllowed", typeof(bool));
+            expected1.Columns.Add("IsEditAllowed", typeof(bool));
+            expected1.Columns.Add("IsDeleteAllowed", typeof(bool));
             expected1.Rows.Add("B27A68AD-7C21-4DDB-8A1D-8932459CF53B", true, true, true);
 
             DataTable expected2 = new DataTable();
             expected2.Columns.Add("ViewId");
-            expected2.Columns.Add("IsAddAllowed");
-            expected2.Columns.Add("IsEditAllowed");
-            expected2.Columns.Add("IsDeleteAllowed");
+            expected2.Columns.Add("IsAddAllowed", typeof(bool));
+            expected2.Columns.Add("IsEditAllowed", typeof(bool));
+            expected2.Columns.Add("IsDeleteAllowed", typeof(bool));
             expected2.Rows.Add("Z27A68AD-7C21-4DDB-8A1D-8932459CF53B", true, true, true);
 
             string json = @"{
@@ -11193,7 +14954,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             DataTableAssert.AreEqual(expected2, dt2);
         }
 
-        //[Test]
+        [Test]
         public static void Sample24Test()
         {
             //var rec = ChoJSONReader.Deserialize("sample24.json");
@@ -11207,14 +14968,67 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             //}), null)).AsDataTable();
 
             DataTable expected = new DataTable();
-            expected.Columns.Add("Solution");
-            expected.Columns.Add("Scenario");
-            expected.Rows.Add(new ChoDynamicObject { }, "Shock: Parallel Up200Bps, 1115, ALM_Base:RS_U200_FLAT, ,");
+            expected.Columns.Add("Solution_Value_PreserveMvDurConv", typeof(bool));
+            expected.Columns.Add("Solution_Value_SaveCpInstrumentResults", typeof(bool));
+            expected.Columns.Add("Solution_Value_SimID");
+            expected.Columns.Add("Solution_Value_SimPdCount", typeof(long));
+            expected.Columns.Add("Solution_Value_SimForecast", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpSimComponents", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_PackedHexDateValue", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_Year", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_Month", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_MonthNum", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_Day", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_RawDay", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_DaysLeftInMonth", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_DaysInThisYear", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_DayOfYear", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_DateValue", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_PackedIntDateValue", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_IsEndOfMonth", typeof(bool));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_IsLastDayOfFebruary", typeof(bool));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_DaysInThisMonth", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_IsEmpty", typeof(bool));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentStartDate_IsValid", typeof(bool));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpRecentMonthCount", typeof(long));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpReportMissingXferRates", typeof(bool));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpCalculateMissingXferRates", typeof(bool));
+            expected.Columns.Add("Solution_Value_FtpPreferences_FtpInProcessAllowanceDays", typeof(long));
+            expected.Columns.Add("Solution_Value_WgtAvgLifeCalcSetting", typeof(long));
+            expected.Columns.Add("Solution_Value_FairValueFrequency", typeof(long));
+            expected.Columns.Add("Solution_Value_MarketValueFrequency", typeof(long));
 
-            DataTable actual = new ChoJSONReader(FileNameSample24JSON).AsDataTable();
+            expected.Columns.Add("Solution_Value_DurConvexFrequency", typeof(long));
+            expected.Columns.Add("Solution_Value_ActivateFTP", typeof(bool));
+            expected.Columns.Add("Solution_Value_ActivateWAL", typeof(bool));
+            expected.Columns.Add("Solution_Value_ActivateYld", typeof(bool));
+            expected.Columns.Add("Solution_Value_ShockBPS", typeof(long));
+            expected.Columns.Add("Solution_Value_ShockDecimal", typeof(double));
+            expected.Columns.Add("Solution_Value_SimSecurities", typeof(long));
+            expected.Columns.Add("Solution_Value_SimOverrideOAS", typeof(long));
+            expected.Columns.Add("Solution_Value_SimSkipBalance", typeof(long));
+
+            expected.Columns.Add("Solution_Value_SimResults", typeof(long));
+            expected.Columns.Add("Solution_Value_SimSkipFairValue", typeof(long));
+            expected.Columns.Add("Solution_Value_SimBuildFwdCP", typeof(long));
+            expected.Columns.Add("Solution_Value_SimRunGapSwitches", typeof(long));
+            expected.Columns.Add("Solution_Value_IncludeGapInSim", typeof(long));
+            expected.Columns.Add("Solution_Value_CalculateFairValue", typeof(bool));
+
+            expected.Columns.Add("Solution_Name");
+            expected.Columns.Add("Solution_Context");
+
+            expected.Columns.Add("Scenario");
+
+            expected.Rows.Add(false, false, "Hira", 13, 0, 0, 0, 0, 0, -24000, 0, 0, 31, 366, -30, -90, 0, false, false, 30, true, false, 0, true, false, 0,
+                0, 0, 0, 0, true, false, false, 0, 0.0, 1, 0, 1, 1, 1, 0, 0, 0, false, "Solution Set 1", "SingleSim",
+                "Shock: Parallel Up200Bps, 1115, ALM_Base:RS_U200_FLAT, ,");
+
+            DataTable actual = new ChoJSONReader(FileNameSample24JSON,
+                new ChoJSONRecordConfiguration()
+                .Configure(c => c.MaxScanRows = 1)).AsDataTable();
 
             DataTableAssert.AreEqual(expected, actual);
-            Assert.Fail("An empty row-entry-item (for Solution) is the same result as the non-empty entry in file because ToString()-method returns ChoETL.ChoDynamicObject(). The whole content is lost.");
         }
         public class StockQuotes
         {
@@ -11265,7 +15079,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void MSFTQuooteToCSV()
         {
             DateTime dt19700101 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -11310,253 +15124,251 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         }
 
 
-        //[Test]
+        [Test]
         public static void JsonToXmlSoap()
         {
-            string expectedXML = @"<soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+            string expectedXML = @"<soap:Envelope xmlns:xml=""http://www.w3.org/XML/1998/namespace"" xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ns2=""http://ws.cwt.ru/"">
   <soap:Body>
-    <ns2:processPayment xmlns:ns2=""http://ws.cwt.ru/"">
+    <ns2:processPayment>
       <Status>SUCCESS</Status>
       <StatusCode>000</StatusCode>
       <StatusMessage>SUCCESS</StatusMessage>
-      <Payments>
-        <Payment>
-          <InPaymentParameters>
-            <entries>
-              <entry>
-                <key>FEE_AMOUNT</key>
-                <value>100</value>
-              </entry>
-              <entry>
-                <key>SOURCE_AMOUNT</key>
-                <value>80000</value>
-              </entry>
-              <entry>
-                <key>SOURCE_ACCOUNT_NUMBER</key>
-                <value>888117823</value>
-              </entry>
-              <entry>
-                <key>DESTINATION_BANK_CB_ID</key>
-                <value>BANK OF AMERICA</value>
-              </entry>
-              <entry>
-                <key>DESCRIPTION</key>
-                <value>chama</value>
-              </entry>
-              <entry>
-                <key>merchantId</key>
-                <value>1321</value>
-              </entry>
-              <entry>
-                <key>MERCHANT_ACQUIRER_CONTRACT_ID</key>
-                <value>1</value>
-              </entry>
-              <entry>
-                <key>DESTINATION_ACCOUNT</key>
-                <value>01116132194100</value>
-              </entry>
-              <entry>
-                <key>MERCHANT_ID</key>
-                <value>admin</value>
-              </entry>
-              <entry>
-                <key>REMOTE_TRANSACTION_ID</key>
-                <value>000000086814933</value>
-              </entry>
-              <entry>
-                <key>DESTINATION_CONNECTION_ID</key>
-                <value>243</value>
-              </entry>
-              <entry>
-                <key>FINANCE_OPERATION_TYPE</key>
-                <value>WITHDRAWAL</value>
-              </entry>
-              <entry>
-                <key>ISO8583_CARD_ACCEPTOR_ID</key>
-                <value>000000000105817</value>
-              </entry>
-              <entry>
-                <key>SOURCE_CONNECTION_ID</key>
-                <value>243</value>
-              </entry>
-              <entry>
-                <key>MESSAGE_ID</key>
-                <value>139096</value>
-              </entry>
-              <entry>
-                <key>ISO8583_CARD_ACCEPTOR_TERMINAL_ID</key>
-                <value>POS00002</value>
-              </entry>
-              <entry>
-                <key>OPERATION_ID</key>
-                <value>756033604</value>
-              </entry>
-              <entry>
-                <key>OPERATION_STATUS_MESSAGE</key>
-              </entry>
-              <entry>
-                <key>OPERATION_STATUS</key>
-                <value>SUCCESS</value>
-              </entry>
-              <entry>
-                <key>SERVICE_NAME</key>
-              </entry>
-              <entry>
-                <key>AUTHORIZATION_PASS</key>
-                <value>admin</value>
-              </entry>
-              <entry>
-                <key>AUTHORIZATION_LOGIN</key>
-                <value>admin</value>
-              </entry>
-              <entry>
-                <key>ISO8583_APPROVAL_CODE</key>
-                <value>122127</value>
-              </entry>
-              <entry>
-                <key>SOURCE_CARD_PAN</key>
-              </entry>
-              <entry>
-                <key>SERVICE_TYPE</key>
-                <value>FINANCE</value>
-              </entry>
-              <entry>
-                <key>TRANSACTION_ID</key>
-                <value>184139327</value>
-              </entry>
-            </entries>
-          </InPaymentParameters>
+      <ns2:Payments>
+        <ns2:Payment>
+          <ns2:InPaymentParameters>
+            <ns2:entry>
+              <key>FEE_AMOUNT</key>
+              <value>100</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>SOURCE_AMOUNT</key>
+              <value>80000</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>SOURCE_ACCOUNT_NUMBER</key>
+              <value>888117823</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>DESTINATION_BANK_CB_ID</key>
+              <value>BANK OF AMERICA</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>DESCRIPTION</key>
+              <value>chama</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>merchantId</key>
+              <value>1321</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>MERCHANT_ACQUIRER_CONTRACT_ID</key>
+              <value>1</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>DESTINATION_ACCOUNT</key>
+              <value>01116132194100</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>MERCHANT_ID</key>
+              <value>admin</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>REMOTE_TRANSACTION_ID</key>
+              <value>000000086814933</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>DESTINATION_CONNECTION_ID</key>
+              <value>243</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>FINANCE_OPERATION_TYPE</key>
+              <value>WITHDRAWAL</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>ISO8583_CARD_ACCEPTOR_ID</key>
+              <value>000000000105817</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>SOURCE_CONNECTION_ID</key>
+              <value>243</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>MESSAGE_ID</key>
+              <value>139096</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>ISO8583_CARD_ACCEPTOR_TERMINAL_ID</key>
+              <value>POS00002</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>OPERATION_ID</key>
+              <value>756033604</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>OPERATION_STATUS_MESSAGE</key>
+            </ns2:entry>
+            <ns2:entry>
+              <key>OPERATION_STATUS</key>
+              <value>SUCCESS</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>SERVICE_NAME</key>
+            </ns2:entry>
+            <ns2:entry>
+              <key>AUTHORIZATION_PASS</key>
+              <value>admin</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>AUTHORIZATION_LOGIN</key>
+              <value>admin</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>ISO8583_APPROVAL_CODE</key>
+              <value>122127</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>SOURCE_CARD_PAN</key>
+            </ns2:entry>
+            <ns2:entry>
+              <key>SERVICE_TYPE</key>
+              <value>FINANCE</value>
+            </ns2:entry>
+            <ns2:entry>
+              <key>TRANSACTION_ID</key>
+              <value>184139327</value>
+            </ns2:entry>
+          </ns2:InPaymentParameters>
           <OutPaymentParameters />
           <ServiceFields />
-        </Payment>
-      </Payments>
+        </ns2:Payment>
+      </ns2:Payments>
     </ns2:processPayment>
   </soap:Body>
 </soap:Envelope>";
 
             string expectedJSON = @"{
- ""soap:Envelope"": {
-   ""@xmlns:soap"": ""http://schemas.xmlsoap.org/soap/envelope/"",
-   ""soap:Body"": {
-     ""ns2:processPayment"": {
-       ""@xmlns:ns2"": ""http://ws.cwt.ru/"",
-       ""Status"": ""SUCCESS"",
-       ""StatusCode"": ""000"",
-       ""StatusMessage"": ""SUCCESS"",
-       ""Payments"": {
-         ""Payment"": {
-           ""InPaymentParameters"": {
-             ""entry"": [
-               {
-                 ""key"": ""FEE_AMOUNT"",
-                 ""value"": ""100""
-               },
-               {
-                 ""key"": ""SOURCE_AMOUNT"",
-                 ""value"": ""80000""
-               },
-               {
-                 ""key"": ""SOURCE_ACCOUNT_NUMBER"",
-                 ""value"": ""888117823""
-               },
-               {
-                 ""key"": ""DESTINATION_BANK_CB_ID"",
-                 ""value"": ""BANK OF AMERICA""
-               },
-               {
-                 ""key"": ""DESCRIPTION"",
-                 ""value"": ""chama""
-               },
-               {
-                 ""key"": ""merchantId"",
-                 ""value"": ""1321""
-               },
-               {
-                 ""key"": ""MERCHANT_ACQUIRER_CONTRACT_ID"",
-                 ""value"": ""1""
-               },
-               {
-                 ""key"": ""DESTINATION_ACCOUNT"",
-                 ""value"": ""01116132194100""
-               },
-               {
-                 ""key"": ""MERCHANT_ID"",
-                 ""value"": ""admin""
-               },
-               {
-                 ""key"": ""REMOTE_TRANSACTION_ID"",
-                 ""value"": ""000000086814933""
-               },
-               {
-                 ""key"": ""DESTINATION_CONNECTION_ID"",
-                 ""value"": ""243""
-               },
-               {
-                 ""key"": ""FINANCE_OPERATION_TYPE"",
-                 ""value"": ""WITHDRAWAL""
-               },
-               {
-                 ""key"": ""ISO8583_CARD_ACCEPTOR_ID"",
-                 ""value"": ""000000000105817""
-               },
-               {
-                 ""key"": ""SOURCE_CONNECTION_ID"",
-                 ""value"": ""243""
-               },
-               {
-                 ""key"": ""MESSAGE_ID"",
-                 ""value"": ""139096""
-               },
-               {
-                 ""key"": ""ISO8583_CARD_ACCEPTOR_TERMINAL_ID"",
-                 ""value"": ""POS00002""
-               },
-               {
-                 ""key"": ""OPERATION_ID"",
-                 ""value"": ""756033604""
-               },
-               {
-                 ""key"": ""OPERATION_STATUS_MESSAGE""
-               },
-               {
-                 ""key"": ""OPERATION_STATUS"",
-                 ""value"": ""SUCCESS""
-               },
-               {
-                 ""key"": ""SERVICE_NAME""
-               },
-               {
-                 ""key"": ""AUTHORIZATION_PASS"",
-                 ""value"": ""admin""
-               },
-               {
-                 ""key"": ""AUTHORIZATION_LOGIN"",
-                 ""value"": ""admin""
-               },
-               {
-                 ""key"": ""ISO8583_APPROVAL_CODE"",
-                 ""value"": ""122127""
-               },
-               {
-                 ""key"": ""SOURCE_CARD_PAN""
-               },
-               {
-                 ""key"": ""SERVICE_TYPE"",
-                 ""value"": ""FINANCE""
-               },
-               {
-                 ""key"": ""TRANSACTION_ID"",
-                 ""value"": ""184139327""
-               }
-             ]
-           },
-           ""OutPaymentParameters"": null,
-           ""ServiceFields"": null
-         }
-       }
-     }
-   }
- }
+  ""soap:Envelope"": {
+    ""@xmlns:soap"": ""http://schemas.xmlsoap.org/soap/envelope/"",
+    ""soap:Body"": {
+      ""ns2:processPayment"": {
+        ""@xmlns:ns2"": ""http://ws.cwt.ru/"",
+        ""Status"": ""SUCCESS"",
+        ""StatusCode"": ""000"",
+        ""StatusMessage"": ""SUCCESS"",
+        ""Payments"": {
+          ""Payment"": {
+            ""InPaymentParameters"": {
+              ""entry"": [
+                {
+                  ""key"": ""FEE_AMOUNT"",
+                  ""value"": ""100""
+                },
+                {
+                  ""key"": ""SOURCE_AMOUNT"",
+                  ""value"": ""80000""
+                },
+                {
+                  ""key"": ""SOURCE_ACCOUNT_NUMBER"",
+                  ""value"": ""888117823""
+                },
+                {
+                  ""key"": ""DESTINATION_BANK_CB_ID"",
+                  ""value"": ""BANK OF AMERICA""
+                },
+                {
+                  ""key"": ""DESCRIPTION"",
+                  ""value"": ""chama""
+                },
+                {
+                  ""key"": ""merchantId"",
+                  ""value"": ""1321""
+                },
+                {
+                  ""key"": ""MERCHANT_ACQUIRER_CONTRACT_ID"",
+                  ""value"": ""1""
+                },
+                {
+                  ""key"": ""DESTINATION_ACCOUNT"",
+                  ""value"": ""01116132194100""
+                },
+                {
+                  ""key"": ""MERCHANT_ID"",
+                  ""value"": ""admin""
+                },
+                {
+                  ""key"": ""REMOTE_TRANSACTION_ID"",
+                  ""value"": ""000000086814933""
+                },
+                {
+                  ""key"": ""DESTINATION_CONNECTION_ID"",
+                  ""value"": ""243""
+                },
+                {
+                  ""key"": ""FINANCE_OPERATION_TYPE"",
+                  ""value"": ""WITHDRAWAL""
+                },
+                {
+                  ""key"": ""ISO8583_CARD_ACCEPTOR_ID"",
+                  ""value"": ""000000000105817""
+                },
+                {
+                  ""key"": ""SOURCE_CONNECTION_ID"",
+                  ""value"": ""243""
+                },
+                {
+                  ""key"": ""MESSAGE_ID"",
+                  ""value"": ""139096""
+                },
+                {
+                  ""key"": ""ISO8583_CARD_ACCEPTOR_TERMINAL_ID"",
+                  ""value"": ""POS00002""
+                },
+                {
+                  ""key"": ""OPERATION_ID"",
+                  ""value"": ""756033604""
+                },
+                {
+                  ""key"": ""OPERATION_STATUS_MESSAGE""
+                },
+                {
+                  ""key"": ""OPERATION_STATUS"",
+                  ""value"": ""SUCCESS""
+                },
+                {
+                  ""key"": ""SERVICE_NAME""
+                },
+                {
+                  ""key"": ""AUTHORIZATION_PASS"",
+                  ""value"": ""admin""
+                },
+                {
+                  ""key"": ""AUTHORIZATION_LOGIN"",
+                  ""value"": ""admin""
+                },
+                {
+                  ""key"": ""ISO8583_APPROVAL_CODE"",
+                  ""value"": ""122127""
+                },
+                {
+                  ""key"": ""SOURCE_CARD_PAN""
+                },
+                {
+                  ""key"": ""SERVICE_TYPE"",
+                  ""value"": ""FINANCE""
+                },
+                {
+                  ""key"": ""TRANSACTION_ID"",
+                  ""value"": ""184139327""
+                }
+              ]
+            },
+            ""OutPaymentParameters"": null,
+            ""ServiceFields"": null
+          }
+        }
+      }
+    }
+  }
 }";
             string actualXML = null;
             string actualJSON = null;
@@ -11564,10 +15376,19 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             {
                 var e = p.First();
 
-                actualXML = ChoXmlWriter.Serialize(e);
+                actualXML = ChoXmlWriter.Serialize(e, new ChoXmlRecordConfiguration()
+                    .Configure(c => c.WithXmlNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/"))
+                    .Configure(c => c.WithXmlNamespace("ns2", "http://ws.cwt.ru/"))
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.IgnoreNodeName = true)
+                    );
                 //Console.WriteLine(xml);
 
-                actualJSON = ChoJSONWriter.Serialize(e);
+                actualJSON = ChoJSONWriter.Serialize(e, new ChoJSONRecordConfiguration()
+                    .Configure(c => c.KeepNSPrefix = true)
+                    .Configure(c => c.EnableXmlAttributePrefix = true)
+                    .Configure(c => c.DefaultArrayHandling = false)
+                    );
                 //Console.WriteLine(json);
             }
             Assert.Multiple(() => { Assert.AreEqual(expectedXML, actualXML); Assert.AreEqual(expectedJSON, actualJSON); });
@@ -11585,25 +15406,25 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             public int? Count { get; set; }
         }
 
-        //[Test]
+        [Test]
         public static void JSON2XmlAndViceVersa()
         {
             string json = @"{
-        ""Source"": ""WEB"",
-        ""CodePlan"": 5,
-        ""PlanSelection"": ""1"",
-        ""PlanAmount"": ""500.01"",
-        ""PlanLimitCount"": 31,
-        ""PlanLimitAmount"": ""3000.01"",
-        ""Visible"": false,
-        ""Count"": null
-     }";
+  ""Source"": ""WEB"",
+  ""CodePlan"": 5,
+  ""PlanSelection"": ""1"",
+  ""PlanAmount"": ""500.01"",
+  ""PlanLimitCount"": 31,
+  ""PlanLimitAmount"": ""3000.01"",
+  ""Visible"": false,
+  ""Count"": null
+}";
 
-            var plan = ChoJSONReader.DeserializeText<Plan>(json);
+            var plan = ChoJSONReader.DeserializeText<Plan>(json).FirstOrDefault();
             Console.WriteLine(plan.Dump());
             var xml = ChoXmlWriter.Serialize(plan);
             Console.WriteLine(xml);
-            plan = ChoXmlReader.DeserializeText<Plan>(xml);
+            plan = ChoXmlReader.DeserializeText<Plan>(xml).FirstOrDefault();
             Console.WriteLine(plan.Dump());
             var json1 = ChoJSONWriter.Serialize(plan);
             Console.WriteLine(json1);
@@ -11633,7 +15454,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Test2()
         {
             List<object> expected = new List<object>
@@ -12255,7 +16076,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        //[Test]
+        [Test]
         public static void GetUSDEURTest()
         {
 
@@ -12310,7 +16131,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Test1()
         {
             Detail expected = new Detail { Name = "John", Job = "Receptionist" };
@@ -12341,28 +16162,28 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void CountNodes()
         {
             int expected = 2;
             int? actual = null;
 
-            string json = @"{
-""package1"": {
+            string json = @"[
+{
     ""type"": ""envelope"",
     ""quantity"": 1,
     ""length"": 6,
     ""width"": 1,
     ""height"": 4
 },
-""package2"": {
+{
     ""type"": ""box"",
     ""quantity"": 2,
     ""length"": 9,
     ""width"": 9,
     ""height"": 9
 }
-}";
+]";
 
             using (var p = ChoJSONReader.LoadText(json).WithJSONPath("$.*"))
             {
@@ -12481,7 +16302,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Sample100()
         {
             List<object> expected = new List<object>
@@ -12544,7 +16365,8 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     }
 }";
             using (var p = ChoJSONReader<SessionPerformanceStats>.LoadText(json)
-                .WithJSONPath("$.*")
+                .WithJSONPath("$.^")
+                .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null)
                 )
             {
                 foreach (var rec in p)
@@ -12560,7 +16382,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             public string list_type { get; set; }
             public List<string> attribute_list { get; set; }
         }
-        //[Test]
+        [Test]
         public static void ListOfStringTest()
         {
             List<object> expected = new List<object>
@@ -12576,7 +16398,8 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     ""list_type"":1
 }";
 
-            using (var p = ChoJSONReader.LoadText(json))
+            using (var p = ChoJSONReader.LoadText(json)
+                )
             {
                 foreach (var rec in p)
                     actual.Add(rec);
@@ -12584,21 +16407,20 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void ArrayToDataTableTest()
         {
             DataTable expected = new DataTable();
+            expected.Columns.Add("Column_0");
             expected.Columns.Add("Column_1");
-            expected.Columns.Add("C2");
-            expected.Rows.Add("TestHub");
-            expected.Rows.Add("Sample879");
-            expected.Rows.Add("Sample233879");
+            expected.Rows.Add("Test123", "TestHub");
+            expected.Rows.Add("Sample12", "Sample879");
+            expected.Rows.Add("Sample121233", "Sample233879");
             DataTable actual = null;
 
             string json = @"[
 [
     ""Test123"",
-
     ""TestHub"",
     ""TestVersion"",
     ""TestMKT"",
@@ -12691,21 +16513,30 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     ""0""
 ]
 ]";
-            using (var p = ChoJSONReader.LoadText(json))
+            using (var p = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$..[*]", true)
+                )
             {
                 //var dt = p.Select(r => ((object[])r.Value).ToDictionary()).AsDataTable();
                 actual = new DataTable();
+                actual.Columns.Add("Column_0");
                 actual.Columns.Add("Column_1");
-                actual.Columns.Add("C2");
 
-                p.Select(
+                var dict = p.Select(
                     r => ((object[])r.Value)
-                    .ToDictionary()).Fill(actual);
+                    .ToDictionary()).ToArray();
+                Console.WriteLine(JsonConvert.SerializeObject(dict, Newtonsoft.Json.Formatting.Indented));
+                dict.Fill(actual);
             }
 
-            DataTableAssert.AreEqual(expected, actual);
+            var actualText = JsonConvert.SerializeObject(actual);
+            var expectedText = JsonConvert.SerializeObject(expected);
+            //Console.WriteLine(expectedText);
+            //Console.WriteLine(actualText);
+            //DataTableAssert.AreEqual(expected, actual);
+            Assert.AreEqual(expectedText, actualText);
         }
-        //[Test]
+        [Test]
         public static void DataTableTest()
         {
             DataTable expected = new DataTable();
@@ -12766,7 +16597,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 }";
 
             using (var r = ChoJSONReader.LoadText(json)
-                .WithJSONPath("$..data[*]")
+                .WithJSONPath("$..data[*]", true)
                 //.WithField("Val1")
                 //.WithField("Val2")
                 //.WithField("Val3")
@@ -12800,7 +16631,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        //[Test]
+        [Test]
         public static void SelectiveFieldsTest()
         {
             List<object> expected = new List<object>
@@ -12856,7 +16687,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         ]
     }
 }";
-            using (var p = ChoJSONReader<Alert>.LoadText(json).WithJSONPath("$..alerts[*]"))
+            using (var p = ChoJSONReader<Alert>.LoadText(json).WithJSONPath("$..alerts[*]", true))
             {
                 foreach (var rec in p)
                     actual.Add(rec);
@@ -12865,7 +16696,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void NSTest()
         {
             string expected = @"<ns3:Test_Service xmlns:ns3=""http://www.CCKS.org/XRT/Form"">
@@ -12874,42 +16705,69 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
   <ns3:CarCompany>saab</ns3:CarCompany>
   <ns3:CarNumber>9741</ns3:CarNumber>
   <ns3:IsInsured>true</ns3:IsInsured>
-  <ns3:safties></ns3:safties>
+  <ns3:safty>ABS</ns3:safty>
+  <ns3:safty>AirBags</ns3:safty>
+  <ns3:safty>childdoorlock</ns3:safty>
   <ns3:CarDescription>test Car</ns3:CarDescription>
   <ns3:collections>
-    <ns3:collection>
-      <ns3:XYZ>1</ns3:XYZ>
-      <ns3:PQR>11</ns3:PQR>
-      <ns3:contactdetails>
-        <ns3:contactdetail>
-          <ns3:contname>DOM</ns3:contname>
-          <ns3:contnumber>8787</ns3:contnumber>
-        </ns3:contactdetail>
-        <ns3:contactdetail>
-          <ns3:contname>COM</ns3:contname>
-          <ns3:contnumber>4564</ns3:contnumber>
-          <ns3:addtionaldetails>
-            <ns3:addtionaldetail>
-              <ns3:description>54657667</ns3:description>
-            </ns3:addtionaldetail>
-          </ns3:addtionaldetails>
-        </ns3:contactdetail>
-        <ns3:contactdetail>
-          <ns3:contname>gf</ns3:contname>
-          <ns3:contnumber>123</ns3:contnumber>
-          <ns3:addtionaldetails>
-            <ns3:addtionaldetail>
-              <ns3:description>123</ns3:description>
-            </ns3:addtionaldetail>
-          </ns3:addtionaldetails>
-        </ns3:contactdetail>
-      </ns3:contactdetails>
-    </ns3:collection>
+    <ns3:XYZ>1</ns3:XYZ>
+    <ns3:PQR>11</ns3:PQR>
+    <ns3:contactdetails>
+      <ns3:contname>DOM</ns3:contname>
+      <ns3:contnumber>8787</ns3:contnumber>
+    </ns3:contactdetails>
+    <ns3:contactdetails>
+      <ns3:contname>COM</ns3:contname>
+      <ns3:contnumber>4564</ns3:contnumber>
+      <ns3:addtionaldetails>
+        <ns3:description>54657667</ns3:description>
+      </ns3:addtionaldetails>
+    </ns3:contactdetails>
+    <ns3:contactdetails>
+      <ns3:contname>gf</ns3:contname>
+      <ns3:contnumber>123</ns3:contnumber>
+      <ns3:addtionaldetails>
+        <ns3:description>123</ns3:description>
+      </ns3:addtionaldetails>
+    </ns3:contactdetails>
   </ns3:collections>
 </ns3:Test_Service>";
             string actual = null;
 
-            string json = @"{""ns3:Test_Service"" : {""@xmlns:ns3"":""http://www.CCKS.org/XRT/Form"",""ns3:fname"":""mark"",""ns3:lname"":""joye"",""ns3:CarCompany"":""saab"",""ns3:CarNumber"":""9741"",""ns3:IsInsured"":""true"",""ns3:safty"":[""ABS"",""AirBags"",""childdoorlock""],""ns3:CarDescription"":""test Car"",""ns3:collections"":[{""ns3:XYZ"":""1"",""ns3:PQR"":""11"",""ns3:contactdetails"":[{""ns3:contname"":""DOM"",""ns3:contnumber"":""8787""},{""ns3:contname"":""COM"",""ns3:contnumber"":""4564"",""ns3:addtionaldetails"":[{""ns3:description"":""54657667""}]},{""ns3:contname"":""gf"",""ns3:contnumber"":""123"",""ns3:addtionaldetails"":[{""ns3:description"":""123""}]}]}]}}";
+            string json = @"{
+  ""ns3:Test_Service"": {
+    ""@xmlns:ns3"": ""http://www.CCKS.org/XRT/Form"",
+    ""ns3:fname"": ""mark"",
+    ""ns3:lname"": ""joye"",
+    ""ns3:CarCompany"": ""saab"",
+    ""ns3:CarNumber"": ""9741"",
+    ""ns3:IsInsured"": ""true"",
+    ""ns3:safty"": [ ""ABS"", ""AirBags"", ""childdoorlock"" ],
+    ""ns3:CarDescription"": ""test Car"",
+    ""ns3:collections"": [
+      {
+        ""ns3:XYZ"": ""1"",
+        ""ns3:PQR"": ""11"",
+        ""ns3:contactdetails"": [
+          {
+            ""ns3:contname"": ""DOM"",
+            ""ns3:contnumber"": ""8787""
+          },
+          {
+            ""ns3:contname"": ""COM"",
+            ""ns3:contnumber"": ""4564"",
+            ""ns3:addtionaldetails"": [ { ""ns3:description"": ""54657667"" } ]
+          },
+          {
+            ""ns3:contname"": ""gf"",
+            ""ns3:contnumber"": ""123"",
+            ""ns3:addtionaldetails"": [ { ""ns3:description"": ""123"" } ]
+          }
+        ]
+      }
+    ]
+  }
+}";
             ////string json = @"{""Test_Service"" : {""fname"":""mark"",""lname"":""joye"",""CarCompany"":""saab"",""CarNumber"":""9741"",""IsInsured"":""true"",""safty"":[""ABS"",""AirBags"",""childdoorlock""],""CarDescription"":""test Car"",""collections"":[{""XYZ"":""1"",""PQR"":""11"",""contactdetails"":[{""contname"":""DOM"",""contnumber"":""8787""},{""contname"":""COM"",""contnumber"":""4564"",""addtionaldetails"":[{""description"":""54657667""}]},{""contname"":""gf"",""contnumber"":""123"",""addtionaldetails"":[{""description"":""123""}]}]}]}}";
 
             StringBuilder sb = new StringBuilder();
@@ -12920,6 +16778,8 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 using (var w = new ChoXmlWriter(sb)
                     .Configure(c => c.IgnoreRootName = true)
                     .Configure(c => c.IgnoreNodeName = true)
+                    .WithXmlNamespace("ns3", "http://www.CCKS.org/XRT/Form")
+                    .Configure(c => c.DoNotEmitXmlNamespace = true)
                     )
                 {
                     w.Write(p);
@@ -12932,11 +16792,11 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         }
 
 
-        public class BookingInfo : IChoNotifyRecordFieldRead
+        public class BookingInfo //: IChoNotifyRecordFieldRead
         {
-            [ChoJSONRecordField(JSONPath = "$.travel_class")]
+            [ChoJSONRecordField(FieldName = "travel_class")]
             public string TravelClass { get; set; }
-            [ChoJSONRecordField(JSONPath = "$.booking_code")]
+            [ChoJSONRecordField(FieldName = "booking_code")]
             public string BookingCode { get; set; }
 
             public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
@@ -12971,7 +16831,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        public class FlightInfo : IChoNotifyRecordRead
+        public class FlightInfo //: IChoNotifyRecordRead
         {
             [ChoJSONRecordField(JSONPath = "$.departs_at")]
             public DateTime DepartAt { get; set; }
@@ -13041,7 +16901,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                        DepartAt == info.DepartAt &&
                        ArriveAt == info.ArriveAt &&
                        Origin == info.Origin &&
-                       EqualityComparer<BookingInfo[]>.Default.Equals(BookingInfo, info.BookingInfo);
+                       Enumerable.SequenceEqual(BookingInfo, info.BookingInfo);
             }
 
             public override int GetHashCode()
@@ -13055,7 +16915,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void BookingInfoTest()
         {
             FlightInfo expected = new FlightInfo
@@ -13137,14 +16997,14 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     }
   ]
 }";
-            var x = ChoJSONReader<FlightInfo>.LoadText(json).Configure(c => c.SupportMultipleContent = false)
-                .WithJSONPath("$.results[0].itineraries[0].outbound.flights")
+            var actual = ChoJSONReader<FlightInfo>.LoadText(json).Configure(c => c.SupportMultipleContent = false)
+                .WithJSONPath("$..results[0].itineraries[0].outbound.flights[0]", true)
                 .FirstOrDefault();
 
-            Assert.AreEqual(expected, x);
+            Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void JsonToString()
         {
             string expected = @"wide, outstretched, width,breadth, town, street,earth, country, greatness. wife, the mistress of the house, wide agricultural tract, waste land the land which is not suitabie for cultivation.";
@@ -13175,22 +17035,27 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Colors2DataTable()
         {
-            Assert.Fail("I am not sure, how the output should be");
+            //Assert.Fail("I am not sure, how the output should be");
 
             DataTable expected = new DataTable();
-            /*            expected.Columns.Add("color");
-                        expected.Columns.Add("category");
-                        expected.Rows.Add();
-            */
+            expected.Columns.Add("color");
+            expected.Columns.Add("category");
+            expected.Rows.Add("black", "hue");
+            expected.Rows.Add("white", "value");
+            expected.Rows.Add("red", "hue");
+            expected.Rows.Add("blue", "hue");
+            expected.Rows.Add("yellow", "hue");
+            expected.Rows.Add("green", "hue");
+
             DataTable actual = null;
 
             using (var p = new ChoJSONReader(FileNameColorsJSON)
                 .WithJSONPath("$.colors")
-                //.WithField("color")
-                //.WithField("category")
+                .WithField("color")
+                .WithField("category")
                 )
             {
                 //                var tmp = p.ToList();
@@ -13202,7 +17067,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             DataTableAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample43()
         {
             List<object> expected = new List<object>
@@ -13211,7 +17076,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 {
                     { "property1",1},
                     { "property2",2 },
-                    { "someArray",new ChoDynamicObject[]{new ChoDynamicObject{ { "item2", 2 } } } }
+                    { "someArray", new object[] { 2 } }
                 }
             };
             List<object> actual = new List<object>();
@@ -13230,9 +17095,9 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     ]
 }";
             using (var p = ChoJSONReader.LoadText(json)
-                .WithField("property1", jsonPath: "$.property1")
-                .WithField("property2", jsonPath: "$.property2")
-                .WithField("someArray", jsonPath: @"$.someArray[*][?(@.item2)]", isArray: true)
+                .WithField("property1", jsonPath: "$.property1", isArray: false)
+                .WithField("property2", jsonPath: "$.property2", isArray: false)
+                .WithField("someArray", jsonPath: @"$.someArray[?(@.item2)].item2", isArray: true)
             )
             {
                 foreach (var rec in p)
@@ -13253,8 +17118,8 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 var node = obj as MyNode;
                 return node != null &&
                        Param1 == node.Param1 &&
-                       Param2 == node.Param2 &&
-                       EqualityComparer<object>.Default.Equals(Param3, node.Param3);
+                       Param2 == node.Param2;
+                //&& EqualityComparer<object>.Default.Equals(Param3, node.Param3);
             }
 
             public override int GetHashCode()
@@ -13267,7 +17132,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Sample42()
         {
             List<object> expected = new List<object>
@@ -13318,7 +17183,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample41()
         {
             List<object> expected = new List<object>
@@ -13365,7 +17230,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             //}
         }
 
-        //[Test]
+        [Test]
         public static void Sample40()
         {
             object[] expected = new object[] { new ChoDynamicObject {
@@ -13406,33 +17271,33 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             public object Value { get; set; }
         }
 
-        //[Test]
+        [Test]
         public static void Sample39()
         {
             string expected = @"[
- {
-  ""Id"": ""12345"",
-  ""Custom_fields"": [
-   {
-     ""Definition"": ""field1"",
-     ""Value"": ""stringvalue""
-   }
-   {
-     ""Definition"": ""field2"",
-     ""Value"": [
-       ""arrayvalue1"",
-       ""arrayvalue2""
-     ]
-   }
-   {
-     ""Definition"": ""field3"",
-     ""Value"": {
-       ""type"": ""user"",
-       ""id"": ""1245""
-     }
-   }
-  ]
- }
+  {
+    ""Id"": ""12345"",
+    ""Custom_fields"": [
+      {
+        ""Definition"": ""field1"",
+        ""Value"": ""stringvalue""
+      },
+      {
+        ""Definition"": ""field2"",
+        ""Value"": [
+          ""arrayvalue1"",
+          ""arrayvalue2""
+        ]
+      },
+      {
+        ""Definition"": ""field3"",
+        ""Value"": {
+          ""type"": ""user"",
+          ""id"": ""1245""
+        }
+      }
+    ]
+  }
 ]";
             string actual = null;
 
@@ -13461,15 +17326,8 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
 
             StringBuilder sb = new StringBuilder();
-            //using (var p = ChoJSONReader.LoadText(json)
-            //	)
-            //{
-            //	var x = p.ToArray();
-            //}
-            //return;
-
             using (var p = ChoJSONReader<RootObject>.LoadText(json)
-                        .WithField(m => m.Custom_fields, itemConverter: v => v)
+                //.WithField(m => m.Custom_fields, itemConverter: v => v)
             )
             {
                 //var x = p.ToArray();
@@ -13479,30 +17337,51 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample38()
         {
-            var testJson = @"{'entry1': {
-                       '49208118': [
+            var testJson = @"{""entry1"": {
+                       ""49208118"": [
                           {
-                             'description': 'just a description'
+                             ""description"": ""just a description""
                           },
                           {
-                             'description': 'another description' 
+                             ""description"": ""another description"" 
                           }
                        ],
-                       '29439559': [
+                       ""29439559"": [
                           {
-                             'description': 'just a description'
+                             ""description"": ""just a description""
                           },
                           {
-                             'description': 'another description' 
+                             ""description"": ""another description"" 
                           }
                        ]
                      }
-                }";
+}";
 
-            Assert.Ignore("Where is the test?");
+            string expected = @"description
+just a description
+another description
+just a description
+another description";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(testJson)
+                .WithJSONPath("$..description", true)
+                .WithField("description", fieldName: "Value")
+                )
+            {
+                //var x = r/*.Select(r1 => r1.Value)*/.ToArray();
+
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(r);
+            }
+
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
         public class sp
@@ -13530,7 +17409,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Sample37()
         {
             List<object> expected = new List<object>
@@ -13560,9 +17439,10 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     }
             ";
 
-            foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..Markets")
+            ChoETLSettings.KeySeparator = '_';
+            foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..results.Markets")
                 .Select(r => (IDictionary<string, object>)r).SelectMany(r1 => r1.Keys.Select(k => new { key = k, value = ((dynamic)((IDictionary<string, object>)r1)[k]) })
-                .Select(k1 => new sp { mKey = k1.key, key = k1.value.productType, productType = k1.value.productType })))
+                .Select(k1 => new sp { mKey = k1.value.key, key = k1.key, productType = k1.value.productType })))
                 actual.Add(rec);// Console.WriteLine(rec.Dump());
             //Console.WriteLine($"ProductType: {rec.productType}, Key: {rec.key}");
 
@@ -13579,9 +17459,24 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample36()
         {
+            string expected = @"<vessel xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
+  <row>
+    <_mmsi>538006090</_mmsi>
+    <_imo>9700665</_imo>
+    <lat_>60.87363</lat_>
+    <_lon>-13.02203</_lon>
+  </row>
+  <row>
+    <_mmsi>527555481</_mmsi>
+    <_imo>0</_imo>
+    <lat_>4.57883</lat_>
+    <_lon>3.76899</_lon>
+  </row>
+</vessel>";
+
             string json = @"{
                ""paging"": {
 
@@ -13635,14 +17530,14 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                     w.Write(p.Select(r => new { _mmsi = r.mmsi, _imo = r.imo == null ? "0" : r.imo, lat_ = r.last_known_position.geometry.coordinates[0], _lon = r.last_known_position.geometry.coordinates[1] }));
                 }
             }
-            Console.WriteLine(sb.ToString());
+            var actual = sb.ToString();
 
-            var x = ChoXmlReader.LoadText(sb.ToString()).ToArray();
+            //var x = ChoXmlReader.LoadText(sb.ToString()).ToArray();
 
-            Assert.Fail("I am not sure, what is expected");
+            Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample35()
         {
             List<object> expected = new List<object>
@@ -13661,33 +17556,6 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 actual.Add(rec);
 
             CollectionAssert.AreEqual(expected, actual);
-        }
-
-        //[Test]
-        public static void Sample34()
-        {
-            string json = @"{
-    ""build"": 44396,
-    ""files"": [
-        ""00005DC8F14C92FFA13E7FDF1C9C35E4684F8B7A"", 
-        [
-            [""file1.zip"", 462485959, 462485959, 2, 0, 883, true, 266716, 1734, 992, 558, 0],
-            [""file1.doc"", 521042, 521042, 2, 0, 883, true, 266716, 1734, 992, 558, 0]
-        ], 
-        ""0001194B90612DFB5E8D363249719FB62E221430"", 
-        [
-            [""file2.iso"", 501163544, 501163544, 2, 0, 956, true, 194777, 2573, 0, 0, 0]
-        ], 
-        ""0002B5245B0897BEA7D7F426E104B6D24FF368DE"", 
-        [
-            [""file3.mp4"", 284564707, 284564707, 2, 0, 543, true, 205165, 1387, 853, 480, 0]
-        ]
-    ]
-}";
-            foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..files").Select(e => new { key = e.Key, fileName = ((object[])((object[])e.Value).Cast<object>().First())[0], fileSize = ((object[])((object[])e.Value).Cast<object>().First())[1] }))
-                Console.WriteLine(rec.Dump());
-
-            Assert.Fail("I am not sure, whats expected");
         }
 
         public class Issue
@@ -13718,7 +17586,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        //[Test]
+        [Test]
         public static void Sample33()
         {
             Issue expected = new Issue { id = 1, project_id = 1, project_name = "name of project" };
@@ -13739,11 +17607,13 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, issue);
         }
 
-        //[Test]
+        [Test]
         public static void Sample32()
         {
-            string expected = @"Value_0_SRNO,Value_0_STK_IDN,Value_0_CERTIMG,Value_1_SRNO,Value_1_STK_IDN,Value_1_CERTIMG,Value_2_SRNO,Value_2_STK_IDN,Value_2_CERTIMG
-2814,1001101259,6262941723,2815,1001101269,6262941726,2816,1001101279,6262941729";
+            string expected = @"SRNO,STK_IDN,CERTIMG
+2814,1001101259,6262941723
+2815,1001101269,6262941726
+2816,1001101279,6262941729";
             string actual = null;
 
             string json = @"{
@@ -13772,31 +17642,31 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample31()
         {
-            string expected = @"<Root>
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
   <XElement>
     <mercedes>
-    <model>GLS 350 d 4MATIC</model>
-    <code>MB-GLS</code>
-    <year>2015</year>
-  </mercedes>
+      <model>GLS 350 d 4MATIC</model>
+      <code>MB-GLS</code>
+      <year>2015</year>
+    </mercedes>
     <bmw>
-    <model>BMW 420d Cabrio</model>
-    <code>BM-420D</code>
-    <year>2017</year>
-  </bmw>
+      <model>BMW 420d Cabrio</model>
+      <code>BM-420D</code>
+      <year>2017</year>
+    </bmw>
     <audi>
-    <model>A5 Sportback 2.0 TDI quattro</model>
-    <code>AU-A5</code>
-    <year>2018</year>
-  </audi>
+      <model>A5 Sportback 2.0 TDI quattro</model>
+      <code>AU-A5</code>
+      <year>2018</year>
+    </audi>
     <tesla>
-    <model>Model S</model>
-    <code>TS-MOS</code>
-    <year>2016</year>
-  </tesla>
+      <model>Model S</model>
+      <code>TS-MOS</code>
+      <year>2016</year>
+    </tesla>
     <test_drive>0</test_drive>
     <path>D:\Mizz\cars\</path>
   </XElement>
@@ -13846,37 +17716,36 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             Assert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void Sample30()
         {
-            string expected = @"<XElement>
-  <Emps>
-    <Emp>
-  <items>
-    <item>
-      <title>Overlay HD/CC</title>
-      <guid>1</guid>
-      <description>This example shows tooltip overlays for captions and quality.</description>
-      <image>http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg</image>
-      <source file=""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"" label=""360p"" />
-      <sources>
-        <source file=""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"" label=""720p"" />
+            string expected = @"<Emps>
+  <Emp>
+    <items>
+      <item>
+        <title>Overlay HD/CC</title>
+        <guid>1</guid>
+        <description>This example shows tooltip overlays for captions and quality.</description>
+        <image>http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg</image>
         <source file=""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"" label=""360p"" />
-        <source file=""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"" label=""180p"" />
-      </sources>
-      <tracks>
-        <track file=""http://content.jwplatform.com/captions/2UEDrDhv.txt"" label=""English"" />
-        <track file=""http://content.jwplatform.com/captions/6aaGiPcs.txt"" label=""Japanese"" />
-        <track file=""http://content.jwplatform.com/captions/2nxzdRca.txt"" label=""Russian"" />
-        <track file=""http://content.jwplatform.com/captions/BMjSl0KC.txt"" label=""Spanish"" />
-      </tracks>
-    </item>
-  </items>
-</Emp>
-<Emp>
-  <items />
-</Emp></Emps>
-</XElement>";
+        <sources>
+          <source file=""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"" label=""720p"" />
+          <source file=""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"" label=""360p"" />
+          <source file=""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"" label=""180p"" />
+        </sources>
+        <tracks>
+          <track file=""http://content.jwplatform.com/captions/2UEDrDhv.txt"" label=""English"" />
+          <track file=""http://content.jwplatform.com/captions/6aaGiPcs.txt"" label=""Japanese"" />
+          <track file=""http://content.jwplatform.com/captions/2nxzdRca.txt"" label=""Russian"" />
+          <track file=""http://content.jwplatform.com/captions/BMjSl0KC.txt"" label=""Spanish"" />
+        </tracks>
+      </item>
+    </items>
+  </Emp>
+  <Emp>
+    <items />
+  </Emp>
+</Emps>";
             string actual = null;
 
             string json = @"{""Emp"": [
@@ -13932,6 +17801,14 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 ]
 }
 ";
+            //ChoDynamicObjectSettings.XmlArrayQualifier = (key, obj) =>
+            //{
+            //    //if (key == "sources"
+            //    //    || key == "tracks")
+            //    //    return true;
+            //    return null;
+            //};
+
             StringBuilder sb = new StringBuilder();
             using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true)
                 )
@@ -13941,7 +17818,10 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
                 using (var w = new ChoXmlWriter(sb)
                     .Configure(c => c.IgnoreRootName = true)
-                    .Configure(c => c.IgnoreNodeName = false)
+                    .Configure(c => c.IgnoreNodeName = true)
+                    .Configure(c => c.DoNotEmitXmlNamespace = true)
+                    .Configure(c => c.UseXmlArray = true)
+                    .Configure(c => c.XmlArrayQualifier = (key, obj) => null)
                     )
                     w.Write(p);
             }
@@ -13951,30 +17831,28 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample29()
         {
             string expected = @"<RSS xmlns:jwplayer=""http://support.jwplayer.com/customer/portal/articles/1403635-media-format-reference#feeds"" version=""2.0"">
   <Channel>
-    <items>
-      <item>
-        <title>Overlay HD/CC</title>
-        <guid>1</guid>
-        <description>This example shows tooltip overlays for captions and quality.</description>
-        <jwplayer:image>http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg</jwplayer:image>
-        <jwplayer:sources>
-          <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"" label=""720p"" />
-          <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"" label=""360p"" />
-          <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"" label=""180p"" />
-        </jwplayer:sources>
-        <jwplayer:tracks>
-          <jwplayer:track file=""http://content.jwplatform.com/captions/2UEDrDhv.txt"" label=""English"" />
-          <jwplayer:track file=""http://content.jwplatform.com/captions/6aaGiPcs.txt"" label=""Japanese"" />
-          <jwplayer:track file=""http://content.jwplatform.com/captions/2nxzdRca.txt"" label=""Russian"" />
-          <jwplayer:track file=""http://content.jwplatform.com/captions/BMjSl0KC.txt"" label=""Spanish"" />
-        </jwplayer:tracks>
-      </item>
-    </items>
+    <item>
+      <title>Overlay HD/CC</title>
+      <guid>1</guid>
+      <description>This example shows tooltip overlays for captions and quality.</description>
+      <jwplayer:image>http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg</jwplayer:image>
+      <jwplayer:sources>
+        <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"" label=""720p"" />
+        <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"" label=""360p"" />
+        <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"" label=""180p"" />
+      </jwplayer:sources>
+      <jwplayer:tracks>
+        <jwplayer:track file=""http://content.jwplatform.com/captions/2UEDrDhv.txt"" label=""English"" />
+        <jwplayer:track file=""http://content.jwplatform.com/captions/6aaGiPcs.txt"" label=""Japanese"" />
+        <jwplayer:track file=""http://content.jwplatform.com/captions/2nxzdRca.txt"" label=""Russian"" />
+        <jwplayer:track file=""http://content.jwplatform.com/captions/BMjSl0KC.txt"" label=""Spanish"" />
+      </jwplayer:tracks>
+    </item>
   </Channel>
 </RSS>";
             string actual = null;
@@ -14027,27 +17905,42 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     ""@version"": ""2.0""
   }
 }";
-
+            //ChoDynamicObjectSettings.XmlArrayQualifier = (key, obj) =>
+            //{
+            //    if (key == "jwplayer:source"
+            //        || key == "jwplayer:track")
+            //        return true;
+            //    return null;
+            //};
             StringBuilder sb = new StringBuilder();
             using (var p = ChoJSONReader.LoadText(json)
                 )
             {
                 using (var w = new ChoXmlWriter(sb)
+                    .WithXmlNamespace("jwplayer", "http://support.jwplayer.com/customer/portal/articles/1403635-media-format-reference#feeds")
                     .Configure(c => c.IgnoreRootName = true)
                     .Configure(c => c.IgnoreNodeName = true)
+                    .Configure(c => c.DoNotEmitXmlNamespace = true)
+                    .Configure(c => c.XmlArrayQualifier = (key, obj) =>
+                    {
+                        if (key == "jwplayer:source"
+                            || key == "jwplayer:track")
+                            return true;
+                        return null;
+                    })
                     )
                     w.Write(p);
             }
 
             actual = sb.ToString();
-
+            Console.WriteLine(actual);
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample28()
         {
-            string expected = @"<Root>
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
   <XElement name=""desired_gross_margin"" type=""int"" value=""50"" />
   <XElement name=""desired_adjusted_gross_margin"" type=""int"" value=""50"" />
   <XElement name=""target_electricity_tariff_unit_charge"" type=""decimal"" value=""0"" />
@@ -14058,10 +17951,10 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
   <XElement name=""assumed_fuel_ratio"" type=""int"" value=""0"" />
   <XElement name=""weather_variable"" type=""string"">
     <value>
-    <year_one>Cold</year_one>
-    <year_two>Average</year_two>
-    <year_three>Warm</year_three>
-  </value>
+      <year_one>Cold</year_one>
+      <year_two>Average</year_two>
+      <year_three>Warm</year_three>
+    </value>
   </XElement>
 </Root>";
             string actual = null;
@@ -14108,10 +18001,10 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             Assert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void Sample27()
         {
-            string expected = @"<cars>
+            string expected = @"<cars xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
   <car>
     <features>
       <feature>
@@ -14156,6 +18049,14 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                     }
                 }
             ]";
+
+            //ChoDynamicObjectSettings.XmlArrayQualifier = (key, obj) =>
+            //{
+            //    if (key == "features")
+            //        return true;
+            //    return null;
+            //};
+
             StringBuilder sb = new StringBuilder();
             using (var p = ChoJSONReader.LoadText(json))
             {
@@ -14163,6 +18064,13 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                     .Configure(c => c.RootName = "cars")
                     //.Configure(c => c.IgnoreRootName = true)
                     .Configure(c => c.IgnoreNodeName = true)
+                    .Configure(c => c.UseXmlArray = true)
+                    .Configure(c => c.XmlArrayQualifier = (key, obj) =>
+                    {
+                        if (key == "features")
+                            return true;
+                        return null;
+                    })
                     )
                 {
                     w.Write(p);
@@ -14173,16 +18081,16 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample26()
         {
-            string expected = @"<x1:Root xmlns:x1=""http://unknwn"">
-  <x1:XElement xmlns:x1=""http://unknwn"">
+            string expected = @"<x1:Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"" xmlns:x1=""http://unknwn"">
+  <x1:XElement>
     <x1:item>
-    <x1:name>item #1</x1:name>
-    <x1:code>itm-123</x1:code>
-    <x1:image url=""http://www.foo.com/bar.jpg"" />
-  </x1:item>
+      <x1:name>item #1</x1:name>
+      <x1:code>itm-123</x1:code>
+      <x1:image url=""http://www.foo.com/bar.jpg"" />
+    </x1:item>
   </x1:XElement>
 </x1:Root>";
             string actual = null;
@@ -14219,7 +18127,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample25()
         {
             string expected = @"Value
@@ -14290,25 +18198,25 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample24()
         {
             string expected = @"[
- {
-  ""ref"": ""ABC123456"",
-  ""pickcompname"": ""ABC Company"",
-  ""gw"": 123.45,
-  ""packaing"": [
-   {
-     ""qty"": 5,
-     ""unit"": ""C""
-   },
-   {
-     ""qty"": 7,
-     ""unit"": ""L""
-   }
-  ]
- }
+  {
+    ""ref"": ""ABC123456"",
+    ""pickcompname"": ""ABC Company"",
+    ""gw"": 123.45,
+    ""packaging"": [
+      {
+        ""qty"": 5,
+        ""unit"": ""C""
+      },
+      {
+        ""qty"": 7,
+        ""unit"": ""L""
+      }
+    ]
+  }
 ]";
             string actual = null;
 
@@ -14324,10 +18232,9 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             actual = sb.ToString();
 
             Assert.AreEqual(expected, actual);
-            Assert.Fail("Are the surrounding []-brackets ([ at beginning and ] at end) are really necessary? They are not in the source!! Remove this Assert if OK");
         }
 
-        //[Test]
+        [Test]
         public static void Sample23()
         {
             string expected = @"<Root>
@@ -14336,40 +18243,38 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
     <lastName>Smith</lastName>
     <age>25</age>
     <address>
-    <streetAddress>21 2nd Street</streetAddress>
-    <city>New York</city>
-    <state>NY</state>
-    <postalCode>10021</postalCode>
-  </address>
-    <phoneNumbers>
-      <phoneNumber>
-    <type>home</type>
-    <number>212 555-1234</number>
-  </phoneNumber>
-  <phoneNumber>
-    <type>fax</type>
-    <number>646 555-4567</number>
-  </phoneNumber></phoneNumbers>
+      <streetAddress>21 2nd Street</streetAddress>
+      <city>New York</city>
+      <state>NY</state>
+      <postalCode>10021</postalCode>
+    </address>
+    <phoneNumber>
+      <type>home</type>
+      <number>212 555-1234</number>
+    </phoneNumber>
+    <phoneNumber>
+      <type>fax</type>
+      <number>646 555-4567</number>
+    </phoneNumber>
   </XElement>
   <XElement>
     <firstName>Tom</firstName>
     <lastName>Mark</lastName>
     <age>50</age>
     <address>
-    <streetAddress>10 Main Street</streetAddress>
-    <city>Edison</city>
-    <state>NJ</state>
-    <postalCode>08837</postalCode>
-  </address>
-    <phoneNumbers>
-      <phoneNumber>
-    <type>home</type>
-    <number>732 555-1234</number>
-  </phoneNumber>
-  <phoneNumber>
-    <type>fax</type>
-    <number>609 555-4567</number>
-  </phoneNumber></phoneNumbers>
+      <streetAddress>10 Main Street</streetAddress>
+      <city>Edison</city>
+      <state>NJ</state>
+      <postalCode>08837</postalCode>
+    </address>
+    <phoneNumber>
+      <type>home</type>
+      <number>732 555-1234</number>
+    </phoneNumber>
+    <phoneNumber>
+      <type>fax</type>
+      <number>609 555-4567</number>
+    </phoneNumber>
   </XElement>
 </Root>";
             string actual = null;
@@ -14418,6 +18323,15 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         ]
     }
 ]";
+            //ChoDynamicObjectSettings.XmlArrayQualifier = (key, obj) =>
+            //{
+            //    if (key == "address"
+            //    || key == "phoneNumber")
+            //        return false;
+
+            //    return null;
+            //};
+
             StringBuilder sb = new StringBuilder();
             using (var p = ChoJSONReader.LoadText(json)
                 )
@@ -14427,18 +18341,34 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 //	)
                 //	w.Write(p);
                 using (var w = new ChoXmlWriter(sb)
-        )
+                    .Configure(c => c.DoNotEmitXmlNamespace = true)
+                    .Configure(c => c.XmlArrayQualifier = (key, obj) =>
+                    {
+                        if (key == "address"
+                        || key == "phoneNumber")
+                            return false;
+
+                        return null;
+                    })
+                    )
                     w.Write(p);
             }
             actual = sb.ToString();
 
             Assert.AreEqual(expected, actual);
         }
-        //[Test]
+
+        [Test]
         public static void Sample22()
         {
-            string expected = @"Value_0_item_1,Value_0_item_2,Value_0_item_3,Value_0_item_4_0,Value_0_item_4_1,Value_0_item_5_sub_item_1,Value_0_item_5_sub_item_2_0,Value_0_item_5_sub_item_2_1,Value_1_item_1,Value_1_item_2,Value_1_item_4_0,Value_1_item_4_1,Value_1_item_4_2,Value_1_item_4_3,Value_1_item_4_4,Value_1_item_5_sub_item_1,Value_1_item_5_sub_item_2_0,Value_1_item_5_sub_item_2_1,Value_2_item_1,Value_2_item_2,Value_2_item_4_0,Value_2_item_4_1,Value_2_item_4_2,Value_2_item_4_3,Value_2_item_4_4,Value_2_item_5_sub_item_1,Value_2_item_5_sub_item_2_0,Value_2_item_5_sub_item_2_1,Value_3_item_1,Value_3_item_2,Value_3_item_4_0,Value_3_item_4_1,Value_3_item_5_sub_item_1,Value_3_item_5_sub_item_2_0,Value_3_item_5_sub_item_2_1,Value_4_item_1,Value_4_item_2,Value_4_item_4_0,Value_4_item_4_1,Value_4_item_5_sub_item_1,Value_4_item_5_sub_item_2_0,Value_4_item_5_sub_item_2_1,Value_5_item_1,Value_5_item_2,Value_5_item_4_0,Value_5_item_4_1,Value_5_item_5_sub_item_1,Value_5_item_5_sub_item_2_0,Value_5_item_5_sub_item_2_1,Value_6_item_1,Value_6_item_2,Value_6_item_4_0,Value_6_item_4_1,Value_6_item_5_sub_item_1,Value_6_item_5_sub_item_2_0,Value_6_item_5_sub_item_2_1
-value_11,value_12,value_13,sub_value_14,sub_value_15,sub_item_value_11,sub_item_value_12,sub_item_value_13,value_21,value_22,sub_value_24,sub_value_25,sub_value_15,sub_value_15,sub_value_15,sub_item_value_21,sub_item_value_22,sub_item_value_23,value_21,value_22,sub_value_24,sub_value_25,sub_value_15,sub_value_15,sub_value_15,sub_item_value_21,sub_item_value_22,sub_item_value_23,value_21,value_22,sub_value_24,sub_value_25,sub_item_value_21,sub_item_value_22,sub_item_value_23,value_21,value_22,sub_value_24,sub_value_25,sub_item_value_21,sub_item_value_22,sub_item_value_23,value_21,value_22,sub_value_24,sub_value_25,sub_item_value_21,sub_item_value_22,sub_item_value_23,value_21,value_22,sub_value_24,sub_value_25,sub_item_value_21,sub_item_value_22,sub_item_value_23";
+            string expected = @"item_1,item_2,item_3,item_4_0,item_4_1,item_4_2,item_4_3,item_4_4,item_5_sub_item_1,item_5_sub_item_2_0,item_5_sub_item_2_1
+value_11,value_12,value_13,sub_value_14,sub_value_15,,,,sub_item_value_11,sub_item_value_12,sub_item_value_13
+value_21,value_22,,sub_value_24,sub_value_25,sub_value_15,sub_value_15,sub_value_15,sub_item_value_21,sub_item_value_22,sub_item_value_23
+value_21,value_22,,sub_value_24,sub_value_25,sub_value_15,sub_value_15,sub_value_15,sub_item_value_21,sub_item_value_22,sub_item_value_23
+value_21,value_22,,sub_value_24,sub_value_25,,,,sub_item_value_21,sub_item_value_22,sub_item_value_23
+value_21,value_22,,sub_value_24,sub_value_25,,,,sub_item_value_21,sub_item_value_22,sub_item_value_23
+value_21,value_22,,sub_value_24,sub_value_25,,,,sub_item_value_21,sub_item_value_22,sub_item_value_23
+value_21,value_22,,sub_value_24,sub_value_25,,,,sub_item_value_21,sub_item_value_22,sub_item_value_23";
             string actual = null;
 
             string json = @"
@@ -14530,33 +18460,33 @@ value_11,value_12,value_13,sub_value_14,sub_value_15,sub_item_value_11,sub_item_
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample21()
         {
             string expected = @"[
- {
-  ""Name"": ""Xytrex Co."",
-  ""Description"": ""Industrial Cleaning Supply Company"",
-  ""Account Number"": ""ABC15797531""
- },
- {
-  ""Name"": ""Watson and Powell Inc."",
-  ""Description"": ""Law firm. New York Headquarters"",
-  ""Account Number"": ""ABC24689753""
- }
+  {
+    ""Name"": ""Xytrex Co."",
+    ""Description"": ""Industrial Cleaning Supply Company"",
+    ""Account Number"": ""ABC15797531""
+  },
+  {
+    ""Name"": ""Watson and Powell Inc."",
+    ""Description"": ""Law firm. New York Headquarters"",
+    ""Account Number"": ""ABC24689753""
+  }
 ]";
             string actual = null;
 
             string csv = @"Name,Description,Account Number
-    Xytrex Co.,Industrial Cleaning Supply Company,ABC15797531
-    Watson and Powell Inc.,Law firm. New York Headquarters,ABC24689753";
+Xytrex Co.,Industrial Cleaning Supply Company,ABC15797531
+Watson and Powell Inc.,Law firm. New York Headquarters,ABC24689753";
 
             StringBuilder json = new StringBuilder();
             using (var p = new ChoCSVReader(new StringReader(csv))
                     .WithFirstLineHeader()
                 )
             {
-                using (var w = new ChoJSONWriter(new StringWriter(json)))
+                using (var w = new ChoJSONWriter(json))
                 {
                     w.Write(p);
                 }
@@ -14567,7 +18497,7 @@ value_11,value_12,value_13,sub_value_14,sub_value_15,sub_item_value_11,sub_item_
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample20()
         {
             string expected = @"Account_Number
@@ -14593,7 +18523,7 @@ ABC24689753";
             {
                 using (var w = new ChoCSVWriter(new StringWriter(csv))
                     .WithFirstLineHeader()
-                    .WithField("Account_Number", fieldName: "Account Number")
+                    .WithField("Account Number", fieldName: "Account_Number")
                     )
                 {
                     w.Write(p);
@@ -14605,13 +18535,13 @@ ABC24689753";
             Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample19()
         {
             var expected = new[]
             {
-                new {pickcompname = (object)"ABC Company", qty = (object)5},
-                new {pickcompname = (object)"ABC Company", qty = (object)7}
+                new {pickcompname = "ABC Company", qty = 5},
+                new {pickcompname = "ABC Company", qty = 7}
             };
             /*            dynamic expectedDyn1 = new ExpandoObject();
                         expectedDyn1.pickcompname = "ABC Company";
@@ -14627,7 +18557,7 @@ ABC24689753";
 
             using (var p = new ChoJSONReader(FileNameSample19JSON))
             {
-                actual = p.SelectMany(p1 => ((dynamic[])p1.packaing).Select(p2 => new { pickcompname = p1.pickcompname, qty = p2.qty })).ToArray();
+                actual = p.SelectMany(p1 => ((dynamic[])p1.packaing).Select(p2 => new { pickcompname = (string)p1.pickcompname, qty = (int)p2.qty })).ToArray();
             }
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -14660,7 +18590,7 @@ ABC24689753";
         public class MetaData
         {
             [JsonProperty(PropertyName = "1. Information")]
-            [ChoJSONRecordField(JSONPath = @"['Meta Data']['1. Information']")]
+            //[ChoJSONRecordField(JSONPath = @"['Meta Data']['1. Information']")]
             public string Information { get; set; }
             [JsonProperty(PropertyName = "2. Notes")]
             public string Notes { get; set; }
@@ -14767,7 +18697,7 @@ ABC24689753";
         public static string FileNameColorsJSON => "colors.json";
         public static string FileNameEmpJSON => "Emp.json";
 
-        //[Test]
+        [Test]
         public static void Sample17()
         {
             List<object> expected = new List<object>
@@ -14796,17 +18726,17 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample16()
         {
             using (var p = new ChoJSONReader(FileNameSample16JSON)
                 .WithField("Ref", jsonPath: "$..ref", fieldType: typeof(string))
                 .WithField("pickcompname", jsonPath: "$..pickcompname", fieldType: typeof(string))
                 .WithField("gw", jsonPath: "$..gw", fieldType: typeof(double))
-                .WithField("qty1", jsonPath: "$..packaing[0].qty", fieldType: typeof(int))
-                .WithField("unit1", jsonPath: "$..packaing[0].unit", fieldType: typeof(string))
-                .WithField("qty2", jsonPath: "$..packaing[1].qty", fieldType: typeof(int))
-                .WithField("unit2", jsonPath: "$..packaing[1].unit", fieldType: typeof(string))
+                .WithField("qty1", jsonPath: "$..packaging[0].qty", fieldType: typeof(int))
+                .WithField("unit1", jsonPath: "$..packaging[0].unit", fieldType: typeof(string))
+                .WithField("qty2", jsonPath: "$..packaging[1].qty", fieldType: typeof(int))
+                .WithField("unit2", jsonPath: "$..packaging[1].unit", fieldType: typeof(string))
                 )
             {
                 using (var c = new ChoCSVWriter(FileNameSample16TestCSV).WithFirstLineHeader())
@@ -14816,7 +18746,7 @@ ABC24689753";
             FileAssert.AreEqual(FileNameSample16ExpectedCSV, FileNameSample16TestCSV);
         }
 
-        //[Test]
+        [Test]
         public static void Sample15()
         {
             Dictionary<string, string>[] expected = new Dictionary<string, string>[]
@@ -14842,7 +18772,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample14()
         {
             List<object> expected = new List<object> {
@@ -14882,7 +18812,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample14b()
         {
             List<object> expected = new List<object> {
@@ -14918,7 +18848,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample13()
         {
             List<object> expected = new List<object> {
@@ -14938,7 +18868,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample12()
         {
             List<object> expected = new List<object>
@@ -14970,7 +18900,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample11()
         {
             List<object> expected = new List<object>
@@ -15008,7 +18938,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample10()
         {
             List<object> expected = new List<object>
@@ -15024,6 +18954,7 @@ ABC24689753";
             List<object> actual = new List<object>();
 
             using (var jr = new ChoJSONReader<Filter>(FileNameSample10JSON)
+                .WithJSONPath("$..[*][*]", true)
                 )
             {
                 foreach (var x in jr)
@@ -15032,19 +18963,9 @@ ABC24689753";
                 }
             }
             CollectionAssert.AreEqual(expected, actual);
-
-            return;
-            using (var jr = new ChoJSONReader(FileNameSample10JSON)
-                )
-            {
-                foreach (var x in jr)
-                {
-                    Console.WriteLine($"FilterName: {x.filterName}");
-                }
-            }
         }
 
-        //[Test]
+        [Test]
         public static void Sample9()
         {
             List<object> expected = new List<object>
@@ -15063,22 +18984,33 @@ ABC24689753";
                 }
             }
             CollectionAssert.AreEqual(expected, actual);
-            return;
-            using (var jr = new ChoJSONReader("sample9.json").WithJSONPath("$..book")
-                )
+        }
+
+        [Test]
+        public static void Sample9_1()
+        {
+            List<object> expected = new List<object>
+            {
+                new Book { Author = "Nigel Rees", Category = "Reference", Price = 8.88, Title = "Sayings of the Century"},
+                new Book { Author = "Evelyn Waugh", Category = "Fiction", Price = 12.66, Title = "Sword of Honour"},
+                new Book { Author = "Nigel Rees", Category = "Reference", Price = 8.88, Title = "Sayings of the Century"},
+                new Book { Author = "Evelyn Waugh", Category = "Fiction", Price = 12.66, Title = "Sword of Honour"},
+            };
+            List<object> actual = new List<object>();
+
+            using (var jr = new ChoJSONReader<Book>(FileNameSample9JSON).WithJSONPath("$..book[*]", true)
+            )
             {
                 foreach (var x in jr)
                 {
-                    Console.WriteLine($"Category: {x.category}");
-                    Console.WriteLine($"Title: {x.title}");
-                    Console.WriteLine($"Author: {x.author}");
-                    Console.WriteLine($"Price: {x.price}");
+                    actual.Add(x);
                 }
             }
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
-        public static void Sample8()
+        [Test]
+        public static void SerializeToKeyValuePair1()
         {
             List<object> expected = new List<object>
             {
@@ -15109,17 +19041,19 @@ ABC24689753";
                 }
             }
 
+            actual.Print();
+            expected.Print();
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample7()
         {
             List<object> expected = new List<object>
             {
-                new Family{ Id = 0, Daughters = new ArrayList{ new FamilyMember { Name = "Amy", Age = 7}, new FamilyMember { Name = "Carol", Age =  29},new FamilyMember { Name = "Barbara", Age =  14} } },
-                new Family{ Id = 1, Daughters = new ArrayList{ } },
-                new Family{ Id = 2, Daughters = new ArrayList{ new FamilyMember { Name = "Elizabeth", Age =  7}, new FamilyMember { Name = "Betty", Age = 15 } } }
+                new Family{ Id = 0, Daughters = new List<FamilyMember>{ new FamilyMember { Name = "Amy", Age = 7}, new FamilyMember { Name = "Carol", Age =  29},new FamilyMember { Name = "Barbara", Age =  14} } },
+                new Family{ Id = 1, Daughters = new List<FamilyMember>{ } },
+                new Family{ Id = 2, Daughters = new List<FamilyMember>{ new FamilyMember { Name = "Elizabeth", Age =  7}, new FamilyMember { Name = "Betty", Age = 15 } } }
             };
             List<object> actual = new List<object>();
 
@@ -15164,19 +19098,20 @@ ABC24689753";
             }
         }
 
-        //[Test]
+        [Test]
         public static void IgnoreItems()
         {
             List<object> expected = new List<object>
             {
                 new ChoDynamicObject {{"ProductId", "17213812"}, { "User", "Regular Guest"} },
-                new ChoDynamicObject {{"ProductId", "17813832" }}
+                new ChoDynamicObject {{"ProductId", "17813832" } }
             };
             List<object> actual = new List<object>();
 
             using (var jr = new ChoJSONReader(FileNameSample6JSON)
-                .WithField("ProductId", jsonPath: "$.productId")
-                .WithField("User", jsonPath: "$.returnPolicies.user")
+                .WithField("ProductId", jsonPath: "$.productId", fieldType: typeof(string))
+                .WithField("User", jsonPath: "$.returnPolicies.user", fieldType: typeof(string))
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
                 )
             {
                 foreach (var item in jr)
@@ -15185,7 +19120,7 @@ ABC24689753";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void KVPTest()
         {
             List<object> expected = new List<object> { "OBJ1", "OBJ2" };
@@ -15202,10 +19137,10 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void Sample4()
         {
-            using (var jr = new ChoJSONReader(FileNameSample4JSON).Configure(c => c.UseJSONSerialization = true))
+            using (var jr = new ChoJSONReader<JObject>(FileNameSample4JSON).Configure(c => c.UseJSONSerialization = true))
             {
                 using (var xw = new ChoCSVWriter(FileNameSample4TestCSV).WithFirstLineHeader())
                 {
@@ -15217,7 +19152,7 @@ ABC24689753";
                            {
                                identityText = i["identityText"].ToString(),
                                identityTypeCode = i["identityTypeCode"].ToString()
-                           })).SelectMany(x => x);
+                           })).SelectMany(x => x).ToArray();
 
                         var members = ChoEnumerable.AsEnumerable<JObject>(jItem).Select(e => ((IList<JToken>)((dynamic)e).members).Select(m => ((IList<JToken>)((dynamic)m).identifiers).Select(i =>
                            new
@@ -15232,15 +19167,15 @@ ABC24689753";
                                optOutIndicator = m["optOutIndicator"].ToString(),
                                relationship = m["relationship"].ToString()
 
-                           }))).SelectMany(x => x).SelectMany(y => y);
+                           }))).SelectMany(x => x).SelectMany(y => y).ToArray();
 
                         var comb = members.ZipEx(identifiers, (m, i) =>
                         {
                             if (i == null)
                                 return new
                                 {
-                                    item.ccId,
-                                    item.hId,
+                                    ccId = ChoUtility.ToStringEx(item.ccId),
+                                    hId = ChoUtility.ToStringEx(item.hId),
                                     identifiers_identityText = String.Empty,
                                     identifiers_identityTypeCode = String.Empty,
                                     members_dob = m.dob,
@@ -15252,15 +19187,15 @@ ABC24689753";
                                     members_memberid = m.memberId,
                                     member_optOutIndicator = m.optOutIndicator,
                                     member_relationship = m.relationship,
-                                    SubscriberFirstName = item.subscriberFirstame,
-                                    SubscriberLastName = item.subscriberLastName,
+                                    SubscriberFirstName = ChoUtility.ToStringEx(item.subscriberFirstame),
+                                    SubscriberLastName = ChoUtility.ToStringEx(item.subscriberLastName),
 
                                 };
                             else
                                 return new
                                 {
-                                    item.ccId,
-                                    item.hId,
+                                    ccId = ChoUtility.ToStringEx(item.ccId),
+                                    hId = ChoUtility.ToStringEx(item.hId),
                                     identifiers_identityText = i.identityText,
                                     identifiers_identityTypeCode = i.identityTypeCode,
                                     members_dob = m.dob,
@@ -15272,11 +19207,11 @@ ABC24689753";
                                     members_memberid = m.memberId,
                                     member_optOutIndicator = m.optOutIndicator,
                                     member_relationship = m.relationship,
-                                    SubscriberFirstName = item.subscriberFirstame,
-                                    SubscriberLastName = item.subscriberLastName,
+                                    SubscriberFirstName = ChoUtility.ToStringEx(item.subscriberFirstame),
+                                    SubscriberLastName = ChoUtility.ToStringEx(item.subscriberLastName),
                                 };
 
-                        });
+                        }).ToArray();
                         xw.Write(comb);
                     }
                 }
@@ -15295,10 +19230,9 @@ ABC24689753";
             //}
 
             FileAssert.AreEqual(FileNameSample4ExpectedCSV, FileNameSample4TestCSV);
-            Assert.Fail("Sample4Expected.csv not added, because of failed enumeration");
         }
 
-        //[Test]
+        [Test]
         public static void Sample3()
         {
             using (var jr = new ChoJSONReader<MyObjectType>(FileNameSample3JSON).WithJSONPath("$.menu")
@@ -15314,15 +19248,15 @@ ABC24689753";
             FileAssert.AreEqual(FileNameSample3ExpectedXML, FileNameSample3TestXML);
         }
 
-        //[Test]
+        [Test]
         public static void Sample2()
         {
             using (var csv = new ChoCSVWriter(FileNameSample2TestCSV) { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
             {
                 csv.Write(new ChoJSONReader(FileNameSample2JSON) { TraceSwitch = ChoETLFramework.TraceSwitchOff }
                 .WithField("Base")
-                .WithField("Rates", fieldType: typeof(Dictionary<string, object>))
-                .Select(m => ((Dictionary<string, object>)m.Rates).Select(r => new { Base = m.Base, Key = r.Key, Value = r.Value })).SelectMany(m => m)
+                .WithField("Rates", fieldType: typeof(IDictionary<string, object>))
+                .Select(m => ((IDictionary<string, object>)m.Rates).Select(r => new { Base = m.Base, Key = r.Key, Value = r.Value })).SelectMany(m => m)
                 );
             }
 
@@ -15354,35 +19288,67 @@ ABC24689753";
             }
             return list.ToArray();
         }
-        //[Test]
+
+        private const string FileNameJsonToXmlJsonInput = "companies.json";
+        private const string FileNameJsonToXmlExpectedXml = "companies.xml";
+        private const string FileNameJsonToXmlActualXml = "companiesactual.xml";
+        [Test]
         public static void JsonToXml()
         {
-            Assert.Fail("File companies.json not found");
+            //using (var r1 = new ChoJSONReader("companies.json"))
+            //{
+            //    using (var w1 = new ChoXmlWriter(Console.Out)
+            //        .WithNodeName("Company")
+            //        )
+            //    {
+            //        w1.Write(r1);
+            //    }
+            //}
+            //return;
 
-            using (var csv = new ChoXmlWriter("companies.xml") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithXPath("companies/company"))
+            StringBuilder xml = new StringBuilder();
+            using (var w = new ChoXmlWriter(xml)
+                .WithXPath("Companies/Company")
+                )
             {
-                csv.Write(new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000).Take(10).
-                    SelectMany(c => c.Products.Touch().
-                    Select(p => new { c.name, c.Permalink, prod_name = p.name, prod_permalink = p.Permalink })));
+                w.Write(new ChoJSONReader(FileNameJsonToXmlJsonInput, new ChoJSONRecordConfiguration()
+                    /*.Configure(c => c.MaxScanRows = 1)*/));
             }
 
-            Assert.Fail("Write appropriate test: maybe the following");
-            //FileAssert.AreEqual(FileNameJsonToXmlExpectedXML, FileNameJsonToXmlTestXML);
+            var actual = xml.ToString();
+            var expected = File.ReadAllText(FileNameJsonToXmlExpectedXml);
+            Console.WriteLine(actual);
+            Assert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        private const string FileNameJsonToCSVJsonInput = "companies.json";
+        private const string FileNameJsonToCSVExpectedCSV = "companies.csv";
+        private const string FileNameJsonToCSVActualCSV = "companies1.csv";
+
+        [Test]
         public static void JsonToCSV()
         {
-            Assert.Fail("File companies.json not found");
+            //using (var r1 = ChoCSVReader.LoadText(csv).
+            //    WithFirstLineHeader())
+            //{
+            //    using (var w1 = new ChoJSONWriter(Console.Out))
+            //    {
+            //        w1.Write(r1);
+            //    }
+            //}
+            //Assert.Fail("File companies.json not found");
 
-            using (var csv = new ChoCSVWriter("companies.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
+            StringBuilder outCSV = new StringBuilder();
+            using (var csv = new ChoCSVWriter(FileNameJsonToCSVActualCSV)
+                .WithFirstLineHeader())
             {
-                csv.Write(new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000).Take(10).
+                csv.Write(new ChoJSONReader<Company>(FileNameJsonToCSVJsonInput)
+                    .NotifyAfter(10000).Take(10).
                     SelectMany(c => c.Products.Touch().
                     Select(p => new { c.name, c.Permalink, prod_name = p.name, prod_permalink = p.Permalink })));
             }
-            Assert.Fail("Write appropriate test: maybe the following");
-            //FileAssert.AreEqual(FileNameJsonToCSVExpectedCSV, FileNameJsonToCSVTestCSV);
+            //Assert.Fail("Write appropriate test: maybe the following");
+            FileAssert.AreEqual(FileNameJsonToCSVExpectedCSV, FileNameJsonToCSVActualCSV);
         }
 
         //[Test]
@@ -15406,6 +19372,19 @@ ABC24689753";
             public string name { get; set; }
             [ChoJSONRecordField]
             public string Permalink { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var rec = obj as Product;
+                return rec != null &&
+                       name == rec.name &&
+                       Permalink == rec.Permalink;
+            }
+
+            public override int GetHashCode()
+            {
+                return new { name, Permalink }.GetHashCode();
+            }
         }
 
         public class Company
@@ -15417,7 +19396,7 @@ ABC24689753";
             [ChoJSONRecordField(JSONPath = "$.products")]
             public Product[] Products { get; set; }
         }
-        //[Test]
+        [Test]
         public static void QuickLoad()
         {
             List<object> expected = new List<object>
@@ -15433,7 +19412,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        //[Test]
+        [Test]
         public static void POCOTest()
         {
             List<EmployeeRec> expected = new List<EmployeeRec>
@@ -15446,24 +19425,14 @@ ABC24689753";
 
             List<object> actual = new List<object>();
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoJSONReader<EmployeeRec>(reader))
+            using (var parser = ChoJSONReader<EmployeeRec>.LoadText(EmpJSON))
             {
-                writer.WriteLine(EmpJSON);
-
-                writer.Flush();
-                stream.Position = 0;
-
-                object rec;
-                while ((rec = parser.Read()) != null)
-                    actual.Add(rec);
+                actual.AddRange(parser.ToArray());
             }
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void StorePOCOTest()
         {
             List<object> expected = new List<object>
@@ -15492,7 +19461,7 @@ ABC24689753";
                 CollectionAssert.AreEqual(expected, actual);
             }
         }
-        //[Test]
+        [Test]
         public static void StorePOCONodeLoadTest()
         {
             List<object> expected = new List<object>
@@ -15525,7 +19494,7 @@ ABC24689753";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void QuickLoadTest()
         {
             List<object> expected = new List<object>
@@ -15535,25 +19504,15 @@ ABC24689753";
             };
             List<object> actual = new List<object>();
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoJSONReader(reader).
+            using (var parser = ChoJSONReader.LoadText(Stores).
                 WithJSONPath("$.Manufacturers").WithField("Name", fieldType: typeof(string)).
                 WithField("Products", fieldType: typeof(Product[])))
             {
-                writer.WriteLine(Stores);
-
-                writer.Flush();
-                stream.Position = 0;
-
-                object rec;
-                while ((rec = parser.Read()) != null)
-                    actual.Add(rec);
+                actual.AddRange(parser.ToArray());
             }
             CollectionAssert.AreEqual(expected, actual);
         }
-        //[Test]
+        [Test]
         public static void QuickLoadSerializationTest()
         {
             List<object> expected = new List<object>

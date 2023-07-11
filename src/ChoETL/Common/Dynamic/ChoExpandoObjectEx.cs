@@ -68,7 +68,8 @@ namespace ChoETL
             return expando;
         }
 
-        public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayIndexSeparator = null, bool allowNestedConversion = true,
+        public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayIndexSeparator = null, 
+            char? arrayEndIndexSeparator = null, bool allowNestedConversion = true,
             int maxArraySize = 100)
         {
             if (separator == ChoCharEx.NUL)
@@ -151,29 +152,38 @@ namespace ChoETL
                     root.Add(kvp.Key, kvp.Value);
             }
 
-            return root.ConvertMembersToArrayIfAny(arrayIndexSeparator, allowNestedConversion);
+            return root.ConvertMembersToArrayIfAny(arrayIndexSeparator, arrayEndIndexSeparator, allowNestedConversion);
 
             //return root as ChoDynamicObject;
         }
 
-        public static dynamic ConvertMembersToArrayIfAny(this object @this, char? arrayIndexSeparator = null, bool allowNestedConversion = true)
+        public static dynamic ConvertMembersToArrayIfAny(this object @this, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true)
         {
             char? startSeparator = null;
             char? endSeparator = null;
-            switch (ChoETLSettings.ArrayBracketNotation)
+            if (arrayIndexSeparator == null)
             {
-                case ChoArrayBracketNotation.None:
-                    startSeparator = arrayIndexSeparator.Value;
-                    endSeparator = null;
-                    break;
-                case ChoArrayBracketNotation.Parenthesis:
-                    startSeparator = '(';
-                    endSeparator = ')';
-                    break;
-                case ChoArrayBracketNotation.Square:
-                    startSeparator = '[';
-                    endSeparator = ']';
-                    break;
+                switch (ChoETLSettings.ArrayBracketNotation)
+                {
+                    case ChoArrayBracketNotation.None:
+                        startSeparator = arrayIndexSeparator.Value;
+                        endSeparator = null;
+                        break;
+                    case ChoArrayBracketNotation.Parenthesis:
+                        startSeparator = '(';
+                        endSeparator = ')';
+                        break;
+                    case ChoArrayBracketNotation.Square:
+                        startSeparator = '[';
+                        endSeparator = ']';
+                        break;
+                }
+            }
+            else
+            {
+                startSeparator = arrayIndexSeparator;
+                if (arrayEndIndexSeparator != null)
+                    endSeparator = arrayEndIndexSeparator;
             }
 
             if (@this == null)
@@ -187,7 +197,7 @@ namespace ChoETL
             object value = null;
             foreach (var kvp in expandoDic)
             {
-                value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, arrayIndexSeparator, allowNestedConversion) : kvp.Value;
+                value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, arrayIndexSeparator, arrayEndIndexSeparator, allowNestedConversion) : kvp.Value;
 
                 var pos = kvp.Key.LastIndexOf(startSeparator.Value);
                 if (pos <= 0)
@@ -225,10 +235,11 @@ namespace ChoETL
 
         public static dynamic ConvertToFlattenObject(this object @this, bool ignoreDictionaryFieldPrefix)
         {
-            return ConvertToFlattenObject(@this, null, null, ignoreDictionaryFieldPrefix);
+            return ConvertToFlattenObject(@this, null, null, null, ignoreDictionaryFieldPrefix);
         }
 
-        public static dynamic ConvertToFlattenObject(this object @this, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
+        public static dynamic ConvertToFlattenObject(this object @this, char? nestedKeySeparator = null, char? arrayIndexSeparator = null,
+            char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
             //if (@this == null || !@this.GetType().IsDynamicType())
             //    return @this;
@@ -237,7 +248,7 @@ namespace ChoETL
             if (dict == null)
                 return @this;
             else
-                return new ChoDynamicObject(dict.Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix).ToDictionary());
+                return new ChoDynamicObject(dict.Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix).ToDictionary());
         }
 
         private static object GetDynamicMember(object obj, string memberName)

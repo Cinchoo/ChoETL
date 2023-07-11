@@ -125,11 +125,13 @@ namespace ChoETL
                     {
                         if (sr.TokenType == JsonToken.StartObject)
                         {
-                            yield return Configuration.InvokeJObjectLoader(sr);
+                            yield return ToJObject(ChoJObjectLoader.InvokeJObjectLoader(sr, Configuration.JsonLoadSettings, Configuration.JObjectLoadOptions,
+                                Configuration.CustomJObjectLoader));
                         }
                         else if (sr.TokenType == JsonToken.StartArray)
                         {
-                            var z = Configuration.InvokeJObjectLoader(sr).Children().ToArray();
+                            var z = ChoJObjectLoader.InvokeJObjectLoader(sr, Configuration.JsonLoadSettings, Configuration.JObjectLoadOptions,
+                                Configuration.CustomJObjectLoader).Children().ToArray();
                             dynamic x = new JObject(new JProperty("Value", z));
                             yield return x;
                         }
@@ -159,10 +161,15 @@ namespace ChoETL
                     }
                 }
                 else if (sr.TokenType == JsonToken.StartObject)
-                    yield return Configuration.InvokeJObjectLoader(sr);
+                    yield return ToJObject(ChoJObjectLoader.InvokeJObjectLoader(sr, Configuration.JsonLoadSettings, Configuration.JObjectLoadOptions,
+                                Configuration.CustomJObjectLoader));
 
                 sr.Skip();
             }
+        }
+        private JObject ToJObject(JToken value)
+        {
+            return ChoJObjectLoader.ToJObject(value);
         }
 
         public static IEnumerable<IDictionary<string, object>> ToCollections(object o)
@@ -222,8 +229,16 @@ namespace ChoETL
                             {
                                 foreach (var kvp in dict)
                                 {
-                                    foreach (var j in ToJObjects(new JToken[] { kvp.Value is JToken ? (JToken)kvp.Value : new JValue(kvp.Value) }))
-                                        yield return j;
+                                    if (Configuration.FlattenIfJArrayWhenReading)
+                                    {
+                                        foreach (var j in ToJObjects(new JToken[] { kvp.Value is JToken ? (JToken)kvp.Value : new JValue(kvp.Value) }))
+                                            yield return j;
+                                    }
+                                    else
+                                    {
+                                        foreach (var j in ToJObjectsDoNotFlattenJArray(new JToken[] { kvp.Value is JToken ? (JToken)kvp.Value : new JValue(kvp.Value) }))
+                                            yield return j;
+                                    }
                                 }
                             }
                         }
@@ -240,14 +255,33 @@ namespace ChoETL
                     if (!Configuration.AllowComplexJSONPath)
                         throw new JsonException("Complex JSON path not supported.");
 
+                    //IEnumerable<JObject> result = null;
+                    //try
+                    //{
+                    //    result = ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath));
+                    //}
+                    //catch
+                    //{
+                    //    result = ToJObjects(JArray.Load(sr).SelectTokens(Configuration.JSONPath));
+                    //}
+                    //if (result != null)
+                    //{
+                    //    foreach (var t in result)
+                    //    {
+                    //        yield return t;
+                    //    }
+                    //}
+
                     IEnumerable<JObject> result = null;
                     try
                     {
-                        result = ToJObjects(Configuration.InvokeJObjectLoader(sr).SelectTokens(Configuration.JSONPath));
+                        result = ToJObjectsDoNotFlattenJArray(ChoJObjectLoader.InvokeJObjectLoader(sr, Configuration.JsonLoadSettings, Configuration.JObjectLoadOptions,
+                                Configuration.CustomJObjectLoader).SelectTokens(Configuration.JSONPath));
                     }
                     catch
                     {
-                        result = ToJObjects(Configuration.InvokeJArrayLoader(sr).SelectTokens(Configuration.JSONPath));
+                        result = ToJObjectsDoNotFlattenJArray(ChoJObjectLoader.InvokeJArrayLoader(sr, Configuration.JsonLoadSettings, Configuration.CustomJArrayLoader,
+                            Configuration.UseImplicitJArrayLoader, Configuration.MaxJArrayItemsLoad).SelectTokens(Configuration.JSONPath));
                     }
                     if (result != null)
                     {
@@ -428,6 +462,22 @@ namespace ChoETL
             return false;
         }
 
+        private IEnumerable<JObject> ToJObjectsDoNotFlattenJArray(IEnumerable<JToken> tokens)
+        {
+            foreach (var t in tokens)
+            {
+                if (t is JArray)
+                {
+                    yield return new JObject(new JProperty("Value", t));
+                }
+                else if (t is JObject)
+                    yield return t.ToObject<JObject>();
+                else if (t is JValue)
+                    yield return new JObject(new JProperty("Value", ((JValue)t).Value));
+            }
+
+        }
+
         private IEnumerable<JObject> ToJObjects(IEnumerable<JToken> tokens)
         {
             foreach (var t in tokens)
@@ -467,10 +517,28 @@ namespace ChoETL
                     }
                     else
                     {
-                        dynamic x1 = new JObject();
-                        x1.Value = t;
-                        yield return x1;
-
+                        if (t is JObject)
+                            yield return t.ToObject<JObject>();
+                        else if (t is JArray)
+                        {
+                            foreach (var i in t as JArray)
+                            {
+                                if (i is JObject)
+                                    yield return i.ToObject<JObject>();
+                                else
+                                {
+                                    dynamic x1 = new JObject();
+                                    x1.Value = i;
+                                    yield return x1;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            dynamic x1 = new JObject();
+                            x1.Value = t;
+                            yield return x1;
+                        }
                         //foreach (JToken item in ((JArray)t))
                         //{
                         //    if (item is JObject)
@@ -510,7 +578,7 @@ namespace ChoETL
             {
                 foreach (var jo in jObjects)
                 {
-                    foreach (var jo1 in jo.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, 
+                    foreach (var jo1 in jo.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator,
                         Configuration.NestedKeyResolver, Configuration.UseNestedKeyFormat, Configuration.IgnoreArrayIndex,
                         Configuration.FlattenByNodeName, Configuration.FlattenByJsonPath).OfType<JObject>())
                         yield return (JObject)jo1;
@@ -571,6 +639,12 @@ namespace ChoETL
 
             foreach (var obj in FlattenNodeIfOn(jObjects))
             {
+                if (RecordType == typeof(JObject))
+                {
+                    yield return obj;
+                    continue;
+                }
+
                 pair = new Tuple<long, JObject>(++counter, obj);
                 skip = false;
 
@@ -753,12 +827,13 @@ namespace ChoETL
                 if (!Configuration.RecordTypeMapped)
                 {
                     Configuration.MapRecordFields(recType);
+                    Configuration.MapRecordFieldsForType(recType);
                     Configuration.Validate(null);
                 }
 
                 if (recType != null)
                 {
-                    rec = recType.IsDynamicType() ? new ChoDynamicObject() 
+                    rec = recType.IsDynamicType() ? new ChoDynamicObject()
                     {
                         ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                     } : ChoActivator.CreateInstance(recType);
@@ -766,7 +841,7 @@ namespace ChoETL
                 }
             }
             else if (!Configuration.UseJSONSerialization || Configuration.IsDynamicObject)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() 
+                rec = Configuration.IsDynamicObject ? new ChoDynamicObject()
                 {
                     ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                 } : ChoActivator.CreateInstance(RecordType);
@@ -834,8 +909,15 @@ namespace ChoETL
                     && !(RecordType.IsGenericType && RecordType.GetGenericTypeDefinition() == typeof(ICollection<>))
                     )
                 {
-                    if (!FillRecord(ref rec, pair))
-                        return false;
+                    if (Configuration.SupportsMultiRecordTypes)
+                    {
+                        rec = DeserializeNode((JToken)pair.Item2, RecordType, null);
+                    }
+                    else
+                    {
+                        if (!FillRecord(ref rec, pair))
+                            return false;
+                    }
 
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
@@ -846,7 +928,7 @@ namespace ChoETL
                         }
                         else if (Configuration.ConvertToFlattenObject && Configuration.NestedKeySeparator != null)
                         {
-                            rec = rec.ConvertToFlattenObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator, 
+                            rec = rec.ConvertToFlattenObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                                 Configuration.IgnoreDictionaryFieldPrefix);
                         }
                     }
@@ -1136,11 +1218,11 @@ namespace ChoETL
                         jToken = jToken is JArray ? ((JArray)jToken).FirstOrDefault() : jToken;
                     }
                     else if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) &&
-                        !typeof(JToken).IsAssignableFrom(fieldConfig.FieldType) && 
+                        !typeof(JToken).IsAssignableFrom(fieldConfig.FieldType) &&
                         (fieldConfig.FieldType.IsCollection()
-         || fieldConfig.FieldType.IsGenericList()
-         || fieldConfig.FieldType.IsGenericEnumerable())
-         && jToken != null)
+                         || fieldConfig.FieldType.IsGenericList()
+                         || fieldConfig.FieldType.IsGenericEnumerable())
+                         && jToken != null)
                     {
                         var itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
                         if (itemType.IsSimple())
@@ -1193,17 +1275,27 @@ namespace ChoETL
                     }
 
                     object v1 = !jTokens.IsNullOrEmpty() ? (object)jTokens : jToken == null ? node : jToken;
+                    Func<object, object> nodeConverterForType = null;
                     if (fieldConfig.CustomSerializer != null)
                         fieldValue = fieldConfig.CustomSerializer(v1);
                     else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref v1))
                         fieldValue = v1;
                     else if (fieldConfig.PropCustomSerializer != null)
                         fieldValue = ChoCustomSerializer.Deserialize(v1, fieldConfig.FieldType, fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name);
+                    else if (Configuration.HasNodeConverterForType(fieldConfig.FieldType, out nodeConverterForType)
+                        || Configuration.HasNodeConverterForType(fieldConfig.FieldType.GetUnderlyingType(), out nodeConverterForType))
+                    {
+                        if (nodeConverterForType != null)
+                            fieldValue = nodeConverterForType(fieldValue);
+                        else
+                            fieldValue = null;
+                    }
                     else
                     {
                         if (fieldConfig.FieldType == null)
                         {
-                            if (!Configuration.IsArray(fieldConfig))
+                            var isArray = Configuration.IsArray(fieldConfig, fieldValue);
+                            if (isArray != null && !isArray.Value)
                             {
                                 if (fieldValue is JToken[])
                                 {
@@ -1289,7 +1381,8 @@ namespace ChoETL
 
                                 if (!typeof(JToken).IsAssignableFrom(itemType))
                                 {
-                                    fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
+                                    var jToken1 = (JToken)fieldValue;
+                                    fieldValue = DeserializeNode(jToken1, itemType, fieldConfig);
                                 }
                             }
                             else if (fieldValue is JArray)
@@ -1350,12 +1443,15 @@ namespace ChoETL
                                         try
                                         {
                                             object fv = null;
-                                            if (fieldConfig.ItemConverter == null || !typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
-                                                fv = DeserializeNode(ele, itemType, fieldConfig);
-                                            else
+                                            if (fieldConfig.ItemConverter != null || typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
                                                 fv = RaiseItemConverter(fieldConfig, ele);
+                                            else
+                                                fv = DeserializeNode(ele, itemType, fieldConfig);
 
-                                            list.Add(fv);
+                                            if (!fieldConfig.HasConverters() && !itemType.IsCollectionType() && fv is IList && !(fv is JToken))
+                                                list.AddRange(((IList)fv).OfType<object>());
+                                            else
+                                                list.Add(fv);
                                         }
                                         catch (Exception ex)
                                         {
@@ -1437,7 +1533,7 @@ namespace ChoETL
                         if (pi != null)
                             rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                         else if (RecordType.IsSimple())
-                            rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
+                            rec = ChoConvert.ConvertFrom(fieldValue, RecordType, Configuration.Culture);
                         else
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 
@@ -1559,16 +1655,29 @@ namespace ChoETL
             //    rec = AssignDefaultsToNullableMembers(rec);
             //}
 
-            rec = rootRec;
+            if (Configuration.RecordFieldConfigurationsDict.Count == 1 && Configuration.RecordFieldConfigurationsDict.First().Key == "Value"
+                && !Configuration.IsDynamicObject)
+            {
+                if (RecordType.IsSimple())
+                {
+
+                }
+                else
+                    rec = rootRec;
+            }
+            else
+            {
+                rec = rootRec;
+            }
             return true;
         }
 
         private object DeserializeNode(JToken jtoken, Type type, ChoJSONRecordFieldConfiguration config)
         {
             object value = null;
-            type = type == null ? (fieldConfig.FieldType == null ? null /*typeof(string)*/ : fieldConfig.FieldType) : type;
+            type = type == null ? (config != null && config.FieldType == null ? null /*typeof(string)*/ : config.FieldType) : type;
 
-            if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+            if (config != null && (config.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType)))
             {
                 var rt = RaiseRecordTypeSelector(config, jtoken);
                 if (rt != null)
@@ -1577,11 +1686,11 @@ namespace ChoETL
 
             try
             {
-                value = ToObject(jtoken, type, config.UseJSONSerialization, config);
+                value = ToObject(jtoken, type, config != null ? config.UseJSONSerialization : false, config);
             }
             catch
             {
-                if (fieldConfig.ItemConverter != null || typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
+                if (config != null && (config.ItemConverter != null || typeof(IChoItemConvertable).IsAssignableFrom(RecordType)))
                     value = RaiseItemConverter(config, jtoken);
                 else
                     throw;
@@ -1743,7 +1852,7 @@ namespace ChoETL
                 {
                     var rec = ChoActivator.CreateInstanceNCache(RecordType);
                     if (rec is IChoItemConvertable)
-                        fieldValue = ((IChoItemConvertable)rec).ItemConvert(fieldConfig.Name, fieldConfig);
+                        fieldValue = ((IChoItemConvertable)rec).ItemConvert(fieldConfig.Name, fieldValue);
                 }
             }
 
@@ -1778,27 +1887,57 @@ namespace ChoETL
 
         private bool FillIfKeyValueObject(ref object rec, JToken jObject)
         {
-            if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
-                || typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
-            {
-                rec = ToObject(jObject, RecordType); //, config.UseJSONSerialization, config);
-                return true;
-            }
-            else
+            if (rec == null)
                 return false;
-
             //if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
             //    || typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
             //{
-            //    IDictionary<string, object> dict = ToDynamic(jObject) as IDictionary<string, object>;
-            //    if (dict == null || dict.Count == 0)
-            //        return true;
-
-            //    FillIfKeyValueObject(rec, dict.First());
+            //    rec = ToObject(jObject, RecordType); //, config.UseJSONSerialization, config);
+            //    return true;
             //}
-            //return false;
+            //else
+            //    return false;
+
+            if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+                || typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
+            {
+                IDictionary<string, object> dict = ToDynamic(jObject) as IDictionary<string, object>;
+                if (dict == null || dict.Count == 0)
+                    return true;
+
+                FillIfKeyValueObject(rec, dict.First());
+                return true;
+            }
+            return false;
         }
 
+
+        private IEnumerable<object> FillIfKeyValueObject(JToken jObject, Type recType)
+        {
+            //if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+            //    || typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
+            //{
+            //    rec = ToObject(jObject, RecordType); //, config.UseJSONSerialization, config);
+            //    return true;
+            //}
+            //else
+            //    return false;
+
+            if (recType.GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+                || typeof(IChoKeyValueType).IsAssignableFrom(recType))
+            {
+                IDictionary<string, object> dict = ToDynamic(jObject) as IDictionary<string, object>;
+                if (dict == null || dict.Count == 0)
+                    yield break;
+
+                foreach (var kvp in dict)
+                {
+                    object rec = ChoActivator.CreateInstance(recType);
+                    FillIfKeyValueObject(rec, kvp);
+                    yield return rec;
+                }
+            }
+        }
 
         private IList FillIfKeyValueObject(Type type, JToken jObject)
         {
@@ -1851,12 +1990,14 @@ namespace ChoETL
 
         private object ToObject(JToken jToken, Type type, bool? useJSONSerialization = null, ChoJSONRecordFieldConfiguration config = null)
         {
-            if (type == null || (type.IsDynamicType() && useJSONSerialization == null)) 
+            if (type == null || (type.IsDynamicType() && useJSONSerialization == null))
             {
                 switch (jToken.Type)
                 {
                     case JTokenType.Null:
                         return null;
+                    case JTokenType.Boolean:
+                        return (bool)jToken;
                     case JTokenType.String:
                         return (string)jToken;
                     case JTokenType.Integer:
@@ -1864,7 +2005,12 @@ namespace ChoETL
                     case JTokenType.Float:
                         return (double)jToken;
                     case JTokenType.Date:
-                        return (DateTime)jToken;
+                        if (Configuration.JsonSerializerSettings.DateParseHandling == DateParseHandling.DateTimeOffset)
+                            return (DateTimeOffset)jToken;
+                        else if (Configuration.JsonSerializerSettings.DateParseHandling == DateParseHandling.DateTime)
+                            return (DateTime)jToken;
+                        else
+                            return (string)jToken;
                     case JTokenType.TimeSpan:
                         return (TimeSpan)jToken;
                     case JTokenType.Guid:
@@ -1902,13 +2048,13 @@ namespace ChoETL
                     {
                         if (config != null)
                         {
-                            if (config.HasConverters())
-                                type = config.SourceType != null ? config.SourceType : typeof(object);
-                            else
+                            //if (config.HasConverters())
+                            //    type = config.SourceType != null ? config.SourceType : typeof(object);
+                            //else
                                 type = config.SourceType != null ? config.SourceType : type;
                         }
 
-                        return JTokenToObject(jToken, type, _se);
+                        return JTokenToObject(jToken, type, _se, config);
                     }
                     else
                     {
@@ -1952,7 +2098,7 @@ namespace ChoETL
             }
         }
 
-        public object JTokenToObject(JToken jToken, Type objectType, Lazy<JsonSerializer> jsonSerializer = null)
+        public object JTokenToObject(JToken jToken, Type objectType, Lazy<JsonSerializer> jsonSerializer = null, ChoJSONRecordFieldConfiguration fieldConfig = null)
         {
             try
             {
@@ -1977,6 +2123,11 @@ namespace ChoETL
                             return currency.Amount;
                         else
                             return jToken.ToObject(objectType, jsonSerializer.Value);
+                    }
+                    else if (typeof(IChoKeyValueType).IsAssignableFrom(objectType))
+                    {
+                        var recs = FillIfKeyValueObject(jToken, objectType).ToArray();
+                        return recs;
                     }
                     else
                     {
@@ -2015,7 +2166,14 @@ namespace ChoETL
 
                             try
                             {
-                                var retval = ChoConvert.ConvertTo(value.Value, objectType);
+                                object retval = value.Value;
+                                //var retval = ChoConvert.ConvertFrom(value.Value, objectType, 
+                                //    parameters: fieldConfig != null && !fieldConfig.FormatText.IsNullOrWhiteSpace() ? new object[] { fieldConfig.FormatText } : null);
+
+                                if (ChoETLRecordHelper.ConvertMemberValue(null, null, fieldConfig, ref retval, Configuration.Culture))
+                                {
+
+                                }
                                 if (retval == null && objectType.IsNullableType())
                                 {
                                     return jToken.ToObject(objectType, jsonSerializer.Value);

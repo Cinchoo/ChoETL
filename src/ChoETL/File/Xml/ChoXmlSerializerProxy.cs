@@ -64,7 +64,7 @@ namespace ChoETL
             var r = Activator.CreateInstance(typeof(ChoXmlReader<>).MakeGenericType(new[] { typeof(TInstanceType) }), new object[] { reader, cf })
                 as IChoReader;
 
-            this._value = r.FirstOrDefault<TInstanceType>();
+            this._value = r.FirstOrDefaultEx<TInstanceType>();
         }
         public virtual void WriteXml(XmlWriter writer)
         {

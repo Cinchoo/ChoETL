@@ -135,6 +135,7 @@ namespace ChoETL
                 yield return line;
         }
 
+        bool headerLineLoaded = false;
         private IEnumerable<object> AsEnumerable(object source, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
         {
             TraceSwitch = traceSwitch;
@@ -154,7 +155,6 @@ namespace ChoETL
             bool abortRequested = false;
             long runningCount = 0;
             long recCount = 0;
-            bool headerLineLoaded = false;
             List<object> buffer = new List<object>();
             IDictionary<string, Type> recFieldTypes = null;
             bool? skipUntil = true;
@@ -214,42 +214,13 @@ namespace ChoETL
                     if (skip.Value)
                         return new Tuple<bool?, Tuple<long, string>>(skip, pairElement);
 
+                    // ****** ORDER IMPORTANT ***
+
                     //if (!(sr.BaseStream is MemoryStream))
                     //    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, ChoETLFramework.Switch.TraceVerbose, "Loading line [{0}]...".FormatString(item.Item1));
 
                     //if (Task != null)
                     //    return !IsStateNOTExistsOrNOTMatch(item);
-
-                    if (pairElement.Item2.IsNullOrWhiteSpace())
-                    {
-                        if (RaiseReportEmptyLine(this, pairElement.Item1))
-                        {
-                            if (TraceSwitch.TraceVerbose)
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pairElement.Item1));
-                            return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
-                        }
-                        else
-                        {
-                            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
-                            {
-                                if (_headerFound)
-                                    return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
-                                else
-                                    return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
-                            }
-                            else
-                                return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
-                        }
-
-                        //if (!Configuration.IgnoreEmptyLine)
-                        //    throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
-                        //else
-                        //{
-                        //    if (TraceSwitch.TraceVerbose)
-                        //        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
-                        //    return new Tuple<bool?, Tuple<long, string>>(false, pair);
-                        //}
-                    }
 
                     //LoadExcelSeparator if any
                     if (pairElement.Item1 == 1
@@ -285,7 +256,7 @@ namespace ChoETL
                                 {
                                     mlr.RaiseCommentLineFound(pairElement.Item1, pairElement.Item2);
                                 }
-                                 
+
                                 return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                             }
                         }
@@ -299,6 +270,43 @@ namespace ChoETL
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Header line at {1}. Skipping [{0}] line...".FormatString(pairElement.Item1, Configuration.FileHeaderConfiguration.HeaderLineAt));
                             return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                         }
+                    }
+
+                    if (pairElement.Item2.IsNullOrWhiteSpace())
+                    {
+                        if (RaiseReportEmptyLine(this, pairElement.Item1))
+                        {
+                            if (Configuration.IgnoreEmptyLine)
+                            {
+                                if (TraceSwitch.TraceVerbose)
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pairElement.Item1));
+
+                                return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
+                            }
+                            else
+                                return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
+                        }
+                        else
+                        {
+                            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+                            {
+                                if (_headerFound)
+                                    return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
+                                else
+                                    return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
+                            }
+                            else
+                                return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
+                        }
+
+                        //if (!Configuration.IgnoreEmptyLine)
+                        //    throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
+                        //else
+                        //{
+                        //    if (TraceSwitch.TraceVerbose)
+                        //        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
+                        //    return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                        //}
                     }
 
                     if (Reader is IChoSanitizableReader)
@@ -349,12 +357,16 @@ namespace ChoETL
                                     Configuration.Validate(GetHeaders(header));
                                 var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                                 //if (Configuration.MaxScanRows == 0)
-                                RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
+                                //RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
+                                if (Configuration.RecordFieldConfigurationsDict2 != null)
+                                    RaiseMembersDiscovered(Configuration.RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FieldType == null ? null : kvp.Value.FieldType));
+                                else
+                                    RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
                                 Configuration.UpdateFieldTypesIfAny(dict);
                                 _configCheckDone = true;
                             }
 
-                                headerLineLoaded = true;
+                            headerLineLoaded = true;
                             _headerFound = true;
                             LoadHeaderLine(header);
 
@@ -374,7 +386,12 @@ namespace ChoETL
                                 Configuration.Validate(GetHeaders(pairElement.Item2));
                             var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
-                            RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
+                            //RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
+                            if (Configuration.RecordFieldConfigurationsDict2 != null)
+                                RaiseMembersDiscovered(Configuration.RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FieldType == null ? null : kvp.Value.FieldType));
+                            else
+                                RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
+
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                         }
@@ -397,6 +414,7 @@ namespace ChoETL
                     }
                     else
                     {
+                        headerLineLoaded = true;
                         if (!_configCheckDone)
                         {
                             if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
@@ -404,9 +422,13 @@ namespace ChoETL
                             }
                             else
                                 Configuration.Validate(GetHeaders(pairElement.Item2));
-                            var dict =   Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                            var dict = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
-                            RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
+                            //RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
+                            if (Configuration.RecordFieldConfigurationsDict2 != null)
+                                RaiseMembersDiscovered(Configuration.RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FieldType == null ? null : kvp.Value.FieldType));
+                            else
+                                RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                             LoadHeaderLine(pairElement);
@@ -530,15 +552,22 @@ namespace ChoETL
 
         private object ConvertToNestedObjectIfApplicable(object rec, bool headerLineFound)
         {
-            if (!headerLineFound || !Configuration.IsDynamicObject || Configuration.NestedColumnSeparator == null)
-                return ConvertToArrayMemebersIfApplicable(rec, headerLineFound);
+            try
+            {
+                if (!headerLineFound || !Configuration.IsDynamicObject || Configuration.NestedColumnSeparator == null)
+                    return ConvertToArrayMemebersIfApplicable(rec, headerLineFound);
 
-            IDictionary<string, object> dict = rec as IDictionary<string, object>;
-            dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
+                IDictionary<string, object> dict = rec as IDictionary<string, object>;
+                dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict.ContainsKey(kvp.Key) ? Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName : kvp.Key, kvp => kvp.Value));
 
-            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value, 
-                Configuration.ArrayIndexSeparator, 
-                Configuration.AllowNestedArrayConversion);
+                return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value,
+                    Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                    Configuration.AllowNestedArrayConversion);
+            }
+            catch
+            {
+                return rec;
+            }
         }
 
         private object ConvertToArrayMemebersIfApplicable(object rec, bool headerLineFound)
@@ -550,7 +579,7 @@ namespace ChoETL
 
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
-            return dict1.ConvertMembersToArrayIfAny(Configuration.GetArrayIndexSeparator() /*.ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator.Value */,
+            return dict1.ConvertMembersToArrayIfAny(Configuration.GetArrayIndexSeparatorChar(), Configuration.ArrayEndIndexSeparator, /*.ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator.Value */
                 Configuration.AllowNestedArrayConversion);
         }
 
@@ -575,10 +604,10 @@ namespace ChoETL
                     rec = null;
                     return true;
                 }
-                else if (pair.Item2 == String.Empty)
-                    return true;
+                //else if (pair.Item2 == String.Empty)
+                //    return true;
 
-                if (!pair.Item2.IsNullOrWhiteSpace())
+                if (headerLineLoaded) //!pair.Item2.IsNullOrWhiteSpace())
                 {
                     if (!FillRecord(rec, pair))
                         return false;
@@ -611,11 +640,16 @@ namespace ChoETL
                 if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
                 {
                     if (!RaiseRecordLoadError(rec, pair, ex))
+                    {
                         throw;
+                    }
                     else
                     {
-                        //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                        //rec = null;
+                        if (!Configuration.AllowReturnPartialLoadedRecs)
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            rec = null;
+                        }
                     }
                 }
                 else
@@ -623,8 +657,11 @@ namespace ChoETL
                     ChoETLFramework.HandleException(ref ex);
                     if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                        rec = null;
+                        if (!Configuration.AllowReturnPartialLoadedRecs)
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            rec = null;
+                        }
                     }
                     else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                     {
@@ -688,29 +725,58 @@ namespace ChoETL
             }
         }
 
+        private string[] GetFieldValuesForValueSelector(string line)
+        {
+            if ((Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value) || Configuration.CSVRecordFieldConfigurations.Any(f => f.QuoteField != null && f.QuoteField.Value))
+                return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar);
+            else
+                return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions);
+        }
+
         private string[] GetFieldValues(string line)
         {
             if ((Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value) || Configuration.CSVRecordFieldConfigurations.Any(f => f.QuoteField != null && f.QuoteField.Value))
                 return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar);
             else
             {
+                if (Configuration.RecordFieldConfigurationsDict == null)
+                    return new string[] { };
+
                 List<string> fvs = new List<string>();
                 int maxPos = Configuration.RecordFieldConfigurationsDict.Max(f => f.Value.FieldPosition);
-                for (int pos = 0; pos <= maxPos; pos++)
+                int pos = 0;
+                while (line != null) //for (int pos = 0; pos <= maxPos; pos++)
                 {
                     var fc = Configuration.RecordFieldConfigurationsDict.Where(f => f.Value.FieldPosition == pos).Select(f => f.Value).FirstOrDefault();
                     bool quoteField = false;
                     if (fc != null)
                         quoteField = fc.QuoteField.GetValueOrDefault(false);
 
-                    var tokens = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions,
-                        !quoteField ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
-                    if (!tokens.IsNullOrEmpty())
+                    if (line == null)
                     {
-                        var fv = tokens.First();
-                        fvs.Add(fv);
-                        line = line.RightOf(fv + Configuration.Delimiter);
+                        break;
                     }
+                    else
+                    {
+                        var tokens = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions,
+                            !quoteField ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
+                        if (!tokens.IsNullOrEmpty())
+                        {
+                            var fv = tokens.First();
+                            fvs.Add(fv);
+                            if (line.IndexOf(fv + Configuration.Delimiter) >= 0)
+                                line = line.RightOf(fv + Configuration.Delimiter);
+                            else
+                                line = null;
+                        }
+                        else
+                        {
+                            fvs.Add(String.Empty);
+                            line = null;
+                        }
+                    }
+
+                    pos++;
                 }
 
                 return fvs.ToArray();
@@ -837,7 +903,17 @@ namespace ChoETL
                         }
                         else
                         {
-                            fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldNameValues));
+                            //fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldNameValues));
+                            var fvs = GetFieldValuesForValueSelector(line);
+                            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+                            {
+                                if (fieldNameValuesEx == null)
+                                    fieldNameValuesEx = InitFieldNameValuesDict();
+                                ToFieldNameValues(fieldNameValuesEx, fvs);
+                                fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldNameValuesEx));
+                            }
+                            else
+                                fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fvs));
                         }
                     }
                     else
@@ -858,15 +934,16 @@ namespace ChoETL
                         }
                         else
                         {
+                            var fvs = GetFieldValuesForValueSelector(line);
                             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
                             {
                                 if (fieldNameValuesEx == null)
                                     fieldNameValuesEx = InitFieldNameValuesDict();
-                                ToFieldNameValues(fieldNameValuesEx, fieldValues);
+                                ToFieldNameValues(fieldNameValuesEx, fvs);
                                 fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldNameValuesEx));
                             }
                             else
-                                fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldValues));
+                                fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fvs));
                         }
                     }
 
@@ -1212,7 +1289,7 @@ namespace ChoETL
                             if (header.IsNullOrWhiteSpace())
                             {
                                 //if (Configuration.FileHeaderConfiguration.KeepColumnsWithEmptyHeader)
-                                    newHeaders.Add("{0}{1}".FormatString(_emptyColumnHeaderPrefix, ++index));
+                                newHeaders.Add("{0}{1}".FormatString(_emptyColumnHeaderPrefix, ++index));
                             }
                             else
                                 newHeaders.Add(header);
@@ -1311,12 +1388,15 @@ namespace ChoETL
 
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
-                if (Configuration.ThrowAndStopOnMissingField) // Configuration.ThrowAndStopOnMissingCSVColumn)
+                if (Configuration.ThrowAndStopOnMissingField)
                 {
-                    foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.Where(i => !i.Optional).OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
+                    var fieldNames = Configuration.CSVRecordFieldConfigurations.Where(i => !i.Optional).OrderBy(i => i.FieldPosition).Select(i => i.FieldName).ToArray();
+                    foreach (string fieldName in fieldNames)
                     {
                         if (!_fieldNames.Contains(fieldName, Configuration.FileHeaderConfiguration.StringComparer))
+                        {
                             throw new ChoMissingCSVColumnException("Missing '{0}' CSV column in CSV file.".FormatString(fieldName));
+                        }
                     }
                 }
 
@@ -1498,7 +1578,7 @@ namespace ChoETL
             {
                 return !Configuration.ThrowAndStopOnMissingField;
             }
-            return true;
+            return false;
         }
 
         private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)

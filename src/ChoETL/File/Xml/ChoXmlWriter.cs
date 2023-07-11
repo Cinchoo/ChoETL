@@ -193,9 +193,8 @@ namespace ChoETL
                 configuration = new ChoXmlRecordConfiguration(typeof(TRec));
                 configuration.IgnoreRootName = true;
                 configuration.RootName = null;
+                configuration.IgnoreNodeName = false;
             }
-
-            configuration.IgnoreNodeName = true;
 
             if (record != null)
             {
@@ -517,6 +516,11 @@ namespace ChoETL
 
         public ChoXmlWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
             Configuration.IgnoreField(field);
             return this;
         }

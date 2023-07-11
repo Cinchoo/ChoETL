@@ -1000,7 +1000,7 @@
                         }
                     }
 
-                    setter(target, val);
+                    setter?.Invoke(target, val);
                 }
 #else
                 propertyInfo.SetValue(target, val, null);
@@ -2735,9 +2735,10 @@
             if (propName.Contains("."))//complex type nested
             {
                 var temp = propName.Split(new char[] { '.' }, 2);
-                return GetDeclaringRecord(GetDeclaringRecord(src, temp[0],
+                var rec1 = GetDeclaringRecord(src, temp[0],
                     nestedArrayIndex == null || nestedArrayIndex.Count <= 0 ? arrayIndex : nestedArrayIndex[0],
-                    nestedArrayIndex == null || nestedArrayIndex.Count <= 0 ? null : nestedArrayIndex.Skip(1).ToList(), false), temp[1], arrayIndex, nestedArrayIndex);
+                    nestedArrayIndex == null || nestedArrayIndex.Count <= 0 ? null : nestedArrayIndex.Skip(1).ToList(), false);
+                return GetDeclaringRecord(rec1, temp[1], arrayIndex, nestedArrayIndex);
             }
             else
             {

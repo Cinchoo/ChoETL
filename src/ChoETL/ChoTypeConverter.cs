@@ -20,6 +20,7 @@ namespace ChoETL
         static ChoTypeConverter()
         {
             ChoTypeConverter.Global.Add(typeof(Boolean), new ChoBooleanConverter());
+            ChoTypeConverter.Global.Add(typeof(DateTime), new ChoDateTimeConverter());
         }
 
         public void Clear()

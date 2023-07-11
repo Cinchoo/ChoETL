@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -166,7 +167,7 @@ m""
                 IDataReader dr = r.AsDataReader();
                 while (dr.Read())
                 {
-                    actual.Add(new EmployeeRec { Identifier = dr["Identifier"].CastTo<int>(), Name = dr[1].CastTo<string>() });
+                    actual.Add(new EmployeeRec { Identifier = dr["Id"].CastTo<int>(), Name = dr[1].CastTo<string>() });
                 }
 
             }
@@ -372,6 +373,21 @@ Val 1,Val 2,Val 3,Val 4";
         [Test]
         public static void ScientificNotationdecimalsTest()
         {
+            string expected = @"[
+  {
+    ""a"": 1.2,
+    ""b"": 3.4,
+    ""RN"": null,
+    ""TimeStamp"": null
+  },
+  {
+    ""a"": 1.2E-05,
+    ""b"": 7.8,
+    ""RN"": null,
+    ""TimeStamp"": null
+  }
+]";
+
             //ChoTypeConverterFormatSpec.Instance.LongNumberStyle = NumberStyles.Number | NumberStyles.AllowExponent;
             string csv = @"a,b
 1.2,3.4
@@ -382,7 +398,9 @@ Val 1,Val 2,Val 3,Val 4";
                 .ThrowAndStopOnMissingField(false)
                 )
             {
-                r.Print();
+                var actual = JsonConvert.SerializeObject(r, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+                //r.Print();
                 //r.WithField(f => f.RN, () => r.RecordNumber);
                 //r.WithField(f => f.TimeStamp, () => DateTime.Now);
 
@@ -418,6 +436,320 @@ Val 1,Val 2,Val 3,Val 4";
             }
             CollectionAssert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public static void DefaultValueTest()
+        {
+            string csv = @"Id, Name
+1, 
+2, Mark";
+
+            List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
+                new ChoDynamicObject {{ "Id", "1" }, { "Name", "XXX" }},
+                new ChoDynamicObject {{ "Id", "2" }, { "Name", "Mark" }},
+            };
+            List<object> actual = new List<object>();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithField("Id")
+                .WithField("Name", defaultValue: "XXX")
+                )
+                actual.AddRange(r.ToArray());
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void DefaultValuePOCOTest()
+        {
+            string csv = @"Id, Name
+1, 
+2, Mark";
+
+            List<EmployeeRec> expected = new List<EmployeeRec> {
+                new EmployeeRec { Identifier = 1, Name = "XXXX"},
+                new EmployeeRec { Identifier = 2, Name = "Mark"},
+            };
+            List<EmployeeRec> actual = new List<EmployeeRec>();
+            using (var r = ChoCSVReader<EmployeeRec>.LoadText(csv)
+                )
+                actual.AddRange(r.ToArray());
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void ValidateCSVDynamic_AtMemberLevel_Test()
+        {
+            Assert.Throws<ChoReaderException>(delegate
+            {
+                string csv = @"Id, Name
+, 
+2, Mark";
+
+                List<object> actual = new List<object>();
+
+                using (var r = ChoCSVReader.LoadText(csv)
+                    .WithFirstLineHeader()
+                    .ValidationMode(ChoObjectValidationMode.MemberLevel)
+                    .WithField("Id", propertyValidator: o => o != null)
+                    .WithField("Name")
+                )
+                {
+                    actual.AddRange(r.ToArray());
+                }
+            });
+        }
+
+        [Test]
+        public static void ValidateCSVDynamic_AtObjectLevel_Test()
+        {
+            Assert.Throws<ValidationException>(delegate
+            {
+                string csv = @"Id, Name
+, 
+2, Mark";
+
+                List<object> actual = new List<object>();
+
+                using (var r = ChoCSVReader.LoadText(csv)
+                    .WithFirstLineHeader()
+                    .ValidationMode(ChoObjectValidationMode.ObjectLevel)
+                    .WithField("Id")
+                    .WithField("Name")
+                    .ObjectLevelValidator(rec =>
+                    {
+                        if (rec.Id == null)
+                            throw new ValidationException("Id value is required.");
+
+                        return true;
+                    })
+                )
+                {
+                    actual.AddRange(r.ToArray());
+                }
+            });
+        }
+
+        [Test]
+        public static void ValidateCSVPOCO_AtMemberLevel_Test()
+        {
+            Assert.Throws<ChoReaderException>(delegate
+            {
+                string csv = @"Id, Name
+, 
+2, Mark";
+
+                List<EmployeeRec> actual = new List<EmployeeRec>();
+
+                using (var r = ChoCSVReader<EmployeeRec>.LoadText(csv)
+                    .ValidationMode(ChoObjectValidationMode.MemberLevel)
+                    )
+                {
+                    actual.AddRange(r.ToArray());
+                }
+            });
+        }
+
+        [Test]
+        public static void ValidateCSVPOCO_AtObjectLevel_Test()
+        {
+            Assert.Throws<ValidationException>(delegate
+            {
+                string csv = @"Id, Name
+, 
+2, Mark";
+
+                List<EmployeeRec> actual = new List<EmployeeRec>();
+
+                using (var r = ChoCSVReader<EmployeeRec>.LoadText(csv)
+                    )
+                {
+                    actual.AddRange(r.ToArray());
+                }
+            });
+        }
+
+        [Test]
+        public static void ValidateCSVDynamic_WithIgnoreAndContinue_AtObjectLevel_Test()
+        {
+            string csv = @"Id, Name
+, 
+2, Mark";
+
+            List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
+                new ChoDynamicObject {{ "Id", "2" }, { "Name", "Mark" }},
+            };
+            List<object> actual = new List<object>();
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .ValidationMode(ChoObjectValidationMode.ObjectLevel)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .WithField("Id")
+                .WithField("Name", defaultValue: "XXXX")
+                .ObjectLevelValidator((rec) =>
+                {
+                    if (rec.Id == null)
+                        throw new ValidationException("Id field is required.");
+                    return true;
+                })
+                )
+            {
+                actual.AddRange(r.ToArray());
+            }
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void ValidateCSVDynamic_WithIgnoreAndContinue_AtMemberLevel_Test()
+        {
+            string csv = @"Id, Name
+, 
+2, Mark";
+
+            List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
+                new ChoDynamicObject {{ "Id", null }, { "Name", "XXXX" }},
+                new ChoDynamicObject {{ "Id", "2" }, { "Name", "Mark" }},
+            };
+            List<object> actual = new List<object>();
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .ValidationMode(ChoObjectValidationMode.MemberLevel)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .WithField("Id", propertyValidator: o => o != null)
+                .WithField("Name", defaultValue: "XXXX")
+                )
+            {
+                actual.AddRange(r.ToArray());
+            }
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void ValidateCSVPOCO_WithIgnoreAndContinue_Test()
+        {
+            string csv = @"Id, Name
+, 
+2, Mark";
+
+            List<EmployeeRec> expected = new List<EmployeeRec> {
+                new EmployeeRec { Identifier = 2, Name = "Mark"},
+            };
+            List<EmployeeRec> actual = new List<EmployeeRec>();
+
+            using (var r = ChoCSVReader<EmployeeRec>.LoadText(csv)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                actual.AddRange(r.ToArray());
+            }
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void ValidateCSVDynamic_WithReportAndContinue_Test()
+        {
+            string csv = @"Id, Name
+, 
+2, Mark";
+
+            List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
+                new ChoDynamicObject {{ "Id", null }, { "Name", "XXXX" }},
+                new ChoDynamicObject {{ "Id", "2" }, { "Name", "Mark" }},
+            };
+            List<object> actual = new List<object>();
+            long failedRecLineIndex = 0;
+            string errorMsg = null;
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .ErrorMode(ChoErrorMode.ReportAndContinue)
+                .ValidationMode(ChoObjectValidationMode.MemberLevel)
+                .WithField("Id", m => m.Value.Validator = v =>
+                {
+                    if (v == null)
+                        throw new ValidationException("Id field is required.");
+
+                    return true;
+                })
+                .WithField("Name", defaultValue: "XXXX")
+                .Setup(s => s.RecordFieldLoadError += (o, e) =>
+                {
+                    failedRecLineIndex = e.Index;
+                    errorMsg = e.Exception.Message;
+                    e.Handled = true;
+                })
+                )
+            {
+                actual.AddRange(r.ToArray());
+            }
+
+            Assert.AreEqual(failedRecLineIndex, 2);
+            Assert.AreEqual(errorMsg, "Id field is required.");
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void ValidateCSVPOCO_WithReportAndContinue_Test()
+        {
+            string csv = @"Id, Name
+, 
+2, Mark";
+
+            List<EmployeeRec> expected = new List<EmployeeRec> {
+                new EmployeeRec { Identifier = null, Name = "XXXX"},
+                new EmployeeRec { Identifier = 2, Name = "Mark"},
+            };
+            List<EmployeeRec> actual = new List<EmployeeRec>();
+
+            long failedRecLineIndex = 0;
+            string errorMsg = null;
+            using (var r = ChoCSVReader<EmployeeRec>.LoadText(csv)
+                .ErrorMode(ChoErrorMode.ReportAndContinue)
+                .Setup(s => s.RecordLoadError += (o, e) =>
+                {
+                    failedRecLineIndex = e.Index;
+                    errorMsg = e.Exception.Message;
+                    e.Handled = true;
+                })
+                )
+            {
+                actual.AddRange(r.ToArray());
+            }
+
+            Assert.AreEqual(failedRecLineIndex, 2);
+            Assert.AreEqual(errorMsg, "Failed to validate 'ChoCSVReaderTest.Test.EmployeeRec' object. \r\nThe Identifier field is required.\r\n");
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void ExcelSeparatorTest()
+        {
+            string csv = @"sep=|
+Id|Name
+1|Tom 
+2|Mark";
+
+            List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
+                new ChoDynamicObject {{ "Id", "1" }, { "Name", "Tom" }},
+                new ChoDynamicObject {{ "Id", "2" }, { "Name", "Mark" }},
+            };
+            List<object> actual = new List<object>();
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                actual.AddRange(r.ToArray());
+            }
+
+            Assert.AreEqual(expected, actual);
+        }
     }
     public class ScientificNotationdecimal
     {
@@ -425,8 +757,8 @@ Val 1,Val 2,Val 3,Val 4";
         public double a { get; set; }
         //[ChoTypeConverterParams(Parameters = NumberStyles.Number | NumberStyles.AllowExponent)]
         public double b { get; set; }
-        public long RN { get; set; }
-        public DateTime TimeStamp { get; set; }
+        public long? RN { get; set; }
+        public DateTime? TimeStamp { get; set; }
     }
 
     public class Employee

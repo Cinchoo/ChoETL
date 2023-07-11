@@ -30,12 +30,17 @@ namespace ChoETL
     }
 
     [DataContract]
-    public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration, IChoDynamicObjectRecordConfiguration
+    public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration, IChoDynamicObjectRecordConfiguration, IChoJSONRecordConfiguration
     {
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         internal readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
-        public Func<string, bool> IsNodeCanBeArray
+        public Func<string, object, bool?> JsonArrayQualifier
+        {
+            get;
+            set;
+        }
+        public Func<string, bool?> IsNodeCanBeArray
         {
             get;
             set;
@@ -134,6 +139,7 @@ namespace ChoETL
             get;
             set;
         }
+        public Action<JsonSerializerSettings> InspectConverters { get; set; }
         public ChoPropertyRenameAndIgnoreSerializerContractResolver JSONSerializerContractResolver
         {
             get
@@ -207,6 +213,9 @@ namespace ChoETL
                     if (_jsonSerializerSettings.Context.Context == null)
                         _jsonSerializerSettings.Context = new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.All, new ChoDynamicObject());
 
+                    if (InspectConverters != null)
+                        InspectConverters(_jsonSerializerSettings);
+
                     return _jsonSerializerSettings;
                 }
             }
@@ -218,14 +227,18 @@ namespace ChoETL
             }
         }
 
-        internal bool IsArray(ChoJSONRecordFieldConfiguration fc)
+        internal bool? IsArray(ChoJSONRecordFieldConfiguration fc, object fieldValue = null)
         {
             if (IsNodeCanBeArray == null)
             {
                 if (fc == null || fc.IsArray == null)
-                    return DefaultArrayHandling == null ? false : DefaultArrayHandling.Value;
+                {
+                    var arrayHandling = DefaultArrayHandling;
+                    arrayHandling = ChoDynamicObjectSettings.IsJsonArray(fc.FieldName, fieldValue, JsonArrayQualifier);
+                    return arrayHandling;
+                }
                 else
-                    return fc.IsArray.Value;
+                    return fc.IsArray;
             }
             else
                 return IsNodeCanBeArray(fc.FieldName);
@@ -266,11 +279,27 @@ namespace ChoETL
             get { return _formatting == null ? Formatting.Indented : _formatting.Value; }
             set { _formatting = value; }
         }
-        internal bool FlatToNestedObjectSupport
+        internal bool ResetMapping { get; set; }
+
+        private bool _flatToNestedObjectSupport;
+        public bool FlatToNestedObjectSupport
         {
-            get;
-            set;
+            get { return _flatToNestedObjectSupport; }
+            set
+            {
+                if (_flatToNestedObjectSupport != value)
+                {
+                    _flatToNestedObjectSupport = value;
+                    ResetMapping = true;
+                }
+            }
         }
+        //public override bool IsDynamicObject
+        //{
+        //    get { return base.IsDynamicObject || RecordType == typeof(object); }
+        //    set { base.IsDynamicObject  = value; }
+        //}
+
         public bool IgnoreNodeName
         {
             get;
@@ -298,9 +327,9 @@ namespace ChoETL
         }
         public bool EnableXmlAttributePrefix { get; set; }
         public bool KeepNSPrefix { get; set; }
-        public Func<Type, MemberInfo, string, bool?> IgnoreProperty;
-        public Func<Type, MemberInfo, string, string> RenameProperty;
-        public Action<Type, MemberInfo, string, JsonProperty> RemapJsonProperty;
+        public Func<Type, MemberInfo, string, bool?> IgnoreProperty { get; set; }
+        public Func<Type, MemberInfo, string, string> RenameProperty { get; set; }
+        public Action<Type, MemberInfo, string, JsonProperty> RemapJsonProperty { get; set; }
 
         private Func<JObject, JObject> _customNodeSelecter = null;
         public Func<JObject, JObject> CustomNodeSelecter
@@ -348,6 +377,8 @@ namespace ChoETL
         public bool IgnoreArrayIndex { get; set; } = true;
         public string FlattenByNodeName { get; set; }
         public string FlattenByJsonPath { get; set; }
+        public Func<object, JToken> ObjectToJTokenConverter { get; set; }
+        public bool FlattenIfJArrayWhenReading { get; set; } = true;
 
         public ChoJSONRecordFieldConfiguration this[string name]
         {
@@ -599,7 +630,10 @@ namespace ChoETL
                             if (recordFieldConfigurations != null)
                             {
                                 if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                {
+                                    LoadFieldConfigurationAttributes(obj, recordType);
                                     recordFieldConfigurations.Add(obj);
+                                }
                             }
                         }
                     }
@@ -629,6 +663,7 @@ namespace ChoETL
                         var obj = new ChoJSONRecordFieldConfiguration("Value", "$.Value");
                         obj.FieldType = recordType;
 
+                        LoadFieldConfigurationAttributes(obj, recordType);
                         recordFieldConfigurations.Add(obj);
                         return recordType;
                     }
@@ -640,7 +675,8 @@ namespace ChoETL
                             continue;
 
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
+                        if (FlatToNestedObjectSupport && ((pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            || (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo()))))
                         {
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, recordFieldConfigurations, false);
                         }
@@ -668,6 +704,7 @@ namespace ChoETL
                                 obj.FieldName = jAttr.PropertyName;
                                 obj.JSONPath = jAttr.PropertyName;
                                 obj.Order = jAttr.Order;
+                                obj.NullValueHandling = jAttr.NullValueHandling;
                             }
                             else
                             {
@@ -713,7 +750,10 @@ namespace ChoETL
                             if (recordFieldConfigurations != null)
                             {
                                 if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                {
+                                    LoadFieldConfigurationAttributes(obj, recordType);
                                     recordFieldConfigurations.Add(obj);
+                                }
                             }
                         }
                     }
@@ -726,6 +766,7 @@ namespace ChoETL
         {
 
         }
+
 
         public override void Validate(object state)
         {
@@ -765,12 +806,23 @@ namespace ChoETL
                         }
                     }
                 }
+                if (InspectConverters != null)
+                    InspectConverters(_jsonSerializerSettings);
+
                 foreach (var conv in _jsonSerializerSettings.Converters.OfType<IChoJSONConverter>())
                 {
                     conv.Serializer = JsonSerializer;
                     conv.Context = new ChoDynamicObject();
                     conv.Context.Configuration = this;
                 }
+
+                foreach (var conv in ChoTypeConverter.Global.GetAll().Select(kvp => kvp.Value).ToArray().OfType<IChoJSONConverter>())
+                {
+                    conv.Serializer = JsonSerializer;
+                    conv.Context = new ChoDynamicObject();
+                    conv.Context.Configuration = this;
+                }
+                
                 foreach (var conv in _jsonSerializerSettings.Converters)
                 {
                     if (!JsonSerializer.Converters.Contains(conv))
@@ -780,7 +832,12 @@ namespace ChoETL
 
             if (RecordType != null)
             {
-                Init(RecordType);
+                if (ResetMapping)
+                {
+                    JSONRecordFieldConfigurations.Clear();
+                    Init(RecordType);
+                    ResetMapping = false;
+                }
             }
 
             base.Validate(state);
@@ -799,7 +856,7 @@ namespace ChoETL
                 && JSONRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && !IsDynamicObject /*&& RecordType != typeof(ExpandoObject)*/
-                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
+                    /*&& ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any()*/)
                 {
                     MapRecordFields(RecordType);
                 }
@@ -819,7 +876,10 @@ namespace ChoETL
                     }
 
                     foreach (ChoJSONRecordFieldConfiguration obj in dict.Values)
+                    {
+                        LoadFieldConfigurationAttributes(obj, RecordType);
                         JSONRecordFieldConfigurations.Add(obj);
+                    }
                 }
                 else if (!fieldNames.IsNullOrEmpty())
                 {
@@ -829,6 +889,7 @@ namespace ChoETL
                             continue;
 
                         var obj = new ChoJSONRecordFieldConfiguration(fn, (string)null);
+                        LoadFieldConfigurationAttributes(obj, RecordType);
                         JSONRecordFieldConfigurations.Add(obj);
                     }
                 }
@@ -907,6 +968,21 @@ namespace ChoETL
             return this;
         }
 
+        public bool HasNodeConverterForType(Type type, out Func<object, object> selector)
+        {
+            selector = null;
+            if (type == null)
+                return false;
+
+            if (NodeConvertersForType.ContainsKey(type))
+            {
+                selector = NodeConvertersForType[type];
+                return true;
+            }
+
+            return false;
+        }
+
         public ChoJSONRecordConfiguration Configure(Action<ChoJSONRecordConfiguration> action)
         {
             if (action != null)
@@ -915,10 +991,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONRecordConfiguration ClearFields()
+        public new ChoJSONRecordConfiguration ClearFields()
         {
             JSONRecordFieldConfigurationsForType.Clear();
             JSONRecordFieldConfigurations.Clear();
+            base.ClearFields();
             return this;
         }
 
@@ -1059,9 +1136,15 @@ namespace ChoETL
                 }
 
                 if (subRecordType == null)
+                {
+                    LoadFieldConfigurationAttributes(nfc, recordType);
                     JSONRecordFieldConfigurations.Add(nfc);
+                }
                 else
+                {
+                    LoadFieldConfigurationAttributes(nfc, subRecordType);
                     AddFieldForType(subRecordType, nfc);
+                }
             }
         }
 
@@ -1081,7 +1164,11 @@ namespace ChoETL
             else
             {
                 if (!JSONRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
-                    JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(propertyName, attr, otherAttrs));
+                {
+                    var fc = new ChoJSONRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                    LoadFieldConfigurationAttributes(fc, subType);
+                    JSONRecordFieldConfigurations.Add(fc);
+                }
 
                 var nfc = JSONRecordFieldConfigurations.First(fc => fc.Name == propertyName);
                 nfc.PropertyDescriptor = pd;
@@ -1090,12 +1177,20 @@ namespace ChoETL
                 return nfc;
             }
         }
+        internal new void LoadFieldConfigurationAttributes(ChoRecordFieldConfiguration fc, Type reflectedType)
+        {
+            base.LoadFieldConfigurationAttributes(fc, reflectedType);
+        }
 
         internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn)
         {
             fn = fn.NTrim();
             if (!JSONRecordFieldConfigurations.Any(fc => fc.Name == fn))
-                JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fn, (string)null));
+            {
+                var fc = new ChoJSONRecordFieldConfiguration(fn, (string)null);
+                LoadFieldConfigurationAttributes(fc, RecordType);
+                JSONRecordFieldConfigurations.Add(fc);
+            }
 
             return JSONRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
@@ -1129,188 +1224,6 @@ namespace ChoETL
         //        }
         //    }
         //}
-
-        internal JObject InvokeJObjectLoader(JsonReader reader)
-        {
-            try
-            {
-                if (JObjectLoadOptions != null)
-                {
-                    switch (JObjectLoadOptions)
-                    {
-                        case ChoJObjectLoadOptions.All:
-                            return JObject.Load(reader, JsonLoadSettings);
-                        case ChoJObjectLoadOptions.None:
-                            reader.Skip();
-                            return ChoJSONObjects.EmptyJObject;
-                        default:
-                            return LoadJObject(reader, JObjectLoadOptions.Value) as JObject;
-                    }
-                }
-                else
-                {
-                    if (CustomJObjectLoader != null)
-                    {
-                        var retValue = CustomJObjectLoader(reader, JsonLoadSettings);
-                        reader.Skip();
-                        return retValue;
-                    }
-                    else
-                        return JObject.Load(reader, JsonLoadSettings);
-                }
-            }
-            finally
-            {
-            }
-        }
-        private JToken LoadJObject(JsonReader reader, ChoJObjectLoadOptions options)
-        {
-            var path = reader.Path;
-            var jo = new JObject();
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonToken.StartObject)
-                {
-                    if ((options & ChoJObjectLoadOptions.ExcludeNestedObjects) == ChoJObjectLoadOptions.ExcludeNestedObjects)
-                    {
-                        reader.Skip();
-                        return ChoJSONObjects.UndefinedValue;
-                    }
-                    else
-                    {
-                        return LoadJObject(reader, options);
-                    }
-                }
-                else if (reader.TokenType == JsonToken.EndObject)
-                {
-                }
-                else if (reader.TokenType == JsonToken.StartArray)
-                {
-                    if ((options & ChoJObjectLoadOptions.ExcludeArrays) == ChoJObjectLoadOptions.ExcludeArrays)
-                    {
-                        reader.Skip();
-                        return ChoJSONObjects.UndefinedValue;
-                    }
-                    else
-                    {
-                        return InvokeJArrayLoader(reader);
-                    }
-                }
-                else if (reader.TokenType == JsonToken.EndArray)
-                {
-                }
-                else if (reader.TokenType == JsonToken.PropertyName)
-                {
-                    var propName = reader.Value.ToNString();
-                    //reader.Read();
-                    var value = LoadJObject(reader, options);
-                    if (ChoJSONObjects.UndefinedValue == value)
-                    {
-                    }
-                    else
-                    {
-                        if (!jo.ContainsKey(propName))
-                            jo.Add(propName, value);
-                    }
-                }
-                else if (reader.TokenType == JsonToken.Integer
-                    || reader.TokenType == JsonToken.Float
-                    || reader.TokenType == JsonToken.String
-                    || reader.TokenType == JsonToken.Boolean
-                    || reader.TokenType == JsonToken.Date
-                    || reader.TokenType == JsonToken.Bytes
-                    || reader.TokenType == JsonToken.Raw
-                    || reader.TokenType == JsonToken.String
-                    )
-                {
-                    var token = JToken.FromObject(reader.Value);
-                    return token;
-                }
-                else
-                    return JValue.CreateNull();
-
-                if (reader.TokenType == JsonToken.EndObject && reader.Path == path)
-                    break;
-            }
-
-            return jo;
-        }
-
-        private void Skip(JsonReader reader)
-        {
-            var path = reader.Path;
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonToken.EndObject && reader.Path == path)
-                    break;
-            }
-        }
-
-        internal JArray InvokeJArrayLoader(JsonReader reader)
-        {
-            try
-            {
-                if (false) //CountOnly)
-                {
-                    reader.Skip();
-                    return ChoJSONObjects.EmptyJArray;
-                }
-                else
-                {
-                    if (CustomJArrayLoader != null)
-                        return CustomJArrayLoader(reader, JsonLoadSettings);
-                    else if (UseImplicitJArrayLoader)
-                    {
-                        JArray ja = new JArray();
-                        long count = 0;
-                        while (reader.Read())
-                        {
-                            if (reader.TokenType == JsonToken.StartObject)
-                            {
-                                count++;
-                                if (MaxJArrayItemsLoad > 0 && count > MaxJArrayItemsLoad)
-                                    reader.Skip();
-                                else
-                                {
-                                    var jo = InvokeJObjectLoader(reader);
-                                    ja.Add(jo);
-                                }
-                            }
-                            else if (reader.TokenType == JsonToken.EndObject)
-                            {
-                                break;
-                            }
-                            //else if (reader.TokenType == JsonToken.StartArray)
-                            //{
-                            //    int count = 0;
-                            //    while (reader.Read())
-                            //    {
-                            //        if (reader.TokenType == JsonToken.StartObject)
-                            //        {
-                            //            var jo = InvokeJObjectLoader(reader);
-                            //            ja.Add(jo);
-
-                            //            count++;
-                            //            if (count % 10 == 0)
-                            //                break;
-                            //        }
-                            //    }
-                            //}
-                        }
-                        return ja;
-                    }
-                    else
-                    {
-                        var retValue = JArray.Load(reader, JsonLoadSettings);
-                        return retValue;
-                    }
-                }
-            }
-            finally
-            {
-            }
-        }
     }
 
     public class ChoJSONRecordConfiguration<T> : ChoJSONRecordConfiguration

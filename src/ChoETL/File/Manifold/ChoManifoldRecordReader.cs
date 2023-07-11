@@ -275,12 +275,12 @@ namespace ChoETL
                     if (config.GetType() == typeof(ChoCSVRecordConfiguration))
                     {
                         var r = ChoCSVReader.LoadText(rec.GetType(), pair.Item2, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch, Reader);
-                        rec = r.FirstOrDefault<object>();
+                        rec = r.FirstOrDefaultEx<object>();
                     }
                     else if (config.GetType() == typeof(ChoFixedLengthRecordConfiguration))
                     {
                         var r = ChoFixedLengthReader.LoadText(rec.GetType(), pair.Item2, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch, Reader);
-                        rec = r.FirstOrDefault<object>();
+                        rec = r.FirstOrDefaultEx<object>();
                     }
                     else
                         throw new ChoParserException("Unsupported record line found to parse.");

@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Globalization;
 using System.Threading;
+using NUnit.Framework;
+using System.Net;
+using static ChoYamlReaderTest.Program;
 
 namespace ChoYamlReaderTest
 {
@@ -332,7 +335,8 @@ emps:
             }
         }
 
-        static void ListTest()
+        [Test]
+        public static void ListTest()
         {
             string yaml = @"
 jedis:
@@ -341,17 +345,25 @@ jedis:
   - Obi-Wan Kenobi
   - Luke Skywalker
 ";
+            List<string> expected = new List<string>();
+            expected.Add("Yoda");
+            expected.Add("Qui-Gon Jinn");
+            expected.Add("Obi-Wan Kenobi");
+            expected.Add("Luke Skywalker");
 
+            List<string> actual = new List<string>();
             using (var r = ChoYamlReader<string>.LoadText(yaml)
                 .WithYamlPath("$.jedis[*]")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                actual.AddRange(r.ToArray());
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void DictTest()
+        [Test]
+        public static void DictTest()
         {
             string yaml = @"
 jedi:
@@ -361,13 +373,22 @@ jedi:
   master: Qui-Gon Jinn
   height: 1.82m";
 
-            using (var r = ChoYamlReader<IDictionary>.LoadText(yaml)
+            Dictionary<string, string> expected = new Dictionary<string, string>();
+            expected.Add("name", "Obi-Wan Kenobi");
+            expected.Add("home-planet", "Stewjon");
+            expected.Add("species", "human");
+            expected.Add("master", "Qui-Gon Jinn");
+            expected.Add("height", "1.82m");
+
+            Dictionary<string, string> actual = new Dictionary<string, string>();
+            using (var r = ChoYamlReader<IDictionary<string, object>>.LoadText(yaml)
                 .WithYamlPath("$.jedi")
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                foreach (var kvp in r.FirstOrDefault())
+                    actual.Add(kvp.Key, kvp.Value as string);
             }
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         static void List2DictTest()
@@ -400,7 +421,7 @@ jedis:
             string yaml = @"
 requests:
   # first item of `requests` list is just a string
-  - http://example1.com/
+  - http://yahoo.com/
  
   # second item of `requests` list is a dictionary
   - url: http://example.com/
@@ -409,7 +430,7 @@ requests:
 
             using (var r = ChoYamlReader.LoadText(yaml)
                 .WithYamlPath("$.requests[*]")
-                .WithField("Value")
+                .WithField(ChoYamlReader.NODE_VALUE)
                 .WithField("url")
                 .WithField("method")
                 )
@@ -613,7 +634,7 @@ users:
         public class Root
         {
             public PeopleInfo people { get; set; }
-            public CityInfo[] cities{ get; set; }
+            public CityInfo[] cities { get; set; }
         }
         public class PeopleInfo
         {
@@ -747,13 +768,13 @@ Books:
             //Console.WriteLine(text.Dump());
 
 
-//            using (var r = ChoYamlReader<Author>.LoadText(yaml)
-//                .YamlSerializerSettings(y => y.RegisterAssembly(typeof(Author).Assembly))
-//)
-//            {
-//                foreach (var rec in r)
-//                    Console.WriteLine(rec.Dump());
-//            }
+            //            using (var r = ChoYamlReader<Author>.LoadText(yaml)
+            //                .YamlSerializerSettings(y => y.RegisterAssembly(typeof(Author).Assembly))
+            //)
+            //            {
+            //                foreach (var rec in r)
+            //                    Console.WriteLine(rec.Dump());
+            //            }
 
         }
 
@@ -1094,7 +1115,7 @@ field3: 'test3'
 
         [ChoYamlTagMap("!!")]
         public class ControlGroup
-        { 
+        {
             public string name { get; set; }
         }
 
@@ -1246,10 +1267,127 @@ Transform:
             }
         }
 
+        public class Jobs
+        {
+            [YamlMember("job")]
+            public string Job { get; set; }
+
+            [YamlMember("displayName")]
+            public string DisplayName { get; set; }
+
+            [YamlMember("pool")]
+            [ChoTypeConverter(typeof(PoolConverter))]
+            public Pool Pool { get; set; }
+            public override bool Equals(object other)
+            {
+                var toCompareWith = other as Jobs;
+                if (toCompareWith == null)
+                    return false;
+                return this.Job == toCompareWith.Job &&
+                   this.DisplayName == toCompareWith.DisplayName && this.Pool.Equals(toCompareWith.Pool);
+            }
+            public override int GetHashCode()
+            {
+                return new { Job, DisplayName, Pool }.GetHashCode();
+            }
+        }
+
+        public class Pool
+        {
+            [YamlMember("name")]
+            public string Name { get; set; }
+            public override bool Equals(object other)
+            {
+                var toCompareWith = other as Pool;
+                if (toCompareWith == null)
+                    return false;
+                return this.Name == toCompareWith.Name;
+            }
+            public override int GetHashCode()
+            {
+                return new { Name }.GetHashCode();
+            }
+        }
+
+        public class PoolConverter : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is Pool)
+                    return value;
+                else if (value is string)
+                    return new Pool { Name = value as string };
+                else
+                    return null;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Test]
+        public static void MixedMemberValueTest()
+        {
+            string yaml1 = @"
+Jobs:
+  - job: Job1
+    displayName: DisplayName1
+    pool:
+      - name: firstPool
+
+  - job: Job2
+    displayName: DisplayName2
+    pool: secondPool 
+";
+            List<Jobs> expected = new List<Jobs>
+            {
+                new Jobs { Job = "Job1", DisplayName = "DisplayName1", Pool = new Pool { Name = "firstPool" } },
+                new Jobs { Job = "Job2", DisplayName = "DisplayName2", Pool = new Pool { Name = "secondPool" }},
+            };
+
+            List<Jobs> actual = new List<Jobs>();
+            using (var r = ChoYamlReader<Jobs>.LoadText(yaml1)
+                .WithYamlPath("Jobs[*]")
+                //.WithField(f => f.Pool, valueConverter: o => o is Pool ? o : new Pool() { Name = o.ToNString() }, itemConverter: o => new Pool() { Name = "X"})
+                )
+            {
+                actual.AddRange(r.ToArray());
+            }
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void KeyValuePairTest()
+        {
+            string yaml = @"
+- key1: value1
+- key2: value2
+- key3: value3
+";
+            Dictionary<string, string> expected = new Dictionary<string, string>();
+            expected.Add("key1", "value1");
+            expected.Add("key2", "value2");
+            expected.Add("key3", "value3");
+
+            Dictionary<string, string> actual = new Dictionary<string, string>();
+            using (var r = ChoYamlReader<Dictionary<string, object>>.LoadText(yaml)
+                )
+            {
+                foreach (var x in r.ToArray())
+                {
+                    actual.Add(x.Keys.First(), x.Values.First() as string);
+                }
+            }
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Test10();
+            KeyValuePairTest();
             return;
 
             //DeserializeTypedYaml();

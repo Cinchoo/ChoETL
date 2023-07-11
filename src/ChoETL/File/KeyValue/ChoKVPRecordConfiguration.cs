@@ -153,10 +153,11 @@ namespace ChoETL
             }
         }
 
-        public ChoKVPRecordConfiguration ClearFields()
+        public new ChoKVPRecordConfiguration ClearFields()
         {
             //KVPRecordFieldConfigurationsForType.Clear();
             KVPRecordFieldConfigurations.Clear();
+            base.ClearFields();
             return this;
         }
 

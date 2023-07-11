@@ -316,7 +316,7 @@ namespace ChoETL
                                         foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                                         {
                                             pt = pd.PropertyType.GetUnderlyingType();
-                                            if (pt != typeof(object) && !pt.IsSimple() /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
+                                            if (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo()) /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
                                             {
                                                 //DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd);
                                             }
@@ -390,7 +390,7 @@ namespace ChoETL
                                     continue;
                                 }
 
-                                if (pt != typeof(object) && !pt.IsSimple()  /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
+                                if (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo()) /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
                                 {
                                     if (declaringMember == pd.Name)
                                     {
@@ -611,7 +611,7 @@ namespace ChoETL
                 && AvroRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && !IsDynamicObject /*&& RecordType != typeof(ExpandoObject)*/
-                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any())
+                    /*&& ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any()*/)
                 {
                     MapRecordFields(RecordType);
                 }
@@ -763,11 +763,12 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
 
-        public ChoAvroRecordConfiguration ClearFields()
+        public new ChoAvroRecordConfiguration ClearFields()
         {
             _indexMapDict.Clear();
             AvroRecordFieldConfigurationsForType.Clear();
             AvroRecordFieldConfigurations.Clear();
+            base.ClearFields();
             return this;
         }
 
@@ -1160,7 +1161,7 @@ namespace ChoETL
                             if (fc != null) continue;
 
                             Type pt = pd.PropertyType.GetUnderlyingType();
-                            if (pt != typeof(object) && !pt.IsSimple())
+                            if (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo()))
                             {
                             }
                             else

@@ -16,7 +16,7 @@ using System.Xml.XPath;
 namespace ChoETL
 {
     [DataContract]
-    public class ChoJSONRecordFieldConfiguration : ChoFileRecordFieldConfiguration
+    public class ChoJSONRecordFieldConfiguration : ChoFileRecordFieldConfiguration, IChoJSONRecordFieldConfiguration
     {
         [DataMember]
         public string JSONPath
@@ -48,6 +48,7 @@ namespace ChoETL
             set { if (value == null) return; _fieldTypeSelector = value; }
         }
         public IContractResolver ContractResolver { get; set; }
+        public NullValueHandling? NullValueHandling { get; set; }
 
         public ChoJSONRecordFieldConfiguration(string name, string jsonPath = null) : this(name, (ChoJSONRecordFieldAttribute)null)
         {

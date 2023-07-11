@@ -13,6 +13,12 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
+        protected HashSet<string> IgnoreFields
+        {
+            get;
+            set;
+        } = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+        public bool AllowReturnPartialLoadedRecs { get; set; }
         public bool? ThrowExceptionIfDynamicPropNotExists
         {
             get;
@@ -176,16 +182,16 @@ namespace ChoETL
         [DataMember]
         public char? NestedColumnSeparator
         {
-            get;
-            set;
+            //get;
+            //set;
+            get { return NestedKeySeparator; }
+            set { NestedKeySeparator = value; }
         }
         [DataMember]
         public char? NestedKeySeparator
         {
             get;
             set;
-            //get { return NestedColumnSeparator; }
-            //set { NestedColumnSeparator = value; }
         }
         public bool ConvertToFlattenObject
         {
@@ -227,6 +233,12 @@ namespace ChoETL
         }
         [DataMember]
         public char? ArrayIndexSeparator
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public char? ArrayEndIndexSeparator
         {
             get;
             set;
@@ -283,6 +295,11 @@ namespace ChoETL
         {
             get;
             set;
+        }
+        public bool? MayHaveQuotedFields
+        {
+            get { return QuoteAllFields; }
+            set { QuoteAllFields = value; }
         }
         [DataMember]
         public ChoStringSplitOptions StringSplitOptions
@@ -354,6 +371,10 @@ namespace ChoETL
                 QuoteEscapeChar = '\0';
             //DetectEncodingFromByteOrderMarks = true;
         }
+        protected void ClearFields()
+        {
+            IgnoredFields.Clear();
+        }
 
         protected override void Init(Type recordType)
         {
@@ -416,6 +437,13 @@ namespace ChoETL
             return ArrayIndexSeparator == null || ArrayIndexSeparator == ChoCharEx.NUL ?
                 (ChoETLSettings.ArrayIndexSeparator == ChoCharEx.NUL ? String.Empty : ChoETLSettings.ArrayIndexSeparator.ToNString())
                 : ArrayIndexSeparator.Value.ToNString();
+        }
+
+        public char GetArrayIndexSeparatorChar()
+        {
+            return ArrayIndexSeparator == null || ArrayIndexSeparator == ChoCharEx.NUL ?
+                (ChoETLSettings.ArrayIndexSeparator == ChoCharEx.NUL ? '_' : ChoETLSettings.ArrayIndexSeparator)
+                : ArrayIndexSeparator.Value;
         }
 
         public override void Validate(object state)

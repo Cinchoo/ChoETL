@@ -195,9 +195,11 @@ namespace ChoETL
                 if (Configuration.FlattenNode)
                 {
                     if (RecordType.IsDynamicType())
-                        recEnum = GetRecords(recEnum).Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
+                        recEnum = GetRecords(recEnum).Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, 
+                            Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
                     else
-                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
+                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, 
+                            Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
                 }
 
                 object notNullRecord = GetFirstNotNullRecord(recEnum);
@@ -265,7 +267,8 @@ namespace ChoETL
                             string[] fieldNames = null;
                             Type recordType = ElementType == null ? record.GetType() : ElementType;
                             Configuration.RecordType = recordType; //.ResolveType();
-                            Configuration.IsDynamicObject = recordType.IsDynamicType();
+                            if (!recordType.IsSimple())
+                                Configuration.IsDynamicObject = recordType.IsDynamicType();
                             if (typeof(IDictionary).IsAssignableFrom(Configuration.RecordType)
                                 || typeof(IList).IsAssignableFrom(Configuration.RecordType))
                                 Configuration.UseJSONSerialization = true;
@@ -366,8 +369,8 @@ namespace ChoETL
                         try
                         {
                             bool skip = false;
-                            if (Configuration.NodeConvertersForType.ContainsKey(RecordType) && Configuration.NodeConvertersForType[RecordType] != null)
-                                record = Configuration.NodeConvertersForType[RecordType](record);
+                            //if (Configuration.NodeConvertersForType.ContainsKey(RecordType) && Configuration.NodeConvertersForType[RecordType] != null)
+                            //    record = Configuration.NodeConvertersForType[RecordType](record);
 
                             if (record == null)
                             {
@@ -436,7 +439,9 @@ namespace ChoETL
                                     //    Configuration.JsonSerializer.Serialize(jw, record);
                                     //}
                                     //recText = json.ToString(); // Configuration.JsonSerializer.Serialize(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                                    recText = Configuration.JsonSerializer.SerializeToJToken(record, Configuration.Formatting, Configuration.JsonSerializerSettings).JTokenToString();
+                                    recText = Configuration.JsonSerializer.SerializeToJToken(record, Configuration.Formatting, Configuration.JsonSerializerSettings, 
+                                        enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix, keepNSPrefix: Configuration.KeepNSPrefix)
+                                        .JTokenToString(Configuration.JsonSerializer, Configuration.JsonSerializerSettings, Configuration.Formatting);
                                     if (!SupportMultipleContent)
                                         sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                     else
@@ -581,7 +586,7 @@ namespace ChoETL
                         if (Configuration.SourceType != null)
                             rec = ChoConvert.ConvertTo(rec, Configuration.SourceType, rec, new object[] { tc }, null, Configuration.Culture, null);
                         else
-                            rec = ChoConvert.ConvertTo(rec, typeof(ExpandoObject), rec, new object[] { tc }, null, Configuration.Culture, null);
+                            rec = ChoConvert.ConvertTo(rec, rec.GetType() /*typeof(ExpandoObject)*/, rec, new object[] { tc }, null, Configuration.Culture, null);
                     }
                 }
 
@@ -641,7 +646,7 @@ namespace ChoETL
                         {
                             if (pi == null)
                             {
-                                if (!RecordType.IsSimple())
+                                if (!RecordType.IsSimple() && RecordType != typeof(object))
                                     throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
                             }
                         }
@@ -840,7 +845,12 @@ namespace ChoETL
                             //    else
                             //        fieldText = fieldConfig.NullValue;
                             //}
-                            if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                            if (fieldConfig.NullValueHandling != null)
+                            {
+                                if (fieldConfig.NullValueHandling.Value == NullValueHandling.Ignore)
+                                    continue;
+                            }
+                            else if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
                                 fieldText = null;
                             else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
                                 fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType), Configuration.Formatting, Configuration.JsonSerializerSettings);
@@ -855,7 +865,10 @@ namespace ChoETL
                                 if (nullValue == null)
                                 {
                                     if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
-                                        fieldText = !Configuration.IsArray(fieldConfig) ? "null" : "[]";
+                                    {
+                                        var isArray = Configuration.IsArray(fieldConfig, fieldValue);
+                                        fieldText = isArray == null || !isArray.Value ? "null" : "[]";
+                                    }
                                     else
                                         fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
                                 }
@@ -880,8 +893,8 @@ namespace ChoETL
                             fieldText = fieldValue.ToString();
                         else
                         {
-                            bool isArray = Configuration.IsArray(fieldConfig);
-                            if (!(fieldValue is IList) && isArray)
+                            bool? isArray = Configuration.IsArray(fieldConfig, fieldValue);
+                            if (!(fieldValue is IList) && isArray != null && isArray.Value)
                             {
                                 fieldValue = new object[] { fieldValue };
                             }
@@ -931,7 +944,9 @@ namespace ChoETL
             }
             else
             {
-                msg.Append(Indent(SerializeObject(rec, Configuration.UseJSONSerialization, fieldConfig)));
+                fieldText = JsonConvert.SerializeObject(rec, Configuration.Formatting);
+
+                msg.Append(Indent(fieldText)); // (SerializeObject(rec, Configuration.UseJSONSerialization, fieldConfig)));
             }
 
             if (!RecordType.IsSimple())
@@ -1007,7 +1022,8 @@ namespace ChoETL
                         Configuration.JsonSerializer.ContractResolver = contractResolver;
 
                     return Configuration.JsonSerializer.SerializeToJToken(target, Configuration.Formatting, Configuration.JsonSerializerSettings,
-                        enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix, keepNSPrefix: Configuration.KeepNSPrefix).JTokenToString();
+                        enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix, keepNSPrefix: Configuration.KeepNSPrefix)
+                        .JTokenToString(Configuration.JsonSerializer, Configuration.JsonSerializerSettings, Configuration.Formatting);
                 }
                 finally
                 {

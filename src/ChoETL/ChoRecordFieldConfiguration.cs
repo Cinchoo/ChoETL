@@ -17,6 +17,11 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoRecordFieldConfiguration
     {
+        public Type ReflectedType
+        {
+            get;
+            set;
+        }
         public Func<object, bool> Validator
         {
             get;
@@ -56,7 +61,7 @@ namespace ChoETL
         [DataMember]
         public Type FieldType
         {
-            get { return SourceType == null ? _fieldType : SourceType; }
+            get { return _fieldType; }
             set { _fieldType = value; }
         }
         [DataMember]

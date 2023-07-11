@@ -266,6 +266,10 @@ namespace ChoETL
                     }
                 }
 
+                Type recordType = ElementType == null ? notNullRecord?.GetType() : ElementType;
+                Configuration.RecordType = recordType.ResolveType();
+                Configuration.IsDynamicObject = recordType.IsDynamicType();
+
                 object record = null;
                 bool abortRequested = false;
                 foreach (object rec in GetRecords(recEnum))
@@ -285,18 +289,6 @@ namespace ChoETL
                     {
                         if (predicate == null || predicate(record))
                         {
-                            //Discover and load CSV columns from first record
-                            if (!_configCheckDone)
-                            {
-                                if (notNullRecord != null)
-                                {
-                                    var fieldNames = GetFields(notNullRecord).ToList();
-                                    RaiseFileHeaderArrange(ref fieldNames);
-                                    Configuration.Validate(fieldNames.ToArray());
-                                    WriteHeaderLine(sw);
-                                    _configCheckDone = true;
-                                }
-                            }
                             //Check record 
                             if (record != null)
                             {
@@ -307,13 +299,25 @@ namespace ChoETL
                                     {
 
                                     }
-                                    else if (!rt.IsDynamicType())
+                                    else if (!rt.IsDynamicType() && !(typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType)))
                                         throw new ChoWriterException("Invalid record found.");
                                 }
                                 else
                                 {
                                     if (rt != Configuration.RecordType)
                                         throw new ChoWriterException("Invalid record found.");
+                                }
+                            }
+                            //Discover and load CSV columns from first record
+                            if (!_configCheckDone)
+                            {
+                                if (notNullRecord != null)
+                                {
+                                    var fieldNames = GetFields(notNullRecord).ToList();
+                                    RaiseFileHeaderArrange(ref fieldNames);
+                                    Configuration.Validate(fieldNames.ToArray());
+                                    WriteHeaderLine(sw);
+                                    _configCheckDone = true;
                                 }
                             }
 
@@ -417,7 +421,7 @@ namespace ChoETL
                 }
 
                 if (Configuration.UseNestedKeyFormat)
-                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
+                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
                 else
                     fieldNames = record.Keys.ToArray();
             }
@@ -454,7 +458,8 @@ namespace ChoETL
                     {
                         ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                     }
-                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary().Keys.ToArray();
+                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                        Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary().Keys.ToArray();
                 }
                 else
                     fieldNames = dict.Keys.ToArray();
@@ -492,7 +497,11 @@ namespace ChoETL
             bool firstColumn = true;
             PropertyInfo pi = null;
             object rootRec = rec;
-            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
+#if DEBUG
+            String.Join(",", Configuration.RecordFieldConfigurationsDict
+                .Where(kvp => !Configuration.IgnoredFields.Contains(kvp.Value.FieldName)).OrderBy(kvp => kvp.Value.FieldPosition).OrderBy(kvp => kvp.Value.Priority).Select(f => f.Value.FieldName)).Print();
+#endif
+            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.FieldPosition).OrderBy(kvp => kvp.Value.Priority))
             {
                 //if (Configuration.IsDynamicObject)
                 //{
@@ -503,7 +512,7 @@ namespace ChoETL
                 fieldConfig = kvp.Value;
                 fieldValue = null;
                 fieldText = String.Empty;
-               
+
                 if (Configuration.PIDict != null)
                 {
                     // if FieldName is set
@@ -533,7 +542,7 @@ namespace ChoETL
                             ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                         }
 
-                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
+                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
                     }
                 }
 
@@ -615,7 +624,7 @@ namespace ChoETL
                         else if (fieldConfig.Expr != null)
                         {
                             fieldValue = fieldConfig.Expr();
-                            if (kvp.Value.FieldType == null)
+                            if (kvp.Value.FieldType == null && pi != null)
                                 kvp.Value.FieldType = pi.PropertyType;
                         }
                         else
@@ -640,16 +649,20 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
+                    if (kvp.Value.SourceType == null && !(fieldValue is IList))
+                        kvp.Value.SourceType = typeof(string);
                     if (fieldConfig.ValueSelector == null)
                     {
                         if (fieldConfig.ValueConverter != null)
                             fieldValue = fieldConfig.ValueConverter(fieldValue);
-                        else
-                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, config: Configuration);
+                        //else
+
+                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, config: Configuration);
                     }
                     else
                     {
                         fieldValue = fieldConfig.ValueSelector(rec);
+                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, config: Configuration);
                     }
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
@@ -796,6 +809,15 @@ namespace ChoETL
                         return ((IList)item).OfType<object>().Skip(fieldConfig.ArrayIndex.Value).FirstOrDefault();
                     }
                     return item;
+                }
+                else if (item != null && typeof(IDictionary).IsAssignableFrom(item.GetType()))
+                {
+                    if (fieldConfig.DictKey != null && ((IDictionary)item).Keys.OfType<string>().Contains(fieldConfig.DictKey))
+                    {
+                        return ((IDictionary)item)[fieldConfig.DictKey];
+                    }
+                    else
+                        return null;
                 }
                 else if (item != null && typeof(IDictionary<string, object>).IsAssignableFrom(item.GetType()))
                 {
@@ -974,7 +996,8 @@ namespace ChoETL
                         {
                             if (!Configuration.EscapeQuoteAndDelimiter)
                             {
-                                //fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                                if (Configuration.EscapeUsingDoubleQuoteChar)
+                                    fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
                             }
                             else
                             {
@@ -1328,14 +1351,14 @@ namespace ChoETL
             bool retValue = true;
             if (Writer != null && Writer.HasFileHeaderWriteSubscribed)
             {
-                retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderWrite(ref ht), false);
-                if (retValue)
+                var skip = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderWrite(ref ht), false);
+                if (!skip)
                     headerText = ht;
             }
             else if (_callbackFileHeaderWrite != null)
             {
-                retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackFileHeaderWrite.FileHeaderWrite(ref ht), false);
-                if (retValue)
+                var skip = ChoFuncEx.RunWithIgnoreError(() => _callbackFileHeaderWrite.FileHeaderWrite(ref ht), false);
+                if (!skip)
                     headerText = ht;
             }
             return retValue;

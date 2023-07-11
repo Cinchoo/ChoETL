@@ -1,4 +1,5 @@
-﻿using SharpYaml.Serialization;
+﻿using Newtonsoft.Json.Serialization;
+using SharpYaml.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [DataContract]
-    public class ChoYamlRecordFieldConfiguration : ChoFileRecordFieldConfiguration
+    public class ChoYamlRecordFieldConfiguration : ChoFileRecordFieldConfiguration, IChoJSONRecordFieldConfiguration
     {
         [DataMember]
         public string YamlPath
@@ -43,6 +44,9 @@ namespace ChoETL
             get { return _fieldTypeSelector; }
             set { if (value == null) return; _fieldTypeSelector = value; }
         }
+
+        public IContractResolver ContractResolver { get; set; }
+        public string JSONPath { get; set; }
 
         public ChoYamlRecordFieldConfiguration(string name, string yamlPath = null) : this(name, (ChoYamlRecordFieldAttribute)null)
         {

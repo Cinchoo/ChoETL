@@ -1,0 +1,447 @@
+﻿[
+  {
+    "Description": "Old cottage",
+    "Id": "a775a0e8-9e22-4157-bfe4-b13a564fb18d",
+    "Name": "Carrowduff",
+    "Occupancy": {
+      "ActivityType": null,
+      "BedroomNumber": 0,
+      "OccupancyNumber": 0,
+      "StoreyNumber": 0
+    },
+    "PropertyDetails": {
+      "Address": null,
+      "FloorPlan": null,
+      "FloorPlan1": null,
+      "Front": null,
+      "Rear": null,
+      "SurveyDate": "\/Date(1681120543033+0100)\/",
+      "Surveyor": null,
+      "UPRN": null
+    },
+    "PropertyTypeDetails": {
+      "Archetype": "Very Old Bungalow",
+      "BungalowType": 0,
+      "Development": 0,
+      "SurveyNotes": null,
+      "Type": 0
+    },
+    "SurveyOptions": {
+      "AdaptedForDisability": false,
+      "BuildYear": 1940,
+      "DisabledAdaptionDetails": null,
+      "HMO": true,
+      "LevelAccessToFrontDoor": false,
+      "SurveyType": {
+        "CommonBlock": false,
+        "CommonServices": false,
+        "External": false,
+        "Grounds": false,
+        "Internal": false,
+        "MRS": false,
+        "OtherGrounds": false
+      }
+    },
+    "Elements": [
+      {
+        "Adequate": true,
+        "Attribute": "Juliette ",
+        "Condition": 3,
+        "Count": 0,
+        "ElementName": "Front-Door",
+        "InstallationAgeInYears": 10,
+        "Notes": "big red door",
+        "Photo": null,
+        "RemYears": 12,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": "Timber",
+        "Condition": 4,
+        "Count": 0,
+        "ElementName": "Rear-Door",
+        "InstallationAgeInYears": 25,
+        "Notes": "other door",
+        "Photo": null,
+        "RemYears": 8,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 0,
+        "Count": 0,
+        "ElementName": "Other-External-Door",
+        "InstallationAgeInYears": 0,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 0,
+        "Count": 0,
+        "ElementName": "Other-External-Door-2",
+        "InstallationAgeInYears": 0,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": "d\/g powder coated",
+        "Condition": 1,
+        "Count": 0,
+        "ElementName": "Windows",
+        "InstallationAgeInYears": 10,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 0,
+        "Count": 0,
+        "ElementName": "Secondary-Window",
+        "InstallationAgeInYears": 0,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 2,
+        "Count": 0,
+        "ElementName": "Secondary-Roof-Covering",
+        "InstallationAgeInYears": 20,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      }
+    ]
+  },
+  {
+    "Description": "Semi D",
+    "Elements": [],
+    "Id": "0e2b5e08-8042-41d9-b7d5-dad64191318b",
+    "Name": "Lahinch",
+    "Occupancy": {
+      "ActivityType": null,
+      "BedroomNumber": 0,
+      "OccupancyNumber": 0,
+      "StoreyNumber": 0
+    },
+    "PropertyDetails": {
+      "Address": null,
+      "FloorPlan": null,
+      "FloorPlan1": null,
+      "Front": null,
+      "Rear": null,
+      "SurveyDate": "\/Date(1681120543034+0100)\/",
+      "Surveyor": null,
+      "UPRN": null
+    },
+    "PropertyTypeDetails": {
+      "Archetype": null,
+      "BungalowType": 0,
+      "Development": 0,
+      "SurveyNotes": null,
+      "Type": 0
+    },
+    "SurveyOptions": {
+      "AdaptedForDisability": false,
+      "BuildYear": 1940,
+      "DisabledAdaptionDetails": null,
+      "HMO": true,
+      "LevelAccessToFrontDoor": false,
+      "SurveyType": {
+        "CommonBlock": false,
+        "CommonServices": false,
+        "External": false,
+        "Grounds": false,
+        "Internal": false,
+        "MRS": false,
+        "OtherGrounds": false
+      }
+    }
+  },
+  {
+    "Description": null,
+    "Elements": [
+      {
+        "Adequate": true,
+        "Attribute": "Juliette ",
+        "Condition": 3,
+        "Count": 0,
+        "ElementName": "Front-Door",
+        "InstallationAgeInYears": 10,
+        "Notes": "big red door",
+        "Photo": null,
+        "RemYears": 12,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": "Timber",
+        "Condition": 4,
+        "Count": 0,
+        "ElementName": "Rear-Door",
+        "InstallationAgeInYears": 25,
+        "Notes": "other door",
+        "Photo": null,
+        "RemYears": 8,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 0,
+        "Count": 0,
+        "ElementName": "Other-External-Door",
+        "InstallationAgeInYears": 0,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 0,
+        "Count": 0,
+        "ElementName": "Other-External-Door-2",
+        "InstallationAgeInYears": 0,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": "d\/g powder coated",
+        "Condition": 1,
+        "Count": 0,
+        "ElementName": "Windows",
+        "InstallationAgeInYears": 10,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 0,
+        "Count": 0,
+        "ElementName": "Secondary-Window",
+        "InstallationAgeInYears": 0,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      },
+      {
+        "Adequate": true,
+        "Attribute": null,
+        "Condition": 2,
+        "Count": 0,
+        "ElementName": "Secondary-Roof-Covering",
+        "InstallationAgeInYears": 20,
+        "Notes": null,
+        "Photo": null,
+        "RemYears": 0,
+        "Repair": {
+          "Description": null,
+          "Measure": 0,
+          "Photo": null,
+          "Quantity": 0,
+          "Reason": {
+            "Investigation": 0,
+            "Reason": 0
+          }
+        },
+        "RepairNecessary": false
+      }
+    ],
+    "Id": "00000000-0000-0000-0000-000000000000",
+    "Name": null,
+    "Occupancy": {
+      "ActivityType": null,
+      "BedroomNumber": 2,
+      "OccupancyNumber": 7,
+      "StoreyNumber": 3
+    },
+    "PropertyDetails": {
+      "Address": "Here and  there",
+      "FloorPlan": null,
+      "FloorPlan1": null,
+      "Front": null,
+      "Rear": null,
+      "SurveyDate": "\/Date(1681120540509+0100)\/",
+      "Surveyor": "Paul",
+      "UPRN": "1778445"
+    },
+    "PropertyTypeDetails": {
+      "Archetype": null,
+      "BungalowType": 0,
+      "Development": 0,
+      "SurveyNotes": null,
+      "Type": 0
+    },
+    "SurveyOptions": {
+      "AdaptedForDisability": false,
+      "BuildYear": 1940,
+      "DisabledAdaptionDetails": null,
+      "HMO": true,
+      "LevelAccessToFrontDoor": false,
+      "SurveyType": {
+        "CommonBlock": false,
+        "CommonServices": false,
+        "External": false,
+        "Grounds": false,
+        "Internal": false,
+        "MRS": false,
+        "OtherGrounds": false
+      }
+    }
+  }
+]

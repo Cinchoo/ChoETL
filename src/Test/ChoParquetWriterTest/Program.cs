@@ -728,9 +728,57 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             PrintParquetFile(@$"C:\Temp\Trade3.parquet");
         }
 
+        static void Issue285()
+        {
+            string json = @"{
+  ""Stype"": ""BaseDecorator"",
+  ""Decorators"": [
+    {
+      ""Stype"": ""FiscalInformationDecorator"",
+      ""FiscalInformation"": {
+        ""Stype"": ""FiscalInformation"",
+        ""UUID"": ""02d0c973-727e-449e-bb4e-45dddbd7dbeb""
+      }
+    },
+    {
+      ""Stype"": ""DocumentInformationDecorator"",
+      ""DocumentInformation"": {
+        ""Stype"": ""DocumentInformation"",
+        ""DocumentModelID"": ""7ec7b1d4-f94f-42b5-ba36-77701cdf1db4""
+      }
+    },
+    {
+      ""Stype"": ""IssuingInformationDecorator"",
+      ""IssuingInformation"": {
+        ""Stype"": ""IssuingInformation"",
+        ""RFC"": ""PRR890126QC2""
+      }
+    }
+  ],
+  ""InstanceID"": ""78091f6e-e458-4a23-abfe-fe286b24b59a"",
+  ""company"": ""d6038f2d-787c-427b-8eaf-4d9eea44a24a""
+}";
+
+            //var stringJson = JArray.FromObject(deserialized_jsons).ToString();
+            using (var r = ChoJSONReader.LoadText(json).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .WithField("Decorators", customSerializer: o => o.ToString())
+                .WithField("InstanceID")
+                .WithField("company")
+                )
+            {
+                using (var w = new ChoParquetWriter(@"C:\Temp\Issue285.parquet",
+                    new ChoParquetRecordConfiguration { CompressionMethod = Parquet.CompressionMethod.Snappy })
+                .ThrowAndStopOnMissingField(false)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue))
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
-            Issue251_2();
+            Issue285();
             return;
 
             JsonToParquet52();

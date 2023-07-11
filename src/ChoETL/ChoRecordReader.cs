@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace ChoETL
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
+        public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> DataReaderMembersDiscovered;
+
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public abstract ChoRecordConfiguration RecordConfiguration
@@ -113,7 +116,7 @@ namespace ChoETL
                 if (recTypes.ContainsKey(kvp.Key))
                     newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key]));
                 else
-                    newRec.Add(kvp.Key, typeof(ChoDynamicObject));
+                    newRec.Add(kvp.Key, kvp.Value); // typeof(ChoDynamicObject));
 
                 if (kvp.Value == null)
                 {

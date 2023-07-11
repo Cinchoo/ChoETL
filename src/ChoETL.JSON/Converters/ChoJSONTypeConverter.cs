@@ -27,8 +27,8 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            _converter?.Invoke(new { value, targetType, parameter, culture, serializer = Serializer, context = Context }.ToDynamic());
-            return null;
+            var ret = _converter?.Invoke(new { value, targetType, parameter, culture, serializer = Serializer, context = Context }.ToDynamic());
+            return ret;
         }
     }
 }

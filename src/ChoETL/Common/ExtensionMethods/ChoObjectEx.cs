@@ -420,7 +420,7 @@ namespace ChoETL
             else
                 return target.ToDictionary(propName);
         }
-        public static Dictionary<string, object> ToDictionary(this object target, string propName = null)
+        public static Dictionary<string, object> ToDictionary(this object target, string propName = null, string valueNamePrefix = null)
         {
             if (target == null || target is IChoReader || target is IChoWriter)
                 return null;
@@ -445,7 +445,7 @@ namespace ChoETL
             if (target is IList)
                 return ((IList)(target)).OfType<object>().Select((item, index) =>
                 {
-                    return new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item);
+                    return new KeyValuePair<string, object>($"{ChoETLSettings.GetValueNamePrefixOrDefault(valueNamePrefix)}{index + ChoETLSettings.ValueNameStartIndex}", item);
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal(kvp.Key));
 
             string propNamex = null;
@@ -466,7 +466,8 @@ namespace ChoETL
 
             return dict;
         }
-        private static void ZipToDictionary(object target, Dictionary<string, object> dict, Action<Dictionary<string, object>, string, object> collisionResolver = null)
+        private static void ZipToDictionary(object target, Dictionary<string, object> dict, Action<Dictionary<string, object>, string, object> collisionResolver = null,
+            string valueNamePrefix = null)
         {
             if (target == null)
                 return;
@@ -509,7 +510,7 @@ namespace ChoETL
             {
                 foreach (var kvp in ((IList)(target)).OfType<object>().Select((item, index) =>
                 {
-                    return new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item);
+                    return new KeyValuePair<string, object>($"{ChoETLSettings.GetValueNamePrefixOrDefault(valueNamePrefix)}{index + ChoETLSettings.ValueNameStartIndex}", item);
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal(kvp.Key)))
                 {
                     if (!dict.ContainsKey(kvp.Key))
@@ -547,7 +548,7 @@ namespace ChoETL
             return dict;
 
         }
-        public static Dictionary<string, object> ToSimpleDictionary(this object target)
+        public static Dictionary<string, object> ToSimpleDictionary(this object target, string valueNamePrefix = null)
         {
             if (target == null)
                 return null;
@@ -572,7 +573,7 @@ namespace ChoETL
             if (target is IList)
                 return ((IList)(target)).OfType<object>().Select((item, index) =>
                 {
-                    return new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item);
+                    return new KeyValuePair<string, object>($"{ChoETLSettings.GetValueNamePrefixOrDefault(valueNamePrefix)}{index + ChoETLSettings.ValueNameStartIndex}", item);
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             string propNamex = null;

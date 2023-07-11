@@ -230,11 +230,27 @@ namespace ChoETL
                                 fv.Add(null);
                             else if (rec[key] is DateTime)
                             {
-                                if (Configuration.TypeConverterFormatSpec == null
-                                    || Configuration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace())
-                                    fv.Add(ChoUtility.ToNString((DateTime)rec[key]));
+                                if (Configuration.TreatDateTimeAsDateTimeOffset)
+                                {
+                                    //fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
+                                    DateTime dt;
+                                    if (rec[key] is DateTime)
+                                        dt = rec[key];
+                                    else
+                                    {
+                                        DateTime.TryParse(ChoUtility.ToNString((object)rec[key]), out dt);
+                                    }
+                                    DateTimeOffset dto = ToDateTimeOffset(dt);
+                                    fv.Add(dto);
+                                }
                                 else
-                                    fv.Add(((DateTime)rec[key]).ToString(Configuration.TypeConverterFormatSpec.DateTimeFormat));
+                                {
+                                    if (Configuration.TypeConverterFormatSpec == null
+                                        || Configuration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace())
+                                        fv.Add(ChoUtility.ToNString((DateTime)rec[key]));
+                                    else
+                                        fv.Add(((DateTime)rec[key]).ToString(Configuration.TypeConverterFormatSpec.DateTimeFormat));
+                                }
                             }
                             else
                                 fv.Add(ChoUtility.ToNString((object)rec[key]).ToString());
@@ -590,7 +606,8 @@ namespace ChoETL
                 }
 
                 if (Configuration.UseNestedKeyFormat)
-                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
+                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
+                        Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
                 else
                     fieldNames = record.Keys.ToArray();
             }
@@ -627,7 +644,8 @@ namespace ChoETL
                     {
                         ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                     }
-                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
+                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
+                        Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
                 }
                 else
                     fieldNames = dict.Keys.ToArray();
@@ -719,7 +737,8 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                         dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                     if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
-                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
+                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
+                            Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
                 }
 
                 if (Configuration.ThrowAndStopOnMissingField)

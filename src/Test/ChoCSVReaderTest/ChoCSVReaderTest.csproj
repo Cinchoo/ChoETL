@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Test\BaseTests.cs" />
+    <Compile Include="Test\Issues.cs" />
     <None Include="020180412_045106Cropped.csv" />
     <None Include="Empty.csv" />
     <None Include="InterfaceTest.csv" />
@@ -104,6 +105,7 @@
     <None Include="Nested.csv" />
     <None Include="NestedQuotes.csv" />
     <None Include="QuoteEscape.csv" />
+    <None Include="SampleData.csv" />
     <None Include="SolarTemp.csv" />
     <None Include="ZipCodes.csv" />
   </ItemGroup>
