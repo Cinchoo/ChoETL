@@ -19,7 +19,24 @@ namespace ChoETL
     public abstract class ChoRecordConfiguration
     {
         protected Lazy<object> _recObject;
-        private ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
+        protected ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
+
+        public Func<string, object, object> ValueConverterBack
+        {
+            get;
+            set;
+        }
+        public Func<string, object, object> ValueConverter
+        {
+            get;
+            set;
+        }
+
+        public dynamic Context
+        {
+            get;
+            protected set;
+        } = new ChoDynamicObject();
 
         public char? ItemSeparator
         {
@@ -35,6 +52,13 @@ namespace ChoETL
         {
             get { return _typeConverterFormatSpec == null ? ChoTypeConverterFormatSpec.Instance : _typeConverterFormatSpec; }
             set { _typeConverterFormatSpec = value; }
+        }
+        internal ChoTypeConverterFormatSpec CreateTypeConverterSpecsIfNull()
+        {
+            if (_typeConverterFormatSpec == null)
+                _typeConverterFormatSpec = new ChoTypeConverterFormatSpec();
+
+            return _typeConverterFormatSpec;
         }
         private ChoFieldTypeAssessor _fieldTypeAssessor = null;
         public ChoFieldTypeAssessor FieldTypeAssessor
@@ -130,6 +154,17 @@ namespace ChoETL
             ThrowAndStopOnMissingField = true;
             ObjectValidationMode = ChoObjectValidationMode.Off;
             IsDynamicObject = RecordType.IsDynamicType();
+        }
+
+        public Action<ChoRecordConfiguration> StateInitializer
+        {
+            get;
+            set;
+        }
+        public virtual void ResetStates()
+        {
+            Context = new ChoDynamicObject();
+            StateInitializer?.Invoke(this);
         }
 
         protected virtual void Init(Type recordType)
@@ -334,9 +369,19 @@ namespace ChoETL
         private readonly Dictionary<Type, object[]> _typeTypeConverterCache = new Dictionary<Type, object[]>();
         private readonly Dictionary<Type, object[]> _typeTypeConverterParamsCache = new Dictionary<Type, object[]>();
 
-        public object[] GetConvertersForType(Type fieldType)
+        public Func<Type, object, object> ConverterForType { get; set; }
+        public Func<Type, object, object> ConverterParamsForType { get; set; }
+
+        public object[] GetConvertersForType(Type fieldType, object value = null)
         {
             if (fieldType == null) return null;
+
+            if (ConverterForType != null)
+            {
+                var conv = ConverterForType(fieldType, value);
+                if (conv != null)
+                    return new object[] { conv };
+            }
 
             if (_typeTypeConverterCache.ContainsKey(fieldType))
                 return _typeTypeConverterCache[fieldType];
@@ -352,9 +397,16 @@ namespace ChoETL
             }
         }
 
-        public object[] GetConverterParamsForType(Type fieldType)
+        public object[] GetConverterParamsForType(Type fieldType, object value = null)
         {
             if (fieldType == null) return null;
+
+            if (ConverterParamsForType != null)
+            {
+                var conv = ConverterParamsForType(fieldType, value);
+                if (conv != null)
+                    return new object[] { conv };
+            }
 
             if (_typeTypeConverterParamsCache.ContainsKey(fieldType))
                 return _typeTypeConverterParamsCache[fieldType];
@@ -404,6 +456,31 @@ namespace ChoETL
                     _typeTypeConverterCache[objType] = converters;
             }
         }
+
+        public void RegisterTypeConverter(Type type)
+        {
+#if !NETSTANDARD2_0
+            if (typeof(IValueConverter).IsAssignableFrom(type))
+            {
+                var attr = ChoType.GetCustomAttribute<ChoSourceTypeAttribute>(type, true);
+                if (attr == null || attr.Type == null) return;
+                RegisterTypeConverterForTypeInternal(attr.Type, ChoActivator.CreateInstance(type));
+                return;
+            }
+#endif
+            if (typeof(IChoValueConverter).IsAssignableFrom(type))
+            {
+                var attr = ChoType.GetCustomAttribute<ChoSourceTypeAttribute>(type, true);
+                if (attr == null || attr.Type == null) return;
+                RegisterTypeConverterForTypeInternal(attr.Type, ChoActivator.CreateInstance(type));
+            }
+        }
+
+        public void RegisterTypeConverter<T>()
+        {
+            RegisterTypeConverter(typeof(T));
+        }
+
 #if !NETSTANDARD2_0
 
         public void RegisterTypeConverterForType<T>(IValueConverter converter)

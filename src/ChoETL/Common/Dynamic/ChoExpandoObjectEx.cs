@@ -68,10 +68,65 @@ namespace ChoETL
             return expando;
         }
 
+        private static bool IsKeyArrayValue(string token, string valueNamePrefix)
+        {
+            int index = -1;
+            return IsKeyArrayValue(token, valueNamePrefix, out index);
+        }
+        private static bool IsKeyArrayValue(string token, string valueNamePrefix,
+            out int index)
+        {
+            index = -1;
+         
+            if (token.IsNullOrWhiteSpace())
+                return false;
+
+            if (!token.StartsWith(valueNamePrefix))
+                return false;
+            token = token.Substring(valueNamePrefix.Length);
+
+            if (Int32.TryParse(token, out index))
+                return true;
+
+            return false;
+        }
+
+        private static bool IsArrayItem(IDictionary<string, object> dict, string keyPrefix, int index, char separator = '/')
+        {
+            keyPrefix = $"{keyPrefix}{separator}";
+
+            return dict.Keys
+                .Where(k => k.StartsWith(keyPrefix))
+                .Select(k => k.SplitNTrim(separator).Where(e => !e.IsNullOrWhiteSpace()).ToArray())
+                .Where(tokens => tokens.Length >= index)
+                .Select(tokens => tokens[index])
+                .All(k => Int32.TryParse(k, out int i));
+        }
+
+        private static bool IsSimpleArrayItem(IDictionary<string, object> dict, string keyPrefix, int index, char separator = '/')
+        {
+            keyPrefix = $"{keyPrefix}{separator}";
+
+            var result = dict.Keys
+                .Where(k => k.StartsWith(keyPrefix))
+                .Select(k => k.SplitNTrim(separator).Where(e => !e.IsNullOrWhiteSpace()).ToArray())
+                .Where(tokens => tokens.Length == index + 1)
+                .Select(tokens => tokens[index]).ToArray();
+            
+            return result.Length > 0 && result.All(k => Int32.TryParse(k, out int i));
+        }
+
         public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayIndexSeparator = null, 
             char? arrayEndIndexSeparator = null, bool allowNestedConversion = true,
-            int maxArraySize = 100)
+            int maxArraySize = 100, string valueNamePrefix = null, int? valueNameStartIndex = null)
         {
+            if (valueNamePrefix.IsNullOrWhiteSpace())
+                valueNamePrefix = ChoETLSettings.ValueNamePrefix;
+            //if (valueNamePrefix.IsNullOrWhiteSpace())
+            //    valueNamePrefix = "Value";
+            if (valueNameStartIndex == null)
+                valueNameStartIndex = ChoETLSettings.ValueNameStartIndex;
+
             if (separator == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid separator passed.");
             if (arrayIndexSeparator == null || arrayIndexSeparator.Value == ChoCharEx.NUL)
@@ -96,27 +151,59 @@ namespace ChoETL
                     IDictionary<string, object> current = root;
                     List<ChoDynamicObject> currentArr = null;
                     string nextToken = null;
+                    string nextNextToken = null;
                     string token = null;
+                    bool handled = false;
 
                     int length = tokens.Length - 1;
                     int index = 0;
                     for (int i = 0; i < length; i++)
                     {
+                        handled = false;
                         nextToken = null;
                         token = tokens[i];
 
-                        if (i + 1 < length)
+                        if (i + 1 < tokens.Length)
                             nextToken = tokens[i + 1];
+                        if (i + 2 < tokens.Length)
+                            nextNextToken = tokens[i + 2];
 
                         if (token.IsNullOrWhiteSpace())
                             continue;
 
-                        if (Int32.TryParse(nextToken, out index) && index >= 0 && index < maxArraySize)
+                        if (!valueNamePrefix.IsNullOrWhiteSpace() && nextNextToken == null && IsKeyArrayValue(nextToken, valueNamePrefix, out index))
                         {
-                            if (!current.ContainsKey(token))
-                                current.Add(token, new List<ChoDynamicObject>());
+                            if (index == valueNameStartIndex)
+                                current.Add(token, new List<object>());
 
-                            currentArr = current[token] as List<ChoDynamicObject>;
+                            List<object> currentList = current[token] as List<object>;
+                            currentList.Add(ConvertToNestedObject(kvp.Value, separator, arrayIndexSeparator, arrayEndIndexSeparator,
+                                allowNestedConversion, maxArraySize, valueNamePrefix, valueNameStartIndex));
+                            handled = true;
+                            break;
+                        }
+                        else if (Int32.TryParse(nextToken, out index)
+                            && index >= 0 && index < maxArraySize
+                            && IsArrayItem(expandoDic, token, i + 1, separator)
+                            )
+                        {
+                            if (IsSimpleArrayItem(expandoDic, token, i + 1, separator))
+                            {
+                                if (!current.ContainsKey(token))
+                                    current.Add(token, new List<object>());
+
+                                List<object> currentList = current[token] as List<object>;
+                                currentList.Add(ConvertToNestedObject(kvp.Value, separator, arrayIndexSeparator, arrayEndIndexSeparator,
+                                    allowNestedConversion, maxArraySize, valueNamePrefix, valueNameStartIndex));
+                                handled = true;
+                            }
+                            else
+                            {
+                                if (!current.ContainsKey(token))
+                                    current.Add(token, new List<ChoDynamicObject>());
+
+                                currentArr = current[token] as List<ChoDynamicObject>;
+                            }
                         }
                         else
                         {
@@ -145,16 +232,65 @@ namespace ChoETL
                             }
                         }
                     }
-                    if (current != null)
+                    if (!handled && current != null)
                         current.AddOrUpdate(tokens[tokens.Length - 1], kvp.Value);
                 }
                 else
                     root.Add(kvp.Key, kvp.Value);
             }
 
+            var retVal = root.ConvertMembersToArrayIfAny(valueNamePrefix, valueNameStartIndex, maxArraySize);
+
             return root.ConvertMembersToArrayIfAny(arrayIndexSeparator, arrayEndIndexSeparator, allowNestedConversion);
 
             //return root as ChoDynamicObject;
+        }
+
+        private static dynamic ConvertMembersToArrayIfAny(this object @this, string valueNamePrefix = null, 
+            int? valueNameStartIndex = null, int maxArraySize = 100)
+        {
+            bool allowNestedConversion = true;
+            if (!(@this is IDictionary<string, object>))
+                return @this;
+
+            IDictionary<string, object> expandoDic = (IDictionary<string, object>)@this;
+            IDictionary<string, object> root = new ChoDynamicObject();
+
+            if (!expandoDic.Keys.All(k => IsKeyArrayValue(k, valueNamePrefix)))
+            {
+                if (!allowNestedConversion)
+                    return @this;
+                else
+                {
+                    foreach (var kvp in expandoDic.ToArray())
+                    {
+                        if (kvp.Value is IDictionary<string, object>)
+                        {
+                            expandoDic[kvp.Key] = ConvertMembersToArrayIfAny(kvp.Value, valueNamePrefix, valueNameStartIndex, maxArraySize);
+                        }
+                    }
+                    return expandoDic;
+                }
+            }
+
+            List<object> newValue = new List<object>();
+            foreach (var kvp in expandoDic)
+            {
+                //if (kvp.Value is IDictionary<string, object>)
+                //    value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, valueNamePrefix, valueNameStartIndex, maxArraySize) 
+                //        : kvp.Value;
+
+                int index = -1;
+                if (IsKeyArrayValue(kvp.Key, valueNamePrefix, out index))
+                {
+                    if (index >= 0)
+                    {
+                        newValue.Add(ConvertMembersToArrayIfAny(kvp.Value, valueNamePrefix, valueNameStartIndex, maxArraySize));
+                    }
+                }
+            }
+
+            return newValue;
         }
 
         public static dynamic ConvertMembersToArrayIfAny(this object @this, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true)

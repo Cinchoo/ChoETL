@@ -1,7 +1,7 @@
 ﻿<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
   <SOAP-ENV:Header></SOAP-ENV:Header>
   <SOAP-ENV:Body>
-    <Status xmlns="">
+    <Status xmlns="http://www.naptan.org.uk/">
       <Message>Success: 12345</Message>
     </Status>
   </SOAP-ENV:Body>

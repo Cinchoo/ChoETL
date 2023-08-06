@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Configuration;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -84,7 +85,6 @@ namespace ChoETL
             get;
             set;
         }
-        public readonly dynamic Context = new ChoDynamicObject();
 
         public ChoFixedLengthRecordFieldConfiguration this[string name]
         {
@@ -664,6 +664,13 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoFixedLengthRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
+        }
 
         public ChoFixedLengthRecordConfiguration Configure(Action<ChoFixedLengthRecordConfiguration> action)
         {

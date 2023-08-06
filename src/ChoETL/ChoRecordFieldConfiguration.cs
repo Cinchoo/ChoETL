@@ -87,6 +87,11 @@ namespace ChoETL
             get;
             set;
         }
+        public Func<object, object> ValueConverterBack
+        {
+            get;
+            set;
+        }
         public Func<dynamic, object> ValueSelector
         {
             get;
@@ -175,7 +180,11 @@ namespace ChoETL
         internal readonly List<object> ValueConverters = new List<object>();
         public PropertyInfo PI { get; set; }
         public PropertyDescriptor PD { get; set; }
-        public object[] PropConverters;
+        public object[] PropConverters
+        {
+            get;
+            set;
+        }
         public object[] PropConverterParams;
         public object PropCustomSerializer;
         public object PropCustomSerializerParams;

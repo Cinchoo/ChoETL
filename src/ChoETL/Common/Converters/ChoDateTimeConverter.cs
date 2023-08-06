@@ -16,6 +16,15 @@ namespace ChoETL
     public class ChoDateTimeConverter : IChoValueConverter
 #endif
     {
+        private string GetTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.DateTimeFormat;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
+        }
+
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
@@ -24,7 +33,7 @@ namespace ChoETL
                 if (!text.IsNullOrWhiteSpace())
                 {
                     DateTime outValue;
-                    string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
+                    string format = GetTypeFormat(parameter); //.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
                     if (!format.IsNullOrWhiteSpace())
                     {
                         if (DateTime.TryParseExact(text, format, culture, System.Globalization.DateTimeStyles.None, out outValue))
@@ -45,9 +54,11 @@ namespace ChoETL
         {
             if (value is DateTime && targetType == typeof(string))
             {
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
+                string format = GetTypeFormat(parameter); //.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
                 return !format.IsNullOrWhiteSpace() ? ((DateTime)value).ToString(format, culture) : ((DateTime)value).ToLongDateString();
             }
+            else if (value == DBNull.Value)
+                return null;
             else
                 return value;
         }

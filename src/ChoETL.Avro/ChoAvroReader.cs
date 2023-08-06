@@ -263,7 +263,8 @@ namespace ChoETL
             {
                 if (s is IDictionary<string, object>)
                     return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
-                        Configuration.IgnoreDictionaryFieldPrefix).ToDictionary() as object;
+                        Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary() as object;
                 else
                     return s;
             }).AsDataReader();
@@ -429,6 +430,7 @@ namespace ChoETL
 
         public ChoAvroReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }

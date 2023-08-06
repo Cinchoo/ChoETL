@@ -342,7 +342,7 @@ namespace ChoETL
                 }
                 else if (!inQuotes && line[i] == cQuotes)
                 {
-                    if (i == length - 1)
+                    //if (i == length - 1)
                         currentStr.Append(line[i]);
                     inQuotes = !inQuotes;
                 }
@@ -354,6 +354,7 @@ namespace ChoETL
                 {
                     if (line[i] == cQuotes) // If not in quotes, end of current string, add it to result
                     {
+                        currentStr.Append(line[i]);
                         inQuotes = false;
                         lineEnded = i + 1 == length;
                         result.Add(currentStr.ToString());
@@ -384,7 +385,14 @@ namespace ChoETL
                         i++;
                     }
                     else
-                        inQuotes = false;
+                    {
+                        if (i + 1 < length && line[i + 1] != cSeparator)
+                        {
+                            currentStr.Append(line[i]);
+                        }
+                        //else
+                            inQuotes = false;
+                    }
                 }
                 else if (line[i] == cSeparator) // Comma
                 {
@@ -410,37 +418,41 @@ namespace ChoETL
             return result.ToArray(); // Return array of all strings
         }
 
-        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char? quoteChar = '\0', char? quoteEscape = ChoCharEx.Backslash)
+        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char? quoteChar = '\0', 
+            char? quoteEscape = ChoCharEx.Backslash, bool mayContainEOLInData = false)
         {
             return Split(text, (object)value, stringSplitOptions, (quoteChar == null ? '\0' : quoteChar.Value), 
-                (quoteEscape == null ? ChoCharEx.Backslash : quoteEscape.Value));
+                (quoteEscape == null ? ChoCharEx.Backslash : quoteEscape.Value), mayContainEOLInData);
         }
 
         private static string[] Split(this string text, object separators, ChoStringSplitOptions stringSplitOptions, 
-            char quoteChar = '\0', char quoteEscape = ChoCharEx.Backslash)
+            char quoteChar = '\0', char quoteEscape = ChoCharEx.Backslash, bool mayContainEOLInData = false)
         {
             if (String.IsNullOrEmpty(text)) return new string[0];
 
-            if (separators is char[] && ((char[])separators).Length == 0)
-                throw new ApplicationException("Invalid separator characters passed.");
-            else if (separators is string && ((string)separators).Length == 0)
+            if (!mayContainEOLInData)
             {
-                throw new ApplicationException("Invalid separator characters passed.");
-            }
+                if (separators is char[] && ((char[])separators).Length == 0)
+                    throw new ApplicationException("Invalid separator characters passed.");
+                else if (separators is string && ((string)separators).Length == 0)
+                {
+                    throw new ApplicationException("Invalid separator characters passed.");
+                }
 
-            if (quoteChar == '\0')
-            {
-                if (separators is char[])
-                    return text.Split(separators as char[]);
-                else if (separators is string)
-                    return text.Split(new string[] { (string)separators }, StringSplitOptions.None);
-                else
-                    throw new NotSupportedException();
+                if (quoteChar == '\0')
+                {
+                    if (separators is char[])
+                        return text.Split(separators as char[]);
+                    else if (separators is string)
+                        return text.Split(new string[] { (string)separators }, StringSplitOptions.None);
+                    else
+                        throw new NotSupportedException();
+                }
+                else if (separators is char[] && ((char[])separators).Length == 1)
+                    return text.FastSplit(((char[])separators)[0], quoteChar, quoteEscape);
+                else if (separators is string && ((string)separators).Length == 1)
+                    return text.FastSplit(((string)separators)[0], quoteChar, quoteEscape);
             }
-            else if (separators is char[] && ((char[])separators).Length == 1)
-                return text.FastSplit(((char[])separators)[0], quoteChar, quoteEscape);
-            else if (separators is string && ((string)separators).Length == 1)
-                return text.FastSplit(((string)separators)[0], quoteChar, quoteEscape);
 
             List<string> splitStrings = new List<string>();
 
@@ -965,6 +977,9 @@ namespace ChoETL
 
         public static object Default(this Type type)
         {
+            if (IsNullableType(type))
+                return null;
+                
             if (type != null && type.IsValueType)
                 return ChoActivator.CreateInstance(type);
             return (object)null;
@@ -1105,6 +1120,7 @@ namespace ChoETL
                 || typeof(ChoCDATA) == type
                 || typeof(Guid) == type
                 || typeof(DBNull) == type
+                || typeof(Single) == type
                 ;
         }
 

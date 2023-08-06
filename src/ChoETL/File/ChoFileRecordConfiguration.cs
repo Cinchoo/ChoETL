@@ -214,6 +214,16 @@ namespace ChoETL
             set;
         } = 100;
 
+        public string ArrayValueNamePrefix
+        {
+            get;
+            set;
+        }
+        public int? ArrayValueNameStartIndex
+        {
+            get;
+            set;
+        }
         [DataMember]
         public bool AllowNestedArrayConversion
         {
@@ -222,6 +232,11 @@ namespace ChoETL
         }
         [DataMember]
         public bool IgnoreDictionaryFieldPrefix
+        {
+            get;
+            set;
+        }
+        public bool IgnoreRootDictionaryFieldPrefix
         {
             get;
             set;

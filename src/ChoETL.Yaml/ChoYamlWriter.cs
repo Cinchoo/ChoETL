@@ -303,6 +303,13 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoYamlWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            Configuration.CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoYamlWriter<T> WithTagMapping(string tagName, Type tagType, bool isAlias = false)
         {
             Configuration.WithTagMapping(tagName, tagType, isAlias);
@@ -348,12 +355,6 @@ namespace ChoETL
         public ChoYamlWriter<T> SingleDocument(bool flag = true)
         {
             Configuration.SingleDocument = flag;
-            return this;
-        }
-
-        public ChoYamlWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
-        {
-            spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
 

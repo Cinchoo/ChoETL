@@ -24,7 +24,7 @@ namespace ChoCSVSqlDbImportSample
             ChoETLFramework.Initialize();
             //POCOSortUsingSqlite();
 
-            LoadDataFile();
+            POCOSortUsingSqlServer();
         }
 
         [SetUp]
@@ -116,6 +116,12 @@ namespace ChoCSVSqlDbImportSample
         //[Test]
         public static void POCOSortUsingSqlServer()
         {
+            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\data\db\localdb.mdf");
+            dbFilePath.Print();
+
+            ChoETLSqlServerSettings settings = new ChoETLSqlServerSettings();
+            settings.ConnectionString =  $"Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename={dbFilePath};Integrated Security=True;Connect Timeout=30";
+
             long? rowsLoaded = null;
             using (var dr = new ChoCSVReader<Address>(FileNameTestTXT).WithDelimiter("\t").NotifyAfter(10000))
             {
@@ -127,10 +133,18 @@ namespace ChoCSVSqlDbImportSample
                 };
                 using (var sw = new StreamWriter(FileNamePOCOSortUsingSqlServerTestTXT))
                 using (var dw = new ChoCSVWriter<Address>(sw))
-                    dw.Write(dr.AsEnumerable().StageOnSqlServer().OrderByDescending(x => x.City).OrderBy(x=> x.Id1));
+                    dw.Write(dr.AsEnumerable().StageOnSqlServer(settings).OrderByDescending(x => x.City).OrderBy(x=> x.Id1));
             }
 
-            Assert.Multiple(() => { Assert.AreEqual(rowsLoaded, 101,"Rows loaded"); FileAssert.AreEqual(FileNamePOCOSortUsingSqlServerExpectedTXT, FileNamePOCOSortUsingSqlServerTestTXT); });
+            Assert.Multiple(() => 
+            { 
+                Assert.AreEqual(rowsLoaded, 101, "Rows loaded");
+                
+                var expected = File.ReadAllText(FileNamePOCOSortUsingSqlServerExpectedTXT);
+                var actual = File.ReadAllText(FileNamePOCOSortUsingSqlServerTestTXT);
+
+                FileAssert.AreEqual(FileNamePOCOSortUsingSqlServerExpectedTXT, FileNamePOCOSortUsingSqlServerTestTXT); 
+            });
         }
 
         //[Test]

@@ -1,5 +1,6 @@
 ﻿<packages xmlns:json ="http://james.newtonking.com/projects/json" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Package id ="1">
+	<Package />
+	<Package id ="1">
         <emps json:Array="true">
             <emp>Tom</emp>
             <emp>Mark</emp>

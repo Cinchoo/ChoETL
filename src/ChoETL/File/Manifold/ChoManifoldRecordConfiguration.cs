@@ -14,8 +14,6 @@ namespace ChoETL
     [DataContract]
     public class ChoManifoldRecordConfiguration : ChoFileRecordConfiguration
     {
-        public readonly dynamic Context = new ChoDynamicObject();
-
         [DataMember]
         public bool IgnoreIfNoRecordParserExists
         {
@@ -112,6 +110,13 @@ namespace ChoETL
 
                 return RecordTypeConfiguration.DefaultRecordType;
             });
+        }
+
+        public ChoManifoldRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
         }
 
         public ChoManifoldRecordConfiguration MapRecordFields<T>()

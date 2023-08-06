@@ -31,6 +31,8 @@ namespace ChoETL
         private readonly Regex _endNSTagRegex = new Regex(@"(.*)(</\w+)\:(\w+)$", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
         private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
         private readonly Regex _endTagRegex = new Regex("(.*)(</.*>)$", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        private readonly Regex _beginTagAllNodesRegex = new Regex(@"(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
+        private readonly Regex _endTagAllNodesRegex = new Regex("(.*)(</.*>)", RegexOptions.Compiled | RegexOptions.Multiline);
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
@@ -44,6 +46,7 @@ namespace ChoETL
             get;
             private set;
         }
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
 
         public ChoXmlRecordWriter(Type recordType, ChoXmlRecordConfiguration configuration) : base(recordType, true)
         {
@@ -175,6 +178,7 @@ namespace ChoETL
         bool _firstElement = true;
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            Configuration.ResetStates();
             _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
@@ -282,7 +286,8 @@ namespace ChoETL
                                 if (Configuration.IsDynamicObject)
                                 {
                                     var dict = notNullRecord.ToDynamicObject() as IDictionary<string, Object>;
-                                    fieldNames = dict.Keys.ToArray();
+                                    if (dict != null)
+                                        fieldNames = dict.Keys.ToArray();
                                 }
                                 else
                                 {
@@ -426,14 +431,18 @@ namespace ChoETL
                                             useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
                                             nsMgr: Configuration.XmlNamespaceManager.Value,
                                             ignoreFieldValueMode: Configuration.IgnoreFieldValueMode,
-                                            turnOffPluralization: Configuration.TurnOffPluralization, xmlArrayQualifierOverride: Configuration.XmlArrayQualifier
-                                            ).RemoveXmlNamespaces();
+                                            turnOffPluralization: Configuration.TurnOffPluralization,
+                                            xmlArrayQualifierOverride: Configuration.XmlArrayQualifier,
+                                            useOriginalNodeName: Configuration.KeepOriginalNodeName
+                                            );
                                     }
 
                                     if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
                                     {
-                                        innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, Configuration.NodeName);
+                                        var innerXml2 = ReplaceXmlNodeIfAppl(innerXml1, Configuration.NodeName);
+                                        innerXml1 = innerXml2;
                                     }
+                                    innerXml1 = innerXml1.RemoveXmlNamespaces();
                                     if (Configuration.IgnoreRootName)
                                     {
                                         var nsMgr = Configuration.XmlNamespaceManager.Value;
@@ -502,48 +511,103 @@ namespace ChoETL
             }
         }
 
+        private bool HasRootNode(string xml)
+        {
+            try
+            {
+                XDocument doc = XDocument.Parse(xml);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
         private string ReplaceXmlNodeIfAppl(string xml, string nodeName)
         {
-            if (_beginNSTagRegex.Match(xml).Success)
+            if (HasRootNode(xml))
             {
-                return xml;
-                xml = _beginNSTagRegex.Replace(xml, delegate (Match m)
+                if (_beginNSTagRegex.Match(xml).Success)
                 {
-                    return m.Groups[1].Value + ":" + nodeName + m.Groups[3].Value;
-                }, 1);
-                xml = _endNSTagRegex.Replace(xml, delegate (Match m)
-                {
-                    return m.Groups[2].Value + "</{0}:{1}>".FormatString(m.Groups[1].Value, nodeName);
-                }, 1);
-            }
-            else
-            {
-                if (Configuration.DefaultNamespacePrefix.IsNullOrWhiteSpace())
-                {
-                    xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                    return xml;
+                    xml = _beginNSTagRegex.Replace(xml, delegate (Match m)
                     {
-                        return "<" + nodeName + m.Groups[2].Value;
+                        return m.Groups[1].Value + ":" + nodeName + m.Groups[3].Value;
                     }, 1);
-                    xml = _endTagRegex.Replace(xml, delegate (Match m)
+                    xml = _endNSTagRegex.Replace(xml, delegate (Match m)
                     {
-                        return m.Groups[1].Value + "</{0}>".FormatString(nodeName);
+                        return m.Groups[2].Value + "</{0}:{1}>".FormatString(m.Groups[1].Value, nodeName);
                     }, 1);
                 }
                 else
                 {
-                    xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                    if (Configuration.DefaultNamespacePrefix.IsNullOrWhiteSpace())
                     {
-                        return "<" + XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                    }, 1);
-                    xml = _endTagRegex.Replace(xml, delegate (Match m)
+                        xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                        {
+                            return "<" + nodeName + m.Groups[2].Value;
+                        }, 1);
+                        xml = _endTagRegex.Replace(xml, delegate (Match m)
+                        {
+                            return m.Groups[1].Value + "</{0}>".FormatString(nodeName);
+                        }, 1);
+                    }
+                    else
                     {
-                        return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix));
-                    }, 1);
+                        xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                        {
+                            return "<" + XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                        }, 1);
+                        xml = _endTagRegex.Replace(xml, delegate (Match m)
+                        {
+                            return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix));
+                        }, 1);
+                    }
+                    return xml;
                 }
             }
-            return xml;
+            else
+            {
+                if (_beginNSTagRegex.Match(xml).Success)
+                {
+                    return xml;
+                    xml = _beginNSTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return m.Groups[1].Value + ":" + nodeName + m.Groups[3].Value;
+                    }, 1);
+                    xml = _endNSTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return m.Groups[2].Value + "</{0}:{1}>".FormatString(m.Groups[1].Value, nodeName);
+                    }, 1);
+                }
+                else
+                {
+                    if (Configuration.DefaultNamespacePrefix.IsNullOrWhiteSpace())
+                    {
+                        xml = _beginTagAllNodesRegex.Replace(xml, delegate (Match m)
+                        {
+                            return "<" + nodeName + m.Groups[2].Value;
+                        });
+                        xml = _endTagAllNodesRegex.Replace(xml, delegate (Match m)
+                        {
+                            return m.Groups[1].Value + "</{0}>".FormatString(nodeName);
+                        });
+                    }
+                    else
+                    {
+                        xml = _beginTagAllNodesRegex.Replace(xml, delegate (Match m)
+                        {
+                            return "<" + XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                        });
+                        xml = _endTagAllNodesRegex.Replace(xml, delegate (Match m)
+                        {
+                            return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix));
+                        });
+                    }
+                    return xml;
+                }
+            }
         }
-
         private string Indent(string value, int indentValue = 1)
         {
             if (value == null)
@@ -633,8 +697,8 @@ namespace ChoETL
                 }
                 else
                 {
-                    recText = Indent(@"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix), ChoXmlSettings.XmlSchemaInstanceNamespace
-                                ), _indent + 1);
+                    recText = Indent(@"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(XmlNamespaceElementName(GetNodeName(index, rec),
+                        Configuration.DefaultNamespacePrefix), ChoXmlSettings.XmlSchemaInstanceNamespace), _indent + 1);
                     return true;
                 }
             }
@@ -679,16 +743,19 @@ namespace ChoETL
 
                 if (config.ThrowAndStopOnMissingField)
                 {
-                    if (config.IsDynamicObject)
+                    if (fieldConfig.ValueSelector == null)
                     {
-                        var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                        if (!dict.ContainsKey(kvp.Key))
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Xml node.".FormatString(fieldConfig.FieldName));
-                    }
-                    else
-                    {
-                        if (pi == null)
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Xml node.".FormatString(fieldConfig.FieldName));
+                        if (config.IsDynamicObject)
+                        {
+                            var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                            if (!dict.ContainsKey(kvp.Key))
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Xml node.".FormatString(fieldConfig.FieldName));
+                        }
+                        else
+                        {
+                            if (pi == null)
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Xml node.".FormatString(fieldConfig.FieldName));
+                        }
                     }
                 }
 
@@ -751,10 +818,23 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
-                    if (fieldConfig.ValueConverter != null)
-                        fieldValue = fieldConfig.ValueConverter(fieldValue);
+                    if (fieldConfig.ValueSelector == null)
+                    {
+                        if (Configuration.ValueConverterBack != null)
+                            fieldValue = Configuration.ValueConverterBack(kvp.Key, fieldValue);
+                        else if (fieldConfig.ValueConverterBack != null)
+                            fieldValue = fieldConfig.ValueConverterBack(fieldValue);
+                        else if (fieldConfig.ValueConverter != null)
+                            fieldValue = fieldConfig.ValueConverter(fieldValue);
+                        else
+                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue, true, config: Configuration);
+                    }
                     else
-                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue, true, config: Configuration);
+                    {
+                        fieldValue = fieldConfig.ValueSelector(rec);
+                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, config: Configuration);
+                    }
+
 
                     if ((config.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, config.ObjectValidationMode, fieldValue);
@@ -784,9 +864,9 @@ namespace ChoETL
                         {
                             var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
-                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue))
+                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, config.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, config.ObjectValidationMode, fieldValue);
-                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue))
+                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, config.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, config.ObjectValidationMode, fieldValue);
                             else
                             {
@@ -797,9 +877,9 @@ namespace ChoETL
                         }
                         else if (pi != null)
                         {
-                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue))
+                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, config.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, config.ObjectValidationMode);
-                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue))
+                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, config.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, config.ObjectValidationMode, fieldValue);
                             else
                             {
@@ -994,8 +1074,10 @@ namespace ChoETL
                                 useXmlArray: useXmlArray,
                                 useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
                                 nsMgr: Configuration.XmlNamespaceManager.Value,
-                                ignoreFieldValueMode: fieldConfig.IgnoreFieldValueMode, 
-                                turnOffPluralization: Configuration.TurnOffPluralization, xmlArrayQualifierOverride: Configuration.XmlArrayQualifier
+                                ignoreFieldValueMode: fieldConfig.IgnoreFieldValueMode,
+                                turnOffPluralization: Configuration.TurnOffPluralization,
+                                xmlArrayQualifierOverride: Configuration.XmlArrayQualifier,
+                                useOriginalNodeName: Configuration.KeepOriginalNodeName
                                 );
 
                             innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
@@ -1062,7 +1144,8 @@ namespace ChoETL
                             useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
                             nsMgr: Configuration.XmlNamespaceManager.Value,
                             ignoreFieldValueMode: fieldConfig.IgnoreFieldValueMode,
-                            key: kvp.Key, turnOffPluralization: Configuration.IsTurnOffPluralization(fieldConfig), Configuration.XmlArrayQualifier
+                            key: kvp.Key, turnOffPluralization: Configuration.IsTurnOffPluralization(fieldConfig),
+                            Configuration.XmlArrayQualifier, useOriginalNodeName: Configuration.KeepOriginalNodeName
                             );
 
                         if (/*kvp.Value is ArrayList ||*/ kvp.Value is IList listValue
@@ -1383,6 +1466,9 @@ namespace ChoETL
         private XElement NewXElement(ChoXmlNamespaceManager nsMgr, string name, string defaultNSPrefix, XNamespace NS, object value = null, bool emitType = false,
             bool? isXmlValue = null)
         {
+            //sanitize name
+            name = name.Replace("#", "");
+
             ChoGuard.ArgumentNotNullOrEmpty(nsMgr, nameof(nsMgr));
 
             string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
@@ -1451,7 +1537,7 @@ namespace ChoETL
                     {
                         var nsAttr = kvp.Key.IsNullOrWhiteSpace() ?
                             new XAttribute("xmlns", kvp.Value) :
-                            new XAttribute(XNamespace.Xmlns + (kvp.Key.IsNullOrWhiteSpace() ? "x" : kvp.Key), kvp.Value);
+                            new XAttribute(XNamespace.Xmlns + (kvp.Key.IsNullOrWhiteSpace() ? ChoXmlNamespaceManager.DefaultNSToken : kvp.Key), kvp.Value);
                         e.Add(nsAttr);
                     }
                     catch { }

@@ -30,6 +30,9 @@ namespace ChoETL
 
     public static class ChoETLSettings
     {
+        internal const string NULL_VALUE = "{NULL_VALUE}";
+        internal const string EMPTY_VALUE = "{EMPTY_VALUE}";
+
         public static ChoArrayBracketNotation ArrayBracketNotation
         {
             get; set;
@@ -280,6 +283,9 @@ namespace ChoETL
             set;
         }
 
+        public string ValueNamePrefix { get; private set; }
+        public int ValueNameStartIndex { get; private set; }
+
         #endregion Instance Members
 
         #region Constructors
@@ -332,11 +338,26 @@ namespace ChoETL
                     }
                 }
             }
+            if (kvpDict is ChoDynamicObject dobj1)
+            {
+                DynamicObjectName = dobj1.DynamicObjectName;
+                SetNSPrefix(dobj1.GetNSPrefix());
+            }
         }
 
-        public ChoDynamicObject(IList<object> list) : this(null, false)
+        public ChoDynamicObject(IList<object> list, string valueNamePrefix = null, int? valueNameStartIndex = null) : this(null, false)
         {
-            _kvpDict = list.Select((item, index) => new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item)).
+            if (valueNamePrefix.IsNullOrWhiteSpace())
+                valueNamePrefix = ChoETLSettings.ValueNamePrefix;
+            if (valueNamePrefix.IsNullOrWhiteSpace())
+                valueNamePrefix = "Value";
+            if (valueNameStartIndex == null)
+                valueNameStartIndex = ChoETLSettings.ValueNameStartIndex;
+
+            ValueNamePrefix = valueNamePrefix;
+            ValueNameStartIndex = valueNameStartIndex.Value;
+
+            _kvpDict = list.Select((item, index) => new KeyValuePair<string, object>($"{valueNamePrefix}{index + valueNameStartIndex}", item)).
                 ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
@@ -360,10 +381,13 @@ namespace ChoETL
             _kvpDict = (IDictionary<string, object>)kvpDict;
         }
 
-        public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
+        public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false, char? keySeparator = null)
         {
-            if (ChoETLSettings.KeySeparator != ChoCharEx.NUL)
-                _keySeparator = ChoETLSettings.KeySeparator.ToString();
+            if (keySeparator == null)
+                keySeparator = ChoETLSettings.KeySeparator;
+
+            if (keySeparator != ChoCharEx.NUL)
+                _keySeparator = keySeparator.ToString();
 
             if (DynamicObjectName.IsNullOrWhiteSpace())
                 DynamicObjectName = DefaultName;
@@ -478,9 +502,11 @@ namespace ChoETL
             return new ChoDynamicObject(ret.GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
         }
 
-        public dynamic ConvertToNestedObject(char separator = '/', char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedArrayConversion = true)
+        public dynamic ConvertToNestedObject(char separator = '/', char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedArrayConversion = true,
+            int? maxArraySize = null, string valueNamePrefix = null, int? valueNameStartIndex = null)
         {
-            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, arrayEndIndexSeparator, allowNestedArrayConversion);
+            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, arrayEndIndexSeparator,
+                allowNestedArrayConversion, maxArraySize == null ? 100 : maxArraySize.Value, valueNamePrefix, valueNameStartIndex);
         }
 
         public dynamic ConvertMembersToArrayIfAny(char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true)
@@ -498,7 +524,7 @@ namespace ChoETL
             return ChoExpandoObjectEx.ConvertToFlattenObject(this, null, null, null, ignoreDictionaryFieldPrefix);
         }
 
-        public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, 
+        public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null,
             bool ignoreDictionaryFieldPrefix = false)
         {
             return ChoExpandoObjectEx.ConvertToFlattenObject(this, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix);
@@ -846,17 +872,10 @@ namespace ChoETL
             else
                 return true;
         }
-
-        protected virtual bool SetPropertyValue(string name, object value)
+        private bool _SetPropertyValue(string name, object value)
         {
             if (IsReadOnly)
                 return false;
-
-            if (name != ChoDynamicObjectSettings.XmlValueToken && name.IndexOf(":") < 0)
-            {
-                if (!_prefix.IsNullOrWhiteSpace() && !name.StartsWith("@xmlns:", StringComparison.InvariantCultureIgnoreCase))
-                    name = "{0}:{1}".FormatString(_prefix, name);
-            }
 
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
@@ -887,6 +906,20 @@ namespace ChoETL
             }
 
             return true;
+        }
+
+        protected virtual bool SetPropertyValue(string name, object value)
+        {
+            if (IsReadOnly)
+                return false;
+
+            if (name != ChoDynamicObjectSettings.XmlValueToken && name.IndexOf(":") < 0)
+            {
+                if (!_prefix.IsNullOrWhiteSpace() && !name.StartsWith("@xmlns:", StringComparison.InvariantCultureIgnoreCase))
+                    name = "{0}:{1}".FormatString(_prefix, name);
+            }
+
+            return _SetPropertyValue(name, value);
         }
         protected virtual object GetDefaultValue(string name)
         {
@@ -992,6 +1025,12 @@ namespace ChoETL
         private string NName
         {
             get { return DynamicObjectName.IsNullOrWhiteSpace() ? GetType().Name : DynamicObjectName; }
+            set { DynamicObjectName = value; }
+        }
+
+        public void ResetName()
+        {
+            DynamicObjectName = DefaultName;
         }
 
         private void SetDefaultValue(MemberInfo mi, bool saveDefaultValue = false)
@@ -1380,16 +1419,20 @@ namespace ChoETL
             return Keys;
         }
 
-        public ChoDynamicObject Flatten(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false, Func<string, string> columnMap = null, StringComparer cmp = null)
+        public ChoDynamicObject Flatten(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, 
+            bool ignoreDictionaryFieldPrefix = false, Func<string, string> columnMap = null, StringComparer cmp = null,
+            string valueNamePrefix = null, bool ignoreRootDictionaryFieldPrefix = false)
         {
-            _kvpDict = _kvpDict.Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix).GroupBy(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key)).ToDictionary(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key), kvp => kvp.First().Value,
+            _kvpDict = _kvpDict.Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix,
+                valueNamePrefix, ignoreRootDictionaryFieldPrefix).GroupBy(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key)).ToDictionary(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key), kvp => kvp.First().Value,
                 cmp == null ? StringComparer.InvariantCultureIgnoreCase : cmp);
             return this;
         }
         public IDictionary<string, object> FlattenToDictionary(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null,
-            bool ignoreDictionaryFieldPrefix = false)
+            bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null, bool ignoreRootDictionaryFieldPrefix = false)
         {
-            return ChoDictionaryEx.FlattenToDictionary(_kvpDict, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix);
+            return ChoDictionaryEx.FlattenToDictionary(_kvpDict, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, 
+                ignoreDictionaryFieldPrefix, valueNamePrefix, ignoreRootDictionaryFieldPrefix);
         }
         public string Dump()
         {
@@ -1400,7 +1443,12 @@ namespace ChoETL
             return ChoUtility.DumpAsJson(this);
         }
 
-        public void Print(TextWriter writer = null)
+        public void Print()
+        {
+            ChoUtility.Print(this);
+        }
+
+        public void Print(TextWriter writer)
         {
             ChoUtility.Print(this, writer);
         }
@@ -1427,7 +1475,8 @@ namespace ChoETL
             bool emitDataType = false, string EOLDelimiter = null, bool? useXmlArray = null,
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
             ChoIgnoreFieldValueMode? ignoreFieldValueMode = null,
-            bool? turnOffPluralization = null, Func<string, object, bool?> xmlArrayQualifierOverride = null
+            bool? turnOffPluralization = null, Func<string, object, bool?> xmlArrayQualifierOverride = null,
+            bool useOriginalNodeName = false
             )
         {
             if (EOLDelimiter == null)
@@ -1520,7 +1569,20 @@ namespace ChoETL
                     msg.AppendFormat(@" {0}=""{1}""", key1, this[key1]);
                 }
             }
-
+            if (IsJsonArrayElement(tag))
+            {
+                if (nsMgr.GetNamespaceForPrefix("json") != null)
+                {
+                    msg.AppendFormat(@" {0}:Array=""{1}""", "json", GetJsonArrayElementFlag(tag).ToNString().ToLower());
+                }
+            }
+            if (IsNillableElement(tag))
+            {
+                if (nsMgr.GetNamespaceForPrefix("xsi") != null)
+                {
+                    msg.AppendFormat(@" {0}:nil=""{1}""", "xsi", GetNillableElementFlag(tag).ToNString().ToLower());
+                }
+            }
             if (ContainsKey(ChoDynamicObjectSettings.XmlValueToken))
             {
                 if (hasAttrs)
@@ -1562,7 +1624,8 @@ namespace ChoETL
 
                     GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray,
                         useJsonNamespaceForObjectType, nsMgr,
-                        ignoreFieldValueMode, turnOffPluralization == null ? false : turnOffPluralization.Value, xmlArrayQualifierOverride
+                        ignoreFieldValueMode, turnOffPluralization == null ? false : turnOffPluralization.Value, xmlArrayQualifierOverride,
+                        useOriginalNodeName
                         );
                 }
                 msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
@@ -1600,15 +1663,20 @@ namespace ChoETL
             bool isCDATA = false, bool emitDataType = false, string EOLDelimiter = null, bool? useXmlArray = null,
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
             ChoIgnoreFieldValueMode? ignoreFieldValueMode = null,
-            bool turnOffPluralization = false, Func<string, object, bool?> xmlArrayQualifierOverride = null)
+            bool turnOffPluralization = false, Func<string, object, bool?> xmlArrayQualifierOverride = null,
+            bool useOriginalNodeName = false)
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
 
             if (value is ChoDynamicObject)
             {
-                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray, useJsonNamespaceForObjectType, nsMgr,
-                        ignoreFieldValueMode, turnOffPluralization, xmlArrayQualifierOverride), EOLDelimiter));
+                var dobj = value as ChoDynamicObject;
+                if (dobj.NName == ChoDynamicObject.DefaultName && !key.IsNullOrWhiteSpace())
+                    dobj.NName = key;
+
+                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(((ChoDynamicObject)value).GetXml(dobj.NName, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray, useJsonNamespaceForObjectType, nsMgr,
+                        ignoreFieldValueMode, turnOffPluralization, xmlArrayQualifierOverride, useOriginalNodeName), EOLDelimiter));
             }
             else
             {
@@ -1638,11 +1706,41 @@ namespace ChoETL
                         if (useXmlArrayOverride != null)
                             useXmlArray = useXmlArrayOverride.Value;
 
+                        if (IsJsonArrayElement(key))
+                        {
+                            useXmlArray = true;
+                        }
+
+                        int indent = 1;
                         if (useXmlArray != null && useXmlArray.Value)
                         {
+                            var origKey = key;
                             if (!turnOffPluralization)
                                 key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
-                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}>".FormatString(key), EOLDelimiter));
+
+                            StringBuilder msg1 = new StringBuilder();
+                            msg1.AppendFormat("<{0}".FormatString(key));
+                          
+                            if (IsJsonArrayElement(origKey))
+                            {
+                                if (nsMgr.GetNamespaceForPrefix("json") != null)
+                                {
+                                    msg1.AppendFormat(@" {0}:Array=""{1}""", "json", GetJsonArrayElementFlag(origKey).ToNString().ToLower());
+                                }
+                            }
+                            if (IsNillableElement(origKey))
+                            {
+                                if (nsMgr.GetNamespaceForPrefix("xsi") != null)
+                                {
+                                    msg1.AppendFormat(@" {0}:nil=""{1}""", "xsi", GetNillableElementFlag(origKey).ToNString().ToLower());
+                                }
+                            }
+                            msg1.Append(">");
+
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, 
+                                Indent(msg1.ToString(), EOLDelimiter));
+
+                            indent = 2;
                         }
                         if (value is IList)
                         {
@@ -1650,17 +1748,27 @@ namespace ChoETL
                             {
                                 if (val is ChoDynamicObject collValue)
                                 {
-                                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? (useXmlArray != null && useXmlArray.Value ? key.ToSingular() : key) : collValue.NName, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter,
-                                        useXmlArray: useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, turnOffPluralization, xmlArrayQualifierOverride), EOLDelimiter));
+                                    if (collValue.NName == ChoDynamicObject.DefaultName && !key.IsNullOrWhiteSpace())
+                                        collValue.NName = key.ToSingular();
+
+                                    var useXmlArrayEx = useXmlArray != null && useXmlArray.Value;
+
+                                    var name = collValue.NName == DefaultName ? (useXmlArrayEx ? key.ToSingular() : key) : collValue.NName;
+                                    if (!useXmlArrayEx && useOriginalNodeName && !key.IsNullOrWhiteSpace())
+                                        name = key;
+
+                                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(name, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter,
+                                        useXmlArray: useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, turnOffPluralization, xmlArrayQualifierOverride, useOriginalNodeName), EOLDelimiter, indent));
                                 }
                                 else
                                     msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(val, null, EOLDelimiter, nullValueHandling, nsPrefix, emitDataType,
-                                useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key: key == DefaultName ? null : key), EOLDelimiter, useXmlArray != null && useXmlArray.Value ? 2 : 1));
+                                useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key: key == DefaultName ? null : key, 
+                                turnOffPluralization, xmlArrayQualifierOverride, useOriginalNodeName), EOLDelimiter, indent));
                             }
                         }
                         else
                             msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value, null, EOLDelimiter, nullValueHandling, nsPrefix, emitDataType,
-                                useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key: key), EOLDelimiter, 1));
+                                useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key: key, turnOffPluralization, xmlArrayQualifierOverride, useOriginalNodeName), EOLDelimiter, indent));
 
                         if (useXmlArray != null && useXmlArray.Value)
                             msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("</{0}>".FormatString(key), EOLDelimiter));
@@ -1767,6 +1875,45 @@ namespace ChoETL
         {
             return _attributes.Contains(attrName) || attrName.StartsWith("@") || attrName.StartsWith("$");
         }
+        private Dictionary<string, bool> _nillableElements = new Dictionary<string, bool>();
+        public void SetAsNillableElement(string elementName, bool flag = false)
+        {
+            if (_nillableElements.ContainsKey(elementName))
+                _nillableElements[elementName] = flag;
+            else
+                _nillableElements.Add(elementName, flag);
+        }
+        public bool IsNillableElement(string elementName)
+        {
+            return _nillableElements.ContainsKey(elementName);
+        }
+        public bool? GetNillableElementFlag(string elementName)
+        {
+            if (_nillableElements.ContainsKey(elementName))
+                return _nillableElements[elementName];
+            else
+                return null;
+        }
+
+        private Dictionary<string, bool> _jsonArrayElements = new Dictionary<string, bool>();
+        public void SetAsJsonArrayElement(string elementName, bool flag = false)
+        {
+            if (_jsonArrayElements.ContainsKey(elementName))
+                _jsonArrayElements[elementName] = flag;
+            else
+                _jsonArrayElements.Add(elementName, flag);
+        }
+        public bool IsJsonArrayElement(string elementName)
+        {
+            return _jsonArrayElements.ContainsKey(elementName);
+        }
+        public bool? GetJsonArrayElementFlag(string elementName)
+        {
+            if (_jsonArrayElements.ContainsKey(elementName))
+                return _jsonArrayElements[elementName];
+            else
+                return null;
+        }
 
         private HashSet<string> _cDatas = new HashSet<string>();
         public void SetElement(string elementName, object value, bool isCDATA = false)
@@ -1786,6 +1933,27 @@ namespace ChoETL
                 SetPropertyValue(elementName, value);
             }
         }
+        public void SetNSElement(string name, object value, bool isCDATA = false, string ns = null)
+        {
+            if (isCDATA)
+            {
+                if (!_cDatas.Contains(name))
+                    _cDatas.Add(name);
+
+                _SetPropertyValue(name, value);
+            }
+            else
+            {
+                if (_cDatas.Contains(name))
+                    _cDatas.Remove(name);
+
+                _SetPropertyValue(name, value);
+            }
+
+            if (ns != null)
+                SetNSPrefix(ns);
+        }
+
         public bool IsCDATA(string elementName)
         {
             return _cDatas.Contains(elementName);
@@ -1967,7 +2135,7 @@ namespace ChoETL
         private string _prefix = null;
         public void SetNSPrefix(string prefix)
         {
-            if (prefix != ChoXmlNamespaceManager.DefaultNSToken)
+            if (prefix != ChoXmlNamespaceManager.DefaultNSToken && !prefix.IsNullOrWhiteSpace())
                 _prefix = prefix;
         }
         public string GetNSPrefix()
@@ -2106,6 +2274,19 @@ namespace ChoETL
             }
 
             return dict;
+        }
+
+        public T ToObject<T>()
+            where T : class, new()
+        {
+            T ret = ((IDictionary<string, object>)this).ToObject<T>();
+
+            return ret;
+        }
+
+        public dynamic Cast()
+        {
+            return this;
         }
     }
 

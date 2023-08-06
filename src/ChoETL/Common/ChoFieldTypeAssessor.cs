@@ -12,8 +12,9 @@ namespace ChoETL
     {
         public readonly static ChoFieldTypeAssessor Instance = new ChoFieldTypeAssessor();
 
-        private ConcurrentBag<Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type>> _fieldTypeAssessors = new ConcurrentBag<Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type>>();
-        public Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type> FieldTypeAssessor
+        private ConcurrentBag<Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type>> _fieldTypeAssessors = 
+            new ConcurrentBag<Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type>>();
+        public Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type> FieldTypeAssessor
         {
             get;
             set;
@@ -24,39 +25,39 @@ namespace ChoETL
 
         }
 
-        public ChoFieldTypeAssessor(ConcurrentBag<Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type>> fieldTypeAssessors)
+        public ChoFieldTypeAssessor(ConcurrentBag<Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type>> fieldTypeAssessors)
         {
             _fieldTypeAssessors = fieldTypeAssessors;
         }
 
-        public ChoFieldTypeAssessor(Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type> fieldTypeAssessor)
+        public ChoFieldTypeAssessor(Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type> fieldTypeAssessor)
         {
             FieldTypeAssessor = fieldTypeAssessor;
         }
 
-        public Type AssessType(object target, ChoTypeConverterFormatSpec fs, CultureInfo ci)
+        public Type AssessType(string key, object value, ChoTypeConverterFormatSpec fs, CultureInfo ci)
         {
-            if (target == null)
+            if (value == null)
                 return null;
            
             Type ft = null;
 
-            Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type> fieldTypeAssessor = FieldTypeAssessor;
+            Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type> fieldTypeAssessor = FieldTypeAssessor;
             if (fieldTypeAssessor != null)
             {
-                ft = fieldTypeAssessor(target, fs, ci);
+                ft = fieldTypeAssessor(key, value, fs, ci);
                 if (ft != null)
                     return ft;
             }
 
-            ConcurrentBag<Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type>> fieldTypeAssessors = _fieldTypeAssessors;
+            ConcurrentBag<Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type>> fieldTypeAssessors = _fieldTypeAssessors;
             if (fieldTypeAssessors == null)
                 return null;
 
             var list = fieldTypeAssessors.ToArray();
             foreach (var item in list)
             {
-                ft = item(target, fs, ci);
+                ft = item(key, value, fs, ci);
                 if (ft != null)
                     return ft;
             }
@@ -64,7 +65,7 @@ namespace ChoETL
             return null;
         }
 
-        public void Add(Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type> fta)
+        public void Add(Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type> fta)
         {
             if (fta == null)
                 return;
@@ -72,12 +73,12 @@ namespace ChoETL
             _fieldTypeAssessors.Add(fta);
         }
 
-        public void Remove(Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type> fta)
+        public void Remove(Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type> fta)
         {
             if (fta == null)
                 return;
 
-            _fieldTypeAssessors = new ConcurrentBag<Func<object, ChoTypeConverterFormatSpec, CultureInfo, Type>>(_fieldTypeAssessors.Except(new[] { fta }));
+            _fieldTypeAssessors = new ConcurrentBag<Func<string, object, ChoTypeConverterFormatSpec, CultureInfo, Type>>(_fieldTypeAssessors.Except(new[] { fta }));
         }
     }
 }

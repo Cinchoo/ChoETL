@@ -367,10 +367,12 @@ namespace ChoETL
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
                     dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
-                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
                 else
                     dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
-                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
 
                 selector?.Invoke(dict);
 
@@ -557,6 +559,7 @@ namespace ChoETL
 
         public ChoJSONReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
@@ -732,7 +735,8 @@ namespace ChoETL
                 fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter);
         }
 
-        public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,

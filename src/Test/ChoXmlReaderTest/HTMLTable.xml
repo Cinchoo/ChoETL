@@ -23,7 +23,7 @@
           <td>12/10/2016 4:30:47 PM</td>
           <td>1</td>
           <td>
-            <a href='/SS_PROD/Report/LotDispoHistSummRepPopUp.aspx?Lot=7649B703&Location=6262' target="_blank">
+            <a href="/SS_PROD/Report/LotDispoHistSummRepPopUp.aspx?Lot=7649B703&amp;Location=6262" target="_blank">
               <i class="icon-eye-open"></i>
             </a>
           </td>
@@ -37,7 +37,7 @@
           <td>12/10/2016 4:30:47 PM</td>
           <td>1</td>
           <td>
-            <a href='/SS_PROD/Report/LotDispoHistSummRepPopUp.aspx?Lot=7649B703&Location=6262' target="_blank">
+            <a href="/SS_PROD/Report/LotDispoHistSummRepPopUp.aspx?Lot=7649B703&amp;Location=6262" target="_blank">
               <i class="icon-eye-open"></i>
             </a>
           </td>

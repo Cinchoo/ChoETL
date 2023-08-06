@@ -56,6 +56,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            Configuration.ResetStates();
             if (source == null)
                 return Enumerable.Empty<object>();
 
@@ -797,9 +798,9 @@ namespace ChoETL
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                        if (dict.SetFallbackValue(key, fieldConfig, Configuration.Culture, ref fieldValue))
+                        if (dict.SetFallbackValue(key, fieldConfig, Configuration.Culture, ref fieldValue, Configuration))
                             dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
-                        else if (dict.SetDefaultValue(key, fieldConfig, Configuration.Culture))
+                        else if (dict.SetDefaultValue(key, fieldConfig, Configuration.Culture, Configuration))
                             dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
                         else if (ex is ValidationException)
                             throw;
@@ -808,9 +809,9 @@ namespace ChoETL
                     }
                     else if (pi != null)
                     {
-                        if (rec.SetFallbackValue(key, fieldConfig, Configuration.Culture))
+                        if (rec.SetFallbackValue(key, fieldConfig, Configuration.Culture, Configuration))
                             rec.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
-                        else if (rec.SetDefaultValue(key, fieldConfig, Configuration.Culture))
+                        else if (rec.SetDefaultValue(key, fieldConfig, Configuration.Culture, Configuration))
                             rec.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
                         else if (ex is ValidationException)
                             throw;

@@ -57,7 +57,7 @@ namespace ChoETL
 
         protected void InitializeRecordFieldConfiguration(ChoRecordConfiguration configuration)
         {
-            if (configuration == null || configuration.IsDynamicObject || configuration.RecordType == null)
+            if (configuration == null/* || configuration.IsDynamicObject || configuration.RecordType == null*/)
                 return;
 
             if (!typeof(IChoNotifyRecordFieldConfigurable).IsAssignableFrom(configuration.RecordMapType))
@@ -107,14 +107,16 @@ namespace ChoETL
             }
         }
 
-        protected virtual IDictionary<string, object> MigrateToNewSchema(IDictionary<string, object> rec, IDictionary<string, Type> recTypes)
+        protected virtual IDictionary<string, object> MigrateToNewSchema(IDictionary<string, object> rec, 
+            IDictionary<string, Type> recTypes,
+            ChoTypeConverterFormatSpec typeConverterFormatSpec = null, bool ignoreSetDynamicObjectName = false)
         {
             IDictionary<string, object> newRec = new ChoDynamicObject(); //  new Dictionary<string, object>();
             foreach (var kvp in rec)
             {
                 //newRec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                 if (recTypes.ContainsKey(kvp.Key))
-                    newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key]));
+                    newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key], typeConverterFormatSpec: typeConverterFormatSpec));
                 else
                     newRec.Add(kvp.Key, kvp.Value); // typeof(ChoDynamicObject));
 
@@ -122,6 +124,13 @@ namespace ChoETL
                 {
                     var dobj = newRec as ChoDynamicObject;
                     dobj.SetMemberType(kvp.Key, recTypes[kvp.Key]);
+                }
+            }
+            if (!ignoreSetDynamicObjectName)
+            {
+                if (rec is ChoDynamicObject dobj1 && newRec is ChoDynamicObject dobj2)
+                {
+                    dobj2.DynamicObjectName = dobj1.DynamicObjectName;
                 }
             }
             return newRec;
@@ -155,7 +164,7 @@ namespace ChoETL
                 }
 
                 if (RecordConfiguration.FieldTypeAssessor != null)
-                    fieldType = RecordConfiguration.FieldTypeAssessor.AssessType(value, RecordConfiguration.TypeConverterFormatSpec, ci);
+                    fieldType = RecordConfiguration.FieldTypeAssessor.AssessType(key, value, RecordConfiguration.TypeConverterFormatSpec, ci);
 
                 if (fieldType == null)
                 {

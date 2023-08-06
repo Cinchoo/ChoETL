@@ -84,7 +84,6 @@ namespace ChoETL
             get;
             private set;
         }
-        public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool AreAllFieldTypesNull
         {
@@ -156,6 +155,13 @@ namespace ChoETL
                 return true;
             });
         }
+        internal ChoTypeConverterFormatSpec CreateTypeConverterSpecsIfNull()
+        {
+            if (_typeConverterFormatSpec == null)
+                _typeConverterFormatSpec = new ChoTypeConverterFormatSpec();
+
+            return _typeConverterFormatSpec;
+        }
 
         internal void Init()
         {
@@ -172,6 +178,13 @@ namespace ChoETL
 
             if (AvroRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);
+        }
+
+        public ChoAvroRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
         }
 
         public ChoAvroRecordConfiguration MapRecordFields<T>()

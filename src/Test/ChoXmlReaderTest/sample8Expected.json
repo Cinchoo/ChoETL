@@ -1,12 +1,12 @@
 {
- "Texts": [
-  {
-    "id": "KEY_1",
-    "text": "Text A"
-  }
-  {
-    "id": "KEY_2",
-    "text": "Text B"
-  }
- ]
+  "Texts": [
+    {
+      "id": "KEY_1",
+      "text": "Text A"
+    },
+    {
+      "id": "KEY_2",
+      "text": "Text B"
+    }
+  ]
 }

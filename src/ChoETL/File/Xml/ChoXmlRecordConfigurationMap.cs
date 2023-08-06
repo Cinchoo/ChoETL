@@ -150,6 +150,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlRecordFieldConfigurationMap ValueConverterBack(Func<object, object> value)
+        {
+            _config.ValueConverterBack = value;
+            return this;
+        }
+
         public ChoXmlRecordFieldConfigurationMap PropertyConverter(IChoValueConverter converter)
         {
             if (_config.PropConverters.IsNullOrEmpty())

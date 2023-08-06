@@ -18,6 +18,22 @@ namespace ChoETL
     public class ChoLongConverter : IChoValueConverter
 #endif
     {
+        private NumberStyles? GetConvertTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.LongNumberStyle;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.LongNumberStyle);
+        }
+        private string GetConvertBackTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.LongFormat;
+
+            return parameter.GetValueAt(1, ChoTypeConverterFormatSpec.Instance.LongFormat);
+        }
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
@@ -26,7 +42,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.LongNumberStyle);
+                NumberStyles? format = GetConvertTypeFormat(parameter); //.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.LongNumberStyle);
                 return format == null ? long.Parse(text, culture) : long.Parse(text, format.Value, culture);
             }
 
@@ -38,9 +54,11 @@ namespace ChoETL
             if (value is long && targetType == typeof(string))
             {
                 long convValue = (long)value;
-                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.LongFormat);
+                string format = GetConvertBackTypeFormat(parameter); //.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.LongFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
+            else if (value == DBNull.Value)
+                return null;
             else
                 return value;
         }

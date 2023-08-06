@@ -108,6 +108,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoKVPRecordFieldConfigurationMap ValueConverterBack(Func<object, object> value)
+        {
+            _config.ValueConverterBack = value;
+            return this;
+        }
+
         public ChoKVPRecordFieldConfigurationMap PropertyConverter(IChoValueConverter converter)
         {
             if (_config.PropConverters.IsNullOrEmpty())

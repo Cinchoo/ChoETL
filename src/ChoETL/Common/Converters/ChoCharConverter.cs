@@ -36,6 +36,8 @@ namespace ChoETL
                 else
                     return ch.ToString();
             }
+            else if (value == DBNull.Value)
+                return null;
             else
                 return value;
         }

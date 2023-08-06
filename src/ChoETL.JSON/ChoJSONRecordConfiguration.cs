@@ -226,6 +226,13 @@ namespace ChoETL
                     _formatting = _jsonSerializerSettings.Formatting;
             }
         }
+        internal ChoTypeConverterFormatSpec CreateTypeConverterSpecsIfNull()
+        {
+            if (_typeConverterFormatSpec == null)
+                _typeConverterFormatSpec = new ChoTypeConverterFormatSpec();
+
+            return _typeConverterFormatSpec;
+        }
 
         internal bool? IsArray(ChoJSONRecordFieldConfiguration fc, object fieldValue = null)
         {
@@ -387,7 +394,6 @@ namespace ChoETL
                 return JSONRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
-        public readonly dynamic Context = new ChoDynamicObject();
 
         public ChoJSONRecordConfiguration() : this(null)
         {
@@ -531,6 +537,13 @@ namespace ChoETL
         public void MapRecordFieldsForType<T>()
         {
             MapRecordFieldsForType(typeof(T));
+        }
+
+        public ChoJSONRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
         }
 
         public void MapRecordFieldsForType(Type rt)

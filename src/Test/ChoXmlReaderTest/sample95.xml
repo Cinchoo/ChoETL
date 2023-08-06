@@ -13,7 +13,7 @@ xmlns:Objecten-ref="www.kadaster.nl/schemas/lvbag/imbag/objecten-ref/v20200601"
 xsi:schemaLocation="http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601/BagvsExtractDeelbestandMutatieLvc-2.1.0.xsd">
   <mlm:bagInfo>
     <selecties-extract:Gebied-Registratief>
-      <selecties-extract:Gebied-NLD />
+		<selecties-extract:Gebied-NLD>Test</selecties-extract:Gebied-NLD>>
     </selecties-extract:Gebied-Registratief>
   </mlm:bagInfo>
 </mlm:bagMutaties>

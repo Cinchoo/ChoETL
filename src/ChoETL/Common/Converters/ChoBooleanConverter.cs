@@ -20,6 +20,15 @@ namespace ChoETL
         {
 
         }
+        private ChoBooleanFormatSpec GetTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.BooleanFormat;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
+        }
+
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
@@ -30,7 +39,7 @@ namespace ChoETL
                 if (txt.IsNull())
                     return false;
 
-                ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
+                ChoBooleanFormatSpec booleanFormat = GetTypeFormat(parameter); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
                 switch (booleanFormat)
                 {
                     case ChoBooleanFormatSpec.YOrN:
@@ -84,7 +93,7 @@ namespace ChoETL
                 {
                     bool boolValue = (bool)value;
 
-                    ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
+                    ChoBooleanFormatSpec booleanFormat = GetTypeFormat(parameter); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
                     switch (booleanFormat)
                     {
                         case ChoBooleanFormatSpec.TOrF:
@@ -100,6 +109,8 @@ namespace ChoETL
                     }
                 }
             }
+            else if (value == DBNull.Value)
+                return null;
 
             return value;
         }

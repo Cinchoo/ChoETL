@@ -226,7 +226,7 @@ namespace ChoETL
 
         private static IEnumerable<IDictionary<string, object>> Pivot(this IEnumerable<IDictionary<string, object>> dicts)
         {
-            return dicts.Select(r1 => 
+            return dicts.Select(r1 =>
                 ToDictionary(r1.First().Value as IList, r1.Skip(1).First().Value as IList));
         }
 
@@ -548,18 +548,35 @@ namespace ChoETL
             IDictionary<string, object> expando = dynamicFactory == null ? new ChoDynamicObject() : dynamicFactory();
             if (expando == null) expando = new ChoDynamicObject();
 
+            //string valuePrefix = "Value";
+            //string separator = "_";
+            //if (src is IList)
+            //{
+            //    Dictionary<string, object> dict = new Dictionary<string, object>();
+            //    int index = 0;
+            //    foreach (var rec in (IList)src)
+            //    {
+            //        var key = $"{valuePrefix}{separator}{index++}";
+            //        if (rec == null)
+            //            dict.Add(key, null);
+            //        else if (rec.GetType().IsSimple())
+            //            dict.Add(key, rec);
+            //        else
+            //            dict.Add(key, ToDynamicObject(rec, shallowDynamic, dynamicFactory, objectGraph));
+            //    }
+            //    return dict;
+            //}
             if (src is IList)
             {
                 List<object> list = new List<object>();
                 foreach (var rec in (IList)src)
                 {
-                    if (rec != null)
-                    {
-                        if (rec.GetType().IsSimple())
-                            list.Add(rec);
-                        else
-                            list.Add(ToDynamicObject(rec, shallowDynamic, dynamicFactory, objectGraph));
-                    }
+                    if (rec == null)
+                        list.Add(rec);
+                    else if (rec.GetType().IsSimple())
+                        list.Add(rec);
+                    else
+                        list.Add(ToDynamicObject(rec, shallowDynamic, dynamicFactory, objectGraph));
                 }
                 return list.ToArray();
             }
@@ -1157,7 +1174,7 @@ namespace ChoETL
                     return defaultValue;
             }
             else
-                return array != null ? (T)array : defaultValue;
+                return array != null && array is T ? (T)array : defaultValue;
         }
 
         public static Type GetTypeFromXmlSectionNode(this XmlNode sectionNode)
@@ -1430,12 +1447,13 @@ namespace ChoETL
             }
         }
 
-        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, 
+        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null,
             ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string nsPrefix = null, bool emitDataType = false, bool? useXmlArray = null,
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
             ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, string key = null,
-            bool? turnOffPluralization = null, Func<string, object, bool?> xmlArrayQualifierOverride = null
+            bool? turnOffPluralization = null, Func<string, object, bool?> xmlArrayQualifierOverride = null,
+            bool useOriginalNodeName = false
             )
         {
             if (target is ExpandoObject)
@@ -1505,13 +1523,15 @@ namespace ChoETL
                     IList list = target as IList;
                     if (list.OfType<ChoDynamicObject>().Count() == list.Count)
                     {
-                        xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray, 
-                            useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key?.ToSingular(), turnOffPluralization, xmlArrayQualifierOverride)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                        xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray,
+                            useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key?.ToSingular(), turnOffPluralization, xmlArrayQualifierOverride,
+                            useOriginalNodeName)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
                     }
                     else if (!(list is ArrayList) && list.OfType<Object>().Select(o => o.GetType()).Distinct().Count() == 1)
                     {
-                        xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray, 
-                            useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key?.ToSingular(), turnOffPluralization, xmlArrayQualifierOverride)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                        xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray,
+                            useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key?.ToSingular(), turnOffPluralization, xmlArrayQualifierOverride,
+                            useOriginalNodeName)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
                     }
                     else
                     {
@@ -1538,7 +1558,8 @@ namespace ChoETL
                 {
                     xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator, useXmlArray: useXmlArray,
                         useJsonNamespaceForObjectType: useJsonNamespaceForObjectType, nsMgr: nsMgr, ignoreFieldValueMode: ignoreFieldValueMode,
-                        turnOffPluralization: turnOffPluralization, xmlArrayQualifierOverride: xmlArrayQualifierOverride));
+                        turnOffPluralization: turnOffPluralization, xmlArrayQualifierOverride: xmlArrayQualifierOverride,
+                        useOriginalNodeName: useOriginalNodeName));
                 }
                 else
                 {
@@ -1553,7 +1574,17 @@ namespace ChoETL
 
                 xtw.Flush();
 
-                return key.IsNullOrWhiteSpace() || !replaceNode ? xmlString.ToString() : xmlString.ToString().ReplaceXmlNodeIfAppl(key);
+                var xml = key.IsNullOrWhiteSpace() || !replaceNode ? xmlString.ToString() : xmlString.ToString().ReplaceXmlNodeIfAppl(key);
+
+                if (emitDataType)
+                {
+                    string xsiNSPrefix = "xsi";
+                    var xsiNS = nsMgr.GetNamespaceForPrefix(xsiNSPrefix);
+                    if (xsiNS != null)
+                        xml = xml.AddXsiTypeIfApplicable(target.GetType(), xsiNS);
+                }
+
+                return xml;
             }
         }
 
@@ -1573,16 +1604,18 @@ namespace ChoETL
 
         public static T XmlDeserialize<T>(Stream sr, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null,
             ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
-            string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null, ChoIgnoreFieldValueMode? ignoreFieldValueMode = null)
+            string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null, ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false, bool ignoreNSPrefix = false,
+            bool includeAllSchemaNS = false)
         {
-            return (T)XmlDeserialize(sr, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, 
-                defaultNSPrefix, nsMgr, ignoreFieldValueMode);
+            return (T)XmlDeserialize(sr, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
+                defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix, includeAllSchemaNS);
         }
 
         public static object XmlDeserialize(Stream sr, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null,
             ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
             ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false, bool ignoreNSPrefix = false,
+            bool includeAllSchemaNS = false)
         {
             ChoGuard.ArgumentNotNullOrEmpty(sr, "Stream");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1592,8 +1625,8 @@ namespace ChoETL
                 if (type == typeof(ChoDynamicObject))
                 {
                     XElement ele = XElement.Load(xtw);
-                    return ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr, 
-                        ignoreFieldValueMode, turnOffPluralization);
+                    return ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr,
+                        ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix, includeAllSchemaNS);
                 }
                 else
                 {
@@ -1607,17 +1640,19 @@ namespace ChoETL
 
         public static T XmlDeserialize<T>(string xmlString, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false, bool ignoreNSPrefix = false,
+            bool includeAllSchemaNS = false)
         {
             ChoGuard.ArgumentNotNullOrEmpty(xmlString, "xmlString");
 
             return (T)XmlDeserialize(xmlString, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
-                defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization);
+                defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix, includeAllSchemaNS);
         }
 
         public static object XmlDeserialize(string xmlString, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false, bool ignoreNSPrefix = false,
+            bool includeAllSchemaNS = false)
         {
             ChoGuard.ArgumentNotNullOrEmpty(xmlString, "XmlString");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1630,8 +1665,8 @@ namespace ChoETL
                     if (type == typeof(ChoDynamicObject))
                     {
                         XElement ele = XElement.Load(xtw);
-                        object obj = ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr, 
-                            ignoreFieldValueMode, turnOffPluralization);
+                        object obj = ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr,
+                            ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix, includeAllSchemaNS);
                         if (obj is Array)
                         {
                             ChoDynamicObject dobj = new ChoDynamicObject();
@@ -1651,23 +1686,25 @@ namespace ChoETL
             }
         }
 
-        public static T XmlDeserializeFromFile<T>(string path, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, 
+        public static T XmlDeserializeFromFile<T>(string path, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null,
             string jsonSchemaNS = null,
             ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false, bool ignoreNSPrefix = false,
+            bool includeAllSchemaNS = false)
         {
             return (T)XmlDeserializeFromFile(path, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
-                            defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization);
+                            defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix, includeAllSchemaNS);
         }
 
-        public static object XmlDeserializeFromFile(string path, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, 
+        public static object XmlDeserializeFromFile(string path, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null,
             string jsonSchemaNS = null,
             ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false, bool ignoreNSPrefix = false,
+            bool includeAllSchemaNS = false)
         {
             ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1680,7 +1717,7 @@ namespace ChoETL
                     {
                         XElement ele = XElement.Load(xtw);
                         return ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
-                            defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization);
+                            defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix, includeAllSchemaNS);
                     }
                     else
                     {
@@ -1711,7 +1748,7 @@ namespace ChoETL
                 return @this;
         }
 
-        public static object CastObjectTo(this object @this, Type type, object defaultValue = null, 
+        public static object CastObjectTo(this object @this, Type type, object defaultValue = null,
             ChoTypeConverterFormatSpec typeConverterFormatSpec = null)
         {
             if (type == null)
@@ -3062,7 +3099,7 @@ namespace ChoETL
             return sorter.Sort(unsorted);
         }
 
-        public static IEnumerable<dynamic> ExternalSort(this IEnumerable<dynamic> unsorted, Func<dynamic, dynamic, int> comparer, 
+        public static IEnumerable<dynamic> ExternalSort(this IEnumerable<dynamic> unsorted, Func<dynamic, dynamic, int> comparer,
             int capacity = 10000, int mergeCount = 10)
         {
             ChoTextFileExternalSorter<dynamic> sorter = new ChoTextFileExternalSorter<dynamic>(new ChoLamdaComparer<dynamic>(comparer), capacity, mergeCount);
@@ -3265,7 +3302,18 @@ namespace ChoETL
                 XmlAttributeOverrides overrides = new XmlAttributeOverrides();
                 var xattribs = new XmlAttributes();
                 xattribs.XmlRoot = ra;
+
+                //XmlElementAttribute attr = new XmlElementAttribute();
+                //attr.ElementName = ra.ElementName;
+                //attr.Type = type;
+                //xattribs.XmlElements.Add(attr);
+
+                //XmlTypeAttribute xmlTypeAttribute = new XmlTypeAttribute();
+                //xmlTypeAttribute.TypeName = type.Name;
+                //xattribs.XmlType = xmlTypeAttribute;
+
                 overrides.Add(proxyType == null ? type : proxyType, xattribs);
+
                 return overrides;
             }
             else
@@ -3273,7 +3321,7 @@ namespace ChoETL
                 var ra = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute;
                 XmlAttributeOverrides overrides = new XmlAttributeOverrides();
                 var xattribs = new XmlAttributes();
-                xattribs.XmlRoot = ra == null ? new XmlRootAttribute() {  ElementName = type.Name } : ra;
+                xattribs.XmlRoot = ra == null ? new XmlRootAttribute() { ElementName = type.Name } : ra;
                 overrides.Add(proxyType == null ? type : proxyType, xattribs);
                 return overrides;
             }

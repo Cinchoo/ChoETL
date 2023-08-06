@@ -388,10 +388,12 @@ namespace ChoETL
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
                     dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
-                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
                 else
                     dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
-                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
 
                 selector?.Invoke(dict);
 
@@ -570,6 +572,7 @@ namespace ChoETL
 
         public ChoYamlReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }

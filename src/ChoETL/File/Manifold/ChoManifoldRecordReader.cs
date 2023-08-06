@@ -33,6 +33,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            Configuration.ResetStates();
             if (source == null)
                 return Enumerable.Empty<object>();
 

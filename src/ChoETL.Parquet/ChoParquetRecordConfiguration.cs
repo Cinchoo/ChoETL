@@ -1,4 +1,5 @@
-﻿using Parquet;
+﻿using Newtonsoft.Json;
+using Parquet;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -21,6 +22,13 @@ namespace ChoETL
     {
         private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
         internal readonly Dictionary<Type, Dictionary<string, ChoParquetRecordFieldConfiguration>> ParquetRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoParquetRecordFieldConfiguration>>();
+        internal ChoTypeConverterFormatSpec CreateTypeConverterSpecsIfNull()
+        {
+            if (_typeConverterFormatSpec == null)
+                _typeConverterFormatSpec = new ChoTypeConverterFormatSpec();
+
+            return _typeConverterFormatSpec;
+        }
 
         public ParquetOptions ParquetOptions
         {
@@ -74,7 +82,6 @@ namespace ChoETL
             get;
             private set;
         }
-        public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool AreAllFieldTypesNull
         {
@@ -114,6 +121,11 @@ namespace ChoETL
         public bool IgnoreHeader { get; set; }
         public bool AutoFlush { get; set; } = true;
         public bool TreatDateTimeAsDateTimeOffset { get; set; }
+        public TimeSpan? DateTimeOffset { get; set; }
+        public Func<object, string> CustomSerializer { get; set; }
+        public Func<string, Type, object> CustomDeserializer { get; set; }
+        public Formatting Formatting { get; set; }
+        public JsonSerializerSettings JsonSerializerSettings { get; set; }
 
         public ChoParquetRecordFieldConfiguration this[string name]
         {
@@ -136,6 +148,14 @@ namespace ChoETL
             {
                 Init(recordType);
             }
+            ConverterForType = (t, o) =>
+            {
+                if (o is ChoDynamicObject)
+                    return new ChoParquetDynamicObjectConverter();
+                else
+                    return null;
+            };
+            NestedKeySeparator = '/';
 
             //RecordSelector = new Func<object, Type>((value) =>
             //{
@@ -175,6 +195,13 @@ namespace ChoETL
 
             if (ParquetRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);
+        }
+
+        public ChoParquetRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
         }
 
         public ChoParquetRecordConfiguration MapRecordFields<T>()
@@ -465,7 +492,7 @@ namespace ChoETL
                 if (!ignoreAttrs)
                 {
                     ChoFieldPositionAttribute fpAttr = pd.Attributes.OfType<ChoFieldPositionAttribute>().FirstOrDefault();
-                    if (fpAttr != null && fpAttr.Position > 0)
+                    if (fpAttr != null && fpAttr.Position >= 0)
                         obj.FieldPosition = fpAttr.Position;
                 }
             }
@@ -956,7 +983,9 @@ namespace ChoETL
         internal void WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption? fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null, 
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null, Type recordType = null, Type subRecordType = null,
@@ -1011,6 +1040,7 @@ namespace ChoETL
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
                     ValueSelector = valueSelector,
+                    CustomSerializer = customSerializer,
                     HeaderSelector = headerSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
@@ -1320,7 +1350,7 @@ namespace ChoETL
             return this;
         }
 
-        #endregion 
+        #endregion
     }
 
     public class ChoParquetRecordConfiguration<T> : ChoParquetRecordConfiguration
@@ -1439,5 +1469,18 @@ namespace ChoETL
         }
 
         #endregion
+    }
+
+    public class ChoParquetDynamicObjectConverter : IChoValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value.ConvertToObject(targetType);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

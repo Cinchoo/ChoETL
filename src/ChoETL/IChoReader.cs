@@ -323,6 +323,31 @@ namespace ChoETL
         }
     }
 
+    public class ChoBadDataEventArgs : EventArgs
+    {
+        public long LineNo
+        {
+            get;
+            private set;
+        }
+
+        public string Line
+        {
+            get;
+            private set;
+        }
+        public bool Handled
+        {
+            get;
+            set;
+        }
+        public ChoBadDataEventArgs(long lineNo, string line)
+        {
+            Line = line;
+            LineNo = lineNo;
+        }
+    }
+
     public class ChoRecordConfigurationConstructArgs : EventArgs
     {
         public Type RecordType

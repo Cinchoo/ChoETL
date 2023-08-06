@@ -18,6 +18,22 @@ namespace ChoETL
     public class ChoDoubleConverter : IChoValueConverter
 #endif
     {
+        private NumberStyles? GetConvertTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.DoubleNumberStyle;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.DoubleNumberStyle);
+        }
+        private string GetConvertBackTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.DoubleFormat;
+
+            return parameter.GetValueAt(1, ChoTypeConverterFormatSpec.Instance.DoubleFormat);
+        }
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
@@ -26,7 +42,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.DoubleNumberStyle);
+                NumberStyles? format = GetConvertTypeFormat(parameter); //.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.DoubleNumberStyle);
                 if (format == null)
                 {
                     Double decResult = 0;
@@ -44,10 +60,13 @@ namespace ChoETL
             if (value is Double && targetType == typeof(string))
             {
                 Double convValue = (Double)value;
-                string format = ChoTypeConverterFormatSpec.Instance.DoubleFormat != null ?
-                    parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.DoubleFormat) : null;
+                //string format = ChoTypeConverterFormatSpec.Instance.DoubleFormat != null ?
+                //    parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.DoubleFormat) : null;
+                string format = GetConvertBackTypeFormat(parameter);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
+            else if (value == DBNull.Value)
+                return null;
             else
                 return value;
         }

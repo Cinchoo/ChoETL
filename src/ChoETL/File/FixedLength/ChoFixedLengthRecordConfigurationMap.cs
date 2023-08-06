@@ -120,6 +120,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthRecordFieldConfigurationMap ValueConverterBack(Func<object, object> value)
+        {
+            _config.ValueConverterBack = value;
+            return this;
+        }
+
         public ChoFixedLengthRecordFieldConfigurationMap PropertyConverter(IChoValueConverter converter)
         {
             if (_config.PropConverters.IsNullOrEmpty())

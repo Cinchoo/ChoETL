@@ -18,6 +18,22 @@ namespace ChoETL
     public class ChoCurrencyConverter : IChoValueConverter
 #endif
     {
+        private NumberStyles? GetConvertTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.CurrencyNumberStyle;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.CurrencyNumberStyle);
+        }
+        private string GetConvertBackTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.CurrencyFormat;
+
+            return parameter.GetValueAt(1, ChoTypeConverterFormatSpec.Instance.CurrencyFormat);
+        }
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
@@ -26,7 +42,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.CurrencyNumberStyle);
+                NumberStyles? format = GetConvertTypeFormat(parameter); //.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.CurrencyNumberStyle);
                 return format == null ? Double.Parse(text, culture) : Double.Parse(text, format.Value, culture);
             }
 
@@ -38,7 +54,7 @@ namespace ChoETL
             if (value is double && targetType == typeof(string))
             {
                 double convValue = (double)value;
-                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.CurrencyFormat);
+                string format = GetConvertBackTypeFormat(parameter); //.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.CurrencyFormat);
                 if (format.IsNullOrWhiteSpace())
                     format = "C";
 
@@ -54,6 +70,8 @@ namespace ChoETL
                 return convValue.ToString(format, culture); // String.Format(culture, "{0:" + format + "}", value);
 
             }
+            else if (value == DBNull.Value)
+                return null;
 
             return value;
         }

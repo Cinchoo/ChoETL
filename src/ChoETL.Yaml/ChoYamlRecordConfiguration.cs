@@ -28,6 +28,13 @@ namespace ChoETL
     {
         private readonly object _padLock = new object();
         internal readonly Dictionary<Type, Dictionary<string, ChoYamlRecordFieldConfiguration>> YamlRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoYamlRecordFieldConfiguration>>();
+        internal ChoTypeConverterFormatSpec CreateTypeConverterSpecsIfNull()
+        {
+            if (_typeConverterFormatSpec == null)
+                _typeConverterFormatSpec = new ChoTypeConverterFormatSpec();
+
+            return _typeConverterFormatSpec;
+        }
 
         private StringComparer _stringComparer = StringComparer.CurrentCultureIgnoreCase;
         public StringComparer StringComparer
@@ -204,7 +211,6 @@ namespace ChoETL
                 return YamlRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
-        public readonly dynamic Context = new ChoDynamicObject();
         private Lazy<bool> _yamlTagMapAutoRegister = null;
 
         public ChoYamlRecordConfiguration() : this(null)
@@ -379,6 +385,13 @@ namespace ChoETL
         public void MapRecordFieldsForType<T>()
         {
             MapRecordFieldsForType(typeof(T));
+        }
+
+        public ChoYamlRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
         }
 
         public void MapRecordFieldsForType(Type rt)

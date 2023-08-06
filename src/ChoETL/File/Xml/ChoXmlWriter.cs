@@ -305,7 +305,10 @@ namespace ChoETL
                         if (root != null && !root.ElementName.IsNullOrWhiteSpace())
                             nodeName = root.ElementName.Trim();
                         else
-                            nodeName = record.GetType().Name;
+                        {
+                            var t = record.GetType().GetUnderlyingType().GetItemType();
+                            nodeName = t.Name;
+                        }
 
                         if (configuration.RootName.IsNullOrWhiteSpace())
                             configuration.RootName = nodeName.ToPlural();
@@ -430,6 +433,7 @@ namespace ChoETL
 
         public ChoXmlWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }

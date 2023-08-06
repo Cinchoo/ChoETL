@@ -36,6 +36,7 @@ namespace ChoETL
             get;
             private set;
         }
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
 
         public ChoYamlRecordWriter(Type recordType, ChoYamlRecordConfiguration configuration) : base(recordType, true)
         {
@@ -127,6 +128,7 @@ namespace ChoETL
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            Configuration.ResetStates();
             _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
@@ -156,10 +158,10 @@ namespace ChoETL
                 if (Configuration.FlattenNode)
                 {
                     if (RecordType.IsDynamicType())
-                        recEnum = GetRecords(recEnum).Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, 
+                        recEnum = GetRecords(recEnum).Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator,
                             Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
                     else
-                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, 
+                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator,
                             Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
                 }
 
@@ -458,18 +460,21 @@ namespace ChoETL
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
-                    if (Configuration.IsDynamicObject)
+                    if (fieldConfig.ValueSelector == null)
                     {
-                        var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                        if (!dict.ContainsKey(kvp.Key))
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Yaml node.".FormatString(fieldConfig.FieldName));
-                    }
-                    else
-                    {
-                        if (pi == null)
+                        if (Configuration.IsDynamicObject)
                         {
-                            if (!RecordType.IsSimple())
+                            var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                            if (!dict.ContainsKey(kvp.Key))
                                 throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Yaml node.".FormatString(fieldConfig.FieldName));
+                        }
+                        else
+                        {
+                            if (pi == null)
+                            {
+                                if (!RecordType.IsSimple())
+                                    throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Yaml node.".FormatString(fieldConfig.FieldName));
+                            }
                         }
                     }
                 }
@@ -540,12 +545,24 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
-                    if (fieldConfig.ValueConverter != null)
-                        fieldValue = fieldConfig.ValueConverter(fieldValue);
-                    else if (RecordType.IsSimple())
-                        fieldValue = new List<object> { rec };
+                    if (fieldConfig.ValueSelector == null)
+                    {
+                        if (Configuration.ValueConverterBack != null)
+                            fieldValue = Configuration.ValueConverterBack(kvp.Key, fieldValue);
+                        else if (fieldConfig.ValueConverterBack != null)
+                            fieldValue = fieldConfig.ValueConverterBack(fieldValue);
+                        else if (fieldConfig.ValueConverter != null)
+                            fieldValue = fieldConfig.ValueConverter(fieldValue);
+                        else if (RecordType.IsSimple())
+                            fieldValue = new List<object> { rec };
+                        else
+                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true, config: Configuration);
+                    }
                     else
+                    {
+                        fieldValue = fieldConfig.ValueSelector(rec);
                         rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true, config: Configuration);
+                    }
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -575,9 +592,9 @@ namespace ChoETL
                         {
                             var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
-                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
                             {
@@ -588,9 +605,9 @@ namespace ChoETL
                         }
                         else if (pi != null)
                         {
-                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
                             {
@@ -673,15 +690,15 @@ namespace ChoETL
                         fieldText = NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType),
                             GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption));
                     else if (ft == typeof(DateTime) || ft == typeof(TimeSpan))
-                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string; 
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture, config: Configuration) as string;
                     else if (ft.IsEnum)
-                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string;
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture, config: Configuration) as string;
                     else if (ft == typeof(ChoCurrency))
                         fieldText = fieldValue.ToString();
                     else if (ft == typeof(bool))
-                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string; 
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture, config: Configuration) as string;
                     else if (ft.IsNumeric())
-                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string;
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture, config: Configuration) as string;
                     else
                         isSimple = false;
                 }

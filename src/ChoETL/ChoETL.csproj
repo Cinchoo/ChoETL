@@ -129,6 +129,7 @@
     <Compile Include="Common\ExtensionMethods\Linq\ChoLeftJoin.cs" />
     <Compile Include="Common\IChoConvertible.cs" />
     <Compile Include="Common\Xml\ChoXmlConvert.cs" />
+    <Compile Include="Exception\ChoBadDataException.cs" />
     <Compile Include="File\CSV\ChoCSVLiteWriter.cs" />
     <Compile Include="File\CSV\ChoCSVLiteReader.cs" />
     <Compile Include="File\CSV\ChoCSVRecordFieldConfigurationMap.cs" />
@@ -276,7 +277,7 @@
     <Compile Include="Common\ChoWin32Exception.cs" />
     <Compile Include="Common\Converters\ChoCurrencyConverter.cs" />
     <Compile Include="Common\Converters\ChoDateTimeConverter.cs" />
-    <Compile Include="Common\Converters\ChoNumericValidator.cs" />
+    <Compile Include="Common\Converters\ChoNumericConverter.cs" />
     <Compile Include="Common\Converters\ChoSeqNoGeneratorConvertor.cs" />
     <Compile Include="Common\Converters\ChoUpperCaseConverter.cs" />
     <Compile Include="Common\Converters\ChoCustomExprConverter.cs" />

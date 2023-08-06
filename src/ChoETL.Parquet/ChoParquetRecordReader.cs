@@ -1,4 +1,5 @@
-﻿using Parquet;
+﻿using Newtonsoft.Json;
+using Parquet;
 using Parquet.Data;
 using System;
 using System.Collections;
@@ -50,6 +51,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            Configuration.ResetStates();
             if (source == null)
                 yield break;
 
@@ -166,10 +168,17 @@ namespace ChoETL
                     else
                         data.Add(cn, null);
                 }
-                yield return data;
+                yield return ConvertToNestedObjectIfApplicable(data);
 
                 index++;
             }
+        }
+
+        private IDictionary<string, object> ConvertToNestedObjectIfApplicable(IDictionary<string, object> value)
+        {
+            return Configuration.UseNestedKeyFormat ? value.ConvertToNestedObject(Configuration.NestedKeySeparator != null ? Configuration.NestedKeySeparator.Value : '/',
+                Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, true) :
+                value;
         }
 
         private IEnumerable<object> AsEnumerable(IEnumerable<DataColumn[]> dataColumns, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
@@ -221,7 +230,7 @@ namespace ChoETL
                             Configuration.Validate(pair);
                         var dict = Configuration.ParquetRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                         //if (Configuration.MaxScanRows == 0)
-                            RaiseMembersDiscovered(dict);
+                        RaiseMembersDiscovered(dict);
                         Configuration.UpdateFieldTypesIfAny(dict);
                         _configCheckDone = true;
                     }
@@ -256,7 +265,7 @@ namespace ChoETL
                                 RaiseMembersDiscovered(dict);
 
                                 foreach (object rec1 in buffer)
-                                    yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+                                    yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec));
 
                                 buffer.Clear();
                             }
@@ -299,7 +308,7 @@ namespace ChoETL
                     RaiseMembersDiscovered(dict);
 
                     foreach (object rec1 in buffer)
-                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec));
                 }
             }
 
@@ -338,14 +347,14 @@ namespace ChoETL
                     Configuration.Validate(null);
                 }
 
-                rec = recType.IsDynamicType() ? new ChoDynamicObject() 
+                rec = recType.IsDynamicType() ? new ChoDynamicObject()
                 {
                     ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                 } : ChoActivator.CreateInstance(recType);
                 RecordType = recType;
             }
             else if (Configuration.IsDynamicObject)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() 
+                rec = Configuration.IsDynamicObject ? new ChoDynamicObject()
                 {
                     ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                 } : ChoActivator.CreateInstance(RecordType);
@@ -430,6 +439,54 @@ namespace ChoETL
         ChoParquetRecordFieldConfiguration fieldConfig = null;
         PropertyInfo pi = null;
 
+        private bool IsInNeedOfCustomFormatter(Type type)
+        {
+            if (type == null)
+                return false;
+
+            Func<Type, Type> mapParquetType = Configuration.MapParquetType;
+            if (mapParquetType != null)
+            {
+                type = mapParquetType(type);
+            }
+
+            var underlytingType = type.GetUnderlyingType();
+            if (underlytingType == null)
+                return false;
+
+            if (underlytingType == typeof(DateTime))
+                return false;
+            else if (underlytingType == typeof(TimeSpan))
+                return false;
+            else if (underlytingType == typeof(ChoCurrency))
+                return false;
+            else if (underlytingType == typeof(Guid))
+                return false;
+            else if (underlytingType.IsEnum)
+                return false;
+            else if (type == typeof(byte[]))
+                return false;
+            else if (type == typeof(DateTimeOffset))
+                return false;
+            else if (underlytingType.IsSimpleSpecial())
+                return false;
+            else if (underlytingType == typeof(ChoDynamicObject))
+                return false;
+            else
+                return true;
+        }
+
+        private object CustomDeserialize(string value, Type type)
+        {
+            if (value == null)
+                return null;
+
+            if (Configuration.CustomDeserializer == null)
+                return JsonConvert.DeserializeObject(value, type, Configuration.JsonSerializerSettings);
+            else
+                return Configuration.CustomDeserializer(value, type);
+        }
+
         private bool FillRecord(ref object rec, Tuple<long, IDictionary<string, object>> pair)
         {
             long lineNo;
@@ -499,12 +556,17 @@ namespace ChoETL
                     }
 
                     object v1 = node;
-                    if (fieldConfig.CustomSerializer != null)
-                        fieldValue = fieldConfig.CustomSerializer(v1);
-                    else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref v1))
+
+                    if (Configuration.IsDynamicObject && fieldConfig.FieldType != null && IsInNeedOfCustomFormatter(fieldConfig.FieldType))
+                    {
+                        fieldValue = CustomDeserialize(fieldValue.ToNString(), fieldConfig.FieldType);
+                    }
+                    else if (fieldConfig.CustomSerializer != null)
+                        fieldValue = fieldConfig.CustomSerializer(fieldValue);
+                    else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref fieldValue))
                         fieldValue = v1;
                     else if (fieldConfig.PropCustomSerializer != null)
-                        fieldValue = ChoCustomSerializer.Deserialize(v1, fieldConfig.FieldType, fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name);
+                        fieldValue = ChoCustomSerializer.Deserialize(fieldValue, fieldConfig.FieldType, fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name);
                     else
                     {
                         if (!node.ContainsKey(kvp.Value.FieldName))
@@ -535,7 +597,7 @@ namespace ChoETL
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                             dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
@@ -562,7 +624,7 @@ namespace ChoETL
                                 rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                         }
                         else if (RecordType.IsSimple())
-                            rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
+                            rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture, config: Configuration);
                         else
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 
@@ -598,9 +660,9 @@ namespace ChoETL
                         {
                             var dict = rec as IDictionary<string, Object>;
 
-                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, Configuration))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (ex is ValidationException)
                                 throw;
@@ -609,9 +671,9 @@ namespace ChoETL
                         }
                         else if (pi != null)
                         {
-                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (ex is ValidationException)
                                 throw;
@@ -647,7 +709,7 @@ namespace ChoETL
                                         {
                                             var dict = rec as IDictionary<string, Object>;
 
-                                            dict.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                            dict.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                         }
                                         else
                                         {

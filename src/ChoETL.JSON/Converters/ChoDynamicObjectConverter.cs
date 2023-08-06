@@ -16,7 +16,7 @@ namespace ChoETL
     { 
         ChoIgnoreFieldValueMode? IgnoreFieldValueMode { get; set; }
         HashSet<string> IgnoredFields { get; set; }
-        object[] GetConvertersForType(Type fieldType);
+        object[] GetConvertersForType(Type fieldType, object value);
     }
 
     public class ChoDynamicObjectConverter : JsonConverter, IChoJSONConverter
@@ -221,7 +221,7 @@ namespace ChoETL
                             var config = Context?.Configuration as IChoDynamicObjectRecordConfiguration;
                             if (config != null)
                             {
-                                convs = config.GetConvertersForType(itemType);
+                                convs = config.GetConvertersForType(itemType, v);
                             }
 
                             v = ChoConvert.ConvertFrom(v, typeof(object), null, convs);

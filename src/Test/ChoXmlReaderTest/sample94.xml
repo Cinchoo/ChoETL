@@ -12,14 +12,14 @@
   <hugeArray>
     <!-- This array has around 12 millions of entries. Here is my problem. -->
     <item>
-      <direction> </direction>
-      <companyId> </companyId>
-      <nameId> </nameId>
+      <direction>d1</direction>
+      <companyId>c1</companyId>
+      <nameId>n1</nameId>
     </item>
     <item>
-      <direction> </direction>
-      <companyId> </companyId>
-      <nameId> </nameId>
+      <direction>d2</direction>
+      <companyId>c2</companyId>
+      <nameId>n2</nameId>
     </item>
   </hugeArray>
 </root>

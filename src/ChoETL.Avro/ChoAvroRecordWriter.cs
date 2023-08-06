@@ -34,6 +34,7 @@ namespace ChoETL
             get;
             private set;
         }
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
 
         public ChoAvroRecordWriter(Type recordType, ChoAvroRecordConfiguration configuration) : base(recordType)
         {
@@ -196,6 +197,7 @@ namespace ChoETL
 
         public IEnumerable<T> WriteTo<T>(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            Configuration.ResetStates();
             Configuration.Init();
 
             if (records == null) yield break;

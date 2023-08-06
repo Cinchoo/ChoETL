@@ -1784,6 +1784,7 @@ Xytrex Co.,Industrial Cleaning Supply Company,ABC15797531
                 //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
                 //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
                 .Index(o => o.Courses, 0, -1)
+                .NestedColumnSeparator('.')
                 .WithMaxScanRows(2)
                 )
             {
@@ -2796,7 +2797,7 @@ ca6f8387-bcf0-45ce-85d8-d609dd5a96bd,,,0,10,1";
             using (var w = new ChoCSVWriter(csvOut)
                 .WithFirstLineHeader()
                 .ThrowAndStopOnMissingField(false)
-                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .ErrorMode(ChoErrorMode.ThrowAndStop)
                 )
             {
                 w.WithField("a");
@@ -2849,7 +2850,7 @@ ca6f8387-bcf0-45ce-85d8-d609dd5a96bd,,,0,10,1";
             using (var w = new ChoCSVWriter<ScientificNotationdecimal>(csvOut)
                 .WithFirstLineHeader()
                 .ThrowAndStopOnMissingField(false)
-                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .ErrorMode(ChoErrorMode.ThrowAndStop)
                 )
             {
                 //w.WithField(f => f.a);
@@ -2876,8 +2877,8 @@ ca6f8387-bcf0-45ce-85d8-d609dd5a96bd,,,0,10,1";
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
-                //w.WithField(f => f.a);
-                //w.WithField(f => f.b);
+                w.WithField(f => f.a);
+                w.WithField(f => f.b);
                 w.WithField(f => f.RN, () => w.RecordNumber);
                 w.WithField(f => f.TimeStamp, () => new DateTime(2023, 1, 1));
 

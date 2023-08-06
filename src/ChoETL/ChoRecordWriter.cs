@@ -10,6 +10,8 @@ namespace ChoETL
 {
     public abstract class ChoRecordWriter
     {
+        public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+      
         public Type RecordType
         {
             get;
@@ -17,6 +19,11 @@ namespace ChoETL
         }
         public TraceSwitch TraceSwitch;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+
+        public abstract ChoRecordConfiguration RecordConfiguration
+        {
+            get;
+        }
 
         static ChoRecordWriter()
         {
@@ -46,6 +53,46 @@ namespace ChoETL
             var ea = new ChoRowsWrittenEventArgs(rowsWritten);
             rowsWrittenEvent(this, ea);
             return ea.Abort;
+        }
+
+        protected void RaiseMembersDiscovered(IDictionary<string, Type> fieldTypes)
+        {
+            EventHandler<ChoEventArgs<IDictionary<string, Type>>> membersDiscovered = MembersDiscovered;
+            if (membersDiscovered != null)
+            {
+                var ea = new ChoEventArgs<IDictionary<string, Type>>(fieldTypes);
+                membersDiscovered(this, ea);
+            }
+            InitializeRecordFieldConfiguration(RecordConfiguration);
+        }
+
+        protected void InitializeRecordConfiguration(ChoRecordConfiguration configuration)
+        {
+            if (configuration == null || configuration.IsDynamicObject || configuration.RecordType == null)
+                return;
+
+            if (!typeof(IChoNotifyRecordConfigurable).IsAssignableFrom(configuration.RecordMapType))
+                return;
+
+            var obj = ChoActivator.CreateInstance(configuration.RecordMapType) as IChoNotifyRecordConfigurable;
+            if (obj != null)
+                obj.RecondConfigure(configuration);
+        }
+
+        protected void InitializeRecordFieldConfiguration(ChoRecordConfiguration configuration)
+        {
+            if (configuration == null/* || configuration.IsDynamicObject || configuration.RecordType == null*/)
+                return;
+
+            if (!typeof(IChoNotifyRecordFieldConfigurable).IsAssignableFrom(configuration.RecordMapType))
+                return;
+
+            var obj = ChoActivator.CreateInstance(configuration.RecordMapType) as IChoNotifyRecordFieldConfigurable;
+            if (obj == null)
+                return;
+
+            foreach (var fc in configuration.RecordFieldConfigurations)
+                obj.RecondFieldConfigure(fc);
         }
 
         public abstract IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null);

@@ -1,0 +1,218 @@
+﻿[
+  {
+    "Id": 1,
+    "Name": "test",
+    "Bar": [
+      {
+        "Id": 1,
+        "Name": "BarName_1_1",
+        "Cities": [
+          "malaga",
+          "barcelona"
+        ],
+        "Baz": {
+          "Id": 1,
+          "Name": "Baz_1_1",
+          "Cities": [
+            "tampere",
+            "helsinki"
+          ],
+          "Cars": {
+            "volvo": "s40",
+            "audi": "a4",
+            "mercedes1": null,
+            "toyota1": null
+          }
+        }
+      },
+      {
+        "Id": 2,
+        "Name": "BarName_1_2",
+        "Cities": [
+          "madrid",
+          "fuerteventura"
+        ],
+        "Baz": {
+          "Id": 2,
+          "Name": "Baz_1_2",
+          "Cities": [
+            "berliini"
+          ],
+          "Cars": {
+            "mercedes": "c",
+            "toyota": "landrover",
+            "mercedes2": null,
+            "toyota2": null
+          }
+        }
+      },
+      {
+        "Id": 3,
+        "Name": "BarName_1_3",
+        "Cities": [
+          "madrid",
+          "fuerteventura"
+        ],
+        "Baz": {
+          "Id": 2,
+          "Name": "Baz_1_3",
+          "Cities": [
+            "berliini3"
+          ],
+          "Cars": {
+            "mercedes3": "c3",
+            "toyota3": "landrover3"
+          }
+        }
+      }
+    ],
+    "Values": [
+      "bar",
+      "baz"
+    ]
+  },
+  {
+    "Id": 2,
+    "Name": "test2",
+    "Bar": [
+      {
+        "Id": 1,
+        "Name": "BarName_2_1",
+        "Cities": [
+          "malaga",
+          "barcelona"
+        ],
+        "Baz": {
+          "Id": 1,
+          "Name": "Baz_2_1",
+          "Cities": [
+            "tampere",
+            "helsinki"
+          ],
+          "Cars": {
+            "volvo": "s40",
+            "audi": "a4",
+            "mercedes1": null,
+            "toyota1": null
+          }
+        }
+      },
+      {
+        "Id": 2,
+        "Name": "BarName_2_2",
+        "Cities": [
+          "madrid",
+          "fuerteventura"
+        ],
+        "Baz": {
+          "Id": 2,
+          "Name": "Baz_2_2",
+          "Cities": [
+            "berliini"
+          ],
+          "Cars": {
+            "mercedes": "c",
+            "toyota": "landrover",
+            "mercedes2": null,
+            "toyota2": null
+          }
+        }
+      },
+      {
+        "Id": 3,
+        "Name": "BarName_2_3",
+        "Cities": [
+          "madrid",
+          "fuerteventura"
+        ],
+        "Baz": {
+          "Id": 2,
+          "Name": "Baz_2_3",
+          "Cities": [
+            "berliini3"
+          ],
+          "Cars": {
+            "mercedes3": "c3",
+            "toyota3": "landrover3"
+          }
+        }
+      }
+    ],
+    "Values": [
+      "bar",
+      "baz"
+    ]
+  },
+  {
+    "Id": 3,
+    "Name": "test2",
+    "Bar": [
+      {
+        "Id": 1,
+        "Name": "BarName_3_1",
+        "Cities": [
+          "malaga",
+          "barcelona"
+        ],
+        "Baz": {
+          "Id": 1,
+          "Name": "Baz_3_1",
+          "Cities": [
+            "berlin1",
+            null
+          ],
+          "Cars": {
+            "volvo": null,
+            "audi": null,
+            "mercedes1": "c1",
+            "toyota1": "landrover1"
+          }
+        }
+      },
+      {
+        "Id": 2,
+        "Name": "BarName_3_2",
+        "Cities": [
+          "madrid",
+          "fuerteventura"
+        ],
+        "Baz": {
+          "Id": 2,
+          "Name": "Baz_3_2",
+          "Cities": [
+            "berlin2"
+          ],
+          "Cars": {
+            "mercedes": null,
+            "toyota": null,
+            "mercedes2": "c2",
+            "toyota2": "landrover2"
+          }
+        }
+      },
+      {
+        "Id": 0,
+        "Name": null,
+        "Cities": [
+          null,
+          null
+        ],
+        "Baz": {
+          "Id": 0,
+          "Name": null,
+          "Cities": [
+            null
+          ],
+          "Cars": {
+            "mercedes3": null,
+            "toyota3": null
+          }
+        }
+      }
+    ],
+    "Values": [
+      "bar",
+      "baz"
+    ]
+  }
+]

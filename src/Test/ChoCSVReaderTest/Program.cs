@@ -25,6 +25,9 @@ using UnitTestHelper;
 using System.Runtime.Serialization;
 using ChoCSVReaderTest.Test;
 using System.Security.Cryptography;
+using NUnit.Framework.Constraints;
+using System.Windows.Navigation;
+using System.Configuration;
 #if !NETSTANDARD2_0
 using System.Windows.Data;
 #endif
@@ -880,10 +883,13 @@ namespace ChoCSVReaderTest
                 })
             )
             {
-                using (var csv = new ChoCSVReader(new FileStream(FileNameNestedCSV, FileMode.OpenOrCreate, FileAccess.ReadWrite)).WithFirstLineHeader()
+                using (var csv = new ChoCSVReader(FileNameNestedCSV).WithFirstLineHeader()
                     .Configure(c => c.NestedColumnSeparator = '/')
                     )
-                    json.Write(csv.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => String.Compare(e1.description, e2.description))));
+                {
+                    var recs = csv.ToArray();
+                    json.Write(recs.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => String.Compare(e1.description, e2.description))));
+                }
             }
 
             string actual = new StreamReader(FileNameNestedJSON).ReadToEnd();
@@ -998,12 +1004,12 @@ namespace ChoCSVReaderTest
         [Test]
         public static void NestedQuotes()
         {
-            List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
-                new ChoDynamicObject {{ "Column1", "Name1" }, { "Column2", "A test, which fails all the time" }, },
-                new ChoDynamicObject {{ "Column1", "Name2" }, { "Column2", "A test, which fails all the time" }, },
-                new ChoDynamicObject {{ "Column1", "Name3" }, { "Column2", "A test, which fails all the time" }, }
-            };
-            List<object> actual = new List<object>();
+            //List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
+            //    new ChoDynamicObject {{ "Column1", "Name1" }, { "Column2", "A test, which fails all the time" }, },
+            //    new ChoDynamicObject {{ "Column1", "Name2" }, { "Column2", "A test, which fails all the time" }, },
+            //    new ChoDynamicObject {{ "Column1", "Name3" }, { "Column2", "A test, which fails all the time" }, }
+            //};
+            //List<object> actual = new List<object>();
 
             //using (var parser = new ChoCSVReader("NestedQuotes.csv")
             //    .WithFields("name", "desc")
@@ -1013,14 +1019,29 @@ namespace ChoCSVReaderTest
             //        Console.WriteLine(x.name + "-" + x.desc);
             //}
 
+            string expected = @"[
+  {
+    ""Column1"": ""Name1"",
+    ""Column2"": ""A test, which \""fails\"" all the time""
+  },
+  {
+    ""Column1"": ""Name2"",
+    ""Column2"": ""A test, which \""fails\"" all the time""
+  },
+  {
+    ""Column1"": ""Name3"",
+    ""Column2"": ""A test, which \""fails\"" all the time""
+  }
+]";
             using (var parser = new ChoCSVReader(FileNameNestedQuotesCSV)
                 .MayHaveQuotedFields())
             {
-                foreach (dynamic x in parser)
-                    actual.Add(x);
+                //foreach (dynamic x in parser)
+                //    actual.Add(x);
+                var recs = parser.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
-
-            CollectionAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -1079,7 +1100,8 @@ namespace ChoCSVReaderTest
         {
             string expected = "Id, Name";
             object actual;
-            using (var p = new ChoCSVReader(FileNameEmpCSV).WithFirstLineHeader())
+            using (var p = new ChoCSVReader(FileNameEmpCSV).WithFirstLineHeader()
+                .MayHaveQuotedFields())
             {
                 p.Read();
                 actual = String.Join(", ", p.Context.Headers);
@@ -1308,12 +1330,43 @@ namespace ChoCSVReaderTest
                 .MayHaveQuotedFields()
                 .Configure(c => c.AllowReturnPartialLoadedRecs = false)
                 .Setup(s => s.RecordLoadError += (o, e) => e.Handled = true)
+                .ThrowAndStopOnBadData(false)
                 )
             {
                 actual.Add(String.Format("{0}", (string)rec["CPF/CNPJ"]));
                 Console.WriteLine(String.Format("{0}", (string)rec["CPF/CNPJ"]));
             }
             CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void HandleBadRecords()
+        {
+            string expected = @"[
+  "","",
+  "",""
+]";
+
+            List<string> badCSVLines = new List<string>();
+            foreach (dynamic rec in new ChoCSVReader(FileNamePontosCSV).WithHeaderLineAt(9)
+                .Configure(c => c.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader = true)
+                .Configure(c => c.CultureName = "es-ES")
+                .MayHaveQuotedFields()
+                .Configure(c => c.AllowReturnPartialLoadedRecs = false)
+                .Setup(s => s.RecordLoadError += (o, e) => e.Handled = true)
+                .ThrowAndStopOnBadData(true)
+                .Setup(s => s.BadDataFound += (o, e) =>
+                {
+                    $"Bad Line: {e.Line}".Print();
+                    badCSVLines.Add(e.Line);
+                    e.Handled = true;
+                })
+                )
+            {
+            }
+
+            var actual = JsonConvert.SerializeObject(badCSVLines, Formatting.Indented);
+            Assert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -1442,8 +1495,8 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
                 { "Column3", "2018-02-16 15:41:39" },
                 { "Column4", "152" },
                 { "Column5", "36" },
-                { "Column6", "{A:{ a1:A1},B:{ b1:B1}}" },
-                { "Column7", @"{X:"",Y:ya}" },
+                { "Column6", @"{""A"":{ ""a1"":""A1""},""B"":{ ""b1"":""B1""}}" },
+                { "Column7", @"{""X"":"",""Y"":""ya""}" },
                 { "Column8", "20" }
             };
             string csv = @"4.1,AB,2018-02-16 15:41:39,152,36,""{""A"":{ ""a1"":""A1""},""B"":{ ""b1"":""B1""}}"",""{""X"":"""",""Y"":""ya""}"",20";
@@ -3005,7 +3058,7 @@ Value 1,""Value2 a, Value 2b"",""Value3 a, Value 3b"",Value 4,Value 5";
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
                 new ChoDynamicObject {{ "AccountOwnerEmail", "v-dakash@catalysis.com" },
-                { "PartnerName", @"HEY? Tester" },
+                { "PartnerName", @"""HEY""? Tester" },
                 { "EnrollmentID", "12345789" },
                 { "Customer", @"Catalysis" },
                 { "LicensingProgram", "LLC." },
@@ -3017,7 +3070,7 @@ Value 1,""Value2 a, Value 2b"",""Value3 a, Value 3b"",Value 4,Value 5";
             List<object> actual = new List<object>();
 
             string csv = @"AccountOwnerEmail,  PartnerName, EnrollmentID, Customer, LicensingProgram, Country, Culture, Issue
-v-dakash@catalysis.com,""HEY""? Tester, 12345789,""Catalysis"", LLC., Enterprise 6 TEST, etc,etc ,etc";
+v-dakash@catalysis.com,""HEY""? Tester, 12345789,""Catalysis"", LLC., Enterprise 6 TEST, etc,etc";
 
             foreach (dynamic rec in ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
@@ -3447,6 +3500,7 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
         [Test]
         public static void ZipCodeBcpTest()
         {
+            Assert.Ignore();
             string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
 
             using (var r = new ChoCSVReader(FileNameZipCodesExCSV)
@@ -3515,11 +3569,13 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
         [Test]
         public static void EscapeQuoteTest()
         {
-            List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
-                new ChoDynamicObject {{ "Field1", "Line 3 Field 1" }, { "Field2", null }, { "Field3" , "Line 3 Field 3\r\nxLine 4 Field 1\t\"\tLine 4 Field 3\"" } }
-            };
-            List<object> actual = new List<object>();
-
+            string expected = @"[
+  {
+    ""Field1"": ""Line 3 Field 1"",
+    ""Field2"": null,
+    ""Field3"": ""Line 3 Field 3\r\nx\""Line 4 Field 1\""\t\""\""\t\""Line 4 Field 3""
+  }
+]";
             using (var reader = new ChoCSVReader(FileNameQuoteEscapeCSV)
                 .WithDelimiter("\t")
                 .WithFirstLineHeader()
@@ -3539,10 +3595,10 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
                 //{
                 //    Console.WriteLine($"{dataReader[0]}, {dataReader[1]}, {dataReader[2]}");
                 //}
-
-                actual = reader.ToList();
+                var recs = reader.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
-            CollectionAssert.AreEqual(expected, actual);
         }
 
         public class FooBar
@@ -3621,41 +3677,42 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
                 .Configure(c => c.NestedColumnSeparator = '_'))
             {
                 using (var w = new ChoCSVWriter<FooBar>(csvOut)
-             .WithFirstLineHeader()
-             .WithField(r => r.Bars, headerSelector: () => "BarID_1,BarProperty1_1,BarProperty2_1,BarProperty3_1,BarID_2,BarProperty1_2,BarProperty2_2,BarProperty3_2",
-                valueSelector: (o) =>
-                {
-                    var r = (FooBar)o;
-                    return $"{r.Bars[0].BarID},{r.Bars[0].BarProperty1},{r.Bars[0].BarProperty2},{r.Bars[0].BarProperty3},{r.Bars[1].BarID},{r.Bars[1].BarProperty1},{r.Bars[1].BarProperty2},{r.Bars[1].BarProperty3}";
-                })
+                     .WithFirstLineHeader()
+                     .WithField(r => r.Bars, headerSelector: () => "BarID_1,BarProperty1_1,BarProperty2_1,BarProperty3_1,BarID_2,BarProperty1_2,BarProperty2_2,BarProperty3_2",
+                        valueSelector: (o) =>
+                        {
+                            var r = (FooBar)o;
+                            return $"{r.Bars[0].BarID},{r.Bars[0].BarProperty1},{r.Bars[0].BarProperty2},{r.Bars[0].BarProperty3},{r.Bars[1].BarID},{r.Bars[1].BarProperty1},{r.Bars[1].BarProperty2},{r.Bars[1].BarProperty3}";
+                        })
                 )
                 {
-                    foreach (var rec in p.Select(r =>
-                {
-                    return new FooBar
+                    var recs = p.ToArray();
+                    foreach (var rec in recs.Select(r =>
                     {
-                        FooID = ChoUtility.CastTo<int>(r.FooID),
-                        FooProperty1 = ChoUtility.CastTo<string>(r.FooProperty1),
-                        Bars = new List<Bar>
+                        return new FooBar
                         {
-                            new Bar
+                            FooID = ChoUtility.CastTo<int>(r.FooID),
+                            FooProperty1 = ChoUtility.CastTo<string>(r.FooProperty1),
+                            Bars = new List<Bar>
                             {
-                                BarID = ChoUtility.CastTo<int>(r.BarID[0]),
-                                BarProperty1 = ChoUtility.CastTo<string>(r.BarProperty1[0]),
-                                BarProperty2 = ChoUtility.CastTo<string>(r.BarProperty2[0]),
-                                BarProperty3 = ChoUtility.CastTo<string>(r.BarProperty3[0]),
-                            },
-                             new Bar
-                            {
-                                BarID = ChoUtility.CastTo<int>(r.BarID[1]),
-                                BarProperty1 = ChoUtility.CastTo<string>(r.BarProperty1[1]),
-                                BarProperty2 = ChoUtility.CastTo<string>(r.BarProperty2[1]),
-                                BarProperty3 = ChoUtility.CastTo<string>(r.BarProperty3[1]),
-                            },
-                       }
-                    };
+                                new Bar
+                                {
+                                    BarID = ChoUtility.CastTo<int>(r.BarID[0]),
+                                    BarProperty1 = ChoUtility.CastTo<string>(r.BarProperty1[0]),
+                                    BarProperty2 = ChoUtility.CastTo<string>(r.BarProperty2[0]),
+                                    BarProperty3 = ChoUtility.CastTo<string>(r.BarProperty3[0]),
+                                },
+                                 new Bar
+                                {
+                                    BarID = ChoUtility.CastTo<int>(r.BarID[1]),
+                                    BarProperty1 = ChoUtility.CastTo<string>(r.BarProperty1[1]),
+                                    BarProperty2 = ChoUtility.CastTo<string>(r.BarProperty2[1]),
+                                    BarProperty3 = ChoUtility.CastTo<string>(r.BarProperty3[1]),
+                                },
+                           }
+                        };
 
-                }))
+                    }))
                     {
                         //Console.WriteLine(rec.Dump());
                         actualFromReader.Add(rec);
@@ -4604,6 +4661,7 @@ Mark, Hartigan";
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
                     .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.ArrayValueNamePrefix = String.Empty)
                     )
                     w.Write(r);
             }
@@ -4998,7 +5056,7 @@ Orange,Citrus x sinensis,Brazil,United States,India,11.75g,0.12g,0.94g";
   {
     ""Column1"": ""1"",
     ""Column2"": ""1/2/2010"",
-    ""Column3"": ""The sample(adasdad) asdada"",
+    ""Column3"": ""The sample(\""adasdad\"") asdada"",
     ""Column4"": ""I was pooping in the door \""Stinky\"", so I'll be damn"",
     ""Column5"": ""AK""
   }
@@ -5078,7 +5136,11 @@ Orange,Citrus x sinensis,Brazil,United States,India,11.75g,0.12g,0.94g";
             {
                 //foreach (var rec in p)
                 //    Console.WriteLine(rec.Dump());
-                var actual = JsonConvert.SerializeObject(p, Formatting.Indented);
+                var recs = p.ToArray();
+
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
                 Assert.AreEqual(expected, actual);
             }
         }
@@ -6647,11 +6709,12 @@ Debug,RollingFile,Serilog.Formatting.Json.JsonFormatter, Serilog,C:\Logs\logConf
 
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
+                .Configure(c => c.StateInitializer = cf =>
+                {
+                    cf.Context.IsCSVEmpty = true;
+                })
                 )
             {
-                //Initialize IsCSVEmpty to true
-                r.Context.IsCSVEmpty = true;
-
                 //Subscribe to before record event
                 r.BeforeRecordLoad += (o, e) =>
                 {
@@ -7555,7 +7618,7 @@ A, B, C";
         public static void BackslashTest()
         {
             string csv = @"column1,column2,column3
-Row1Column0,""Row1\Column2\"",Row1Column3
+Row1Column0,""Row1\Column2"",Row1Column3
 Row2Column0,""Row2
 Column2"",Row2Column3
 Row3Column0,Row3Column2,Row3Column3";
@@ -7563,7 +7626,7 @@ Row3Column0,Row3Column2,Row3Column3";
             string expected = @"[
   {
     ""column1"": ""Row1Column0"",
-    ""column2"": ""Row1\\Column2\\"",
+    ""column2"": ""Row1\\Column2"",
     ""column3"": ""Row1Column3""
   },
   {
@@ -7602,6 +7665,9 @@ Row3Column0,Row3Column2,Row3Column3";
         {
             public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
             {
+                if (targetType != typeof(bool))
+                    return value;
+
                 if (value is string)
                 {
                     string txt = value as string;
@@ -7731,7 +7797,7 @@ Mrs,24.3,N,100247,CUXXX,email@gmail.com,User,Test,Test User,17/09/1957,64,DAILIE
                 .WithMaxScanRows(2)
                 .Configure(c => c.RegisterTypeConverterForType<Boolean>(new ChoBooleanCustomConverter()))
                 .TypeConverterFormatSpec(tf => tf.DateTimeFormat = "dd/MM/yyyy")
-                .Configure(c => c.FieldTypeAssessor = new ChoFieldTypeAssessor((t, fs, ci) =>
+                .Configure(c => c.FieldTypeAssessor = new ChoFieldTypeAssessor((k, t, fs, ci) =>
                 {
                     if (t.ToNString().Length == 1 && (t.ToNString() == "Y" || t.ToNString() == "N"))
                     {
@@ -8445,6 +8511,7 @@ PREPAID US, , US24, WOLONG US LRD, , , , JEMA MOTORS AND AUTOMATION,10827 ELGAR 
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
                 .ConfigureHeader(c => c.IgnoreColumnsWithEmptyHeader = true)
+                .ThrowAndStopOnBadData(false)
                 )
             {
                 //using (var w = new ChoJSONWriter(Console.Out))
@@ -8550,9 +8617,577 @@ CMMV090RIQU A    HZO,21416,CAN-AM,MAVERICK,MAVERICK X RS SAS TURBO RR,2022,,,""M
             public string VehicleType { get; set; }
         }
 
+        public class Sequence
+        {
+            public int SequenceId { get; set; }
+            public int NextId { get; set; }
+        }
+
+        [Test]
+        public void ReadAndWriteDictionary()
+        {
+            string expected = @"Key,Value.SequenceId,Value.NextId
+1,1,2
+2,2,3";
+            var data = new Dictionary<int, Sequence>()
+            {
+                { 1, new Sequence { SequenceId = 1, NextId = 2} },
+                { 2, new Sequence { SequenceId = 2, NextId = 3} },
+            };
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader())
+            {
+                w.Write(data);
+            }
+
+            csv.Print();
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
+
+            string expected1 = @"{
+  ""1"": {
+    ""SequenceId"": 1,
+    ""NextId"": 2
+  },
+  ""2"": {
+    ""SequenceId"": 2,
+    ""NextId"": 3
+  }
+}";
+            using (var r = ChoCSVReader.LoadText(actual)
+                .WithFirstLineHeader())
+            {
+                var recs = r.ToArray();
+                var x = recs.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToObject<Sequence>());
+                var actual1 = JsonConvert.SerializeObject(x, Formatting.Indented);
+                //actual1.Print();
+
+                Assert.AreEqual(expected1, actual1);
+            }
+        }
+
+        public class BehaviouralData
+        {
+            public float ActionZ { get; set; } = 1.0f;
+            public float ActionX { get; set; } = 2.0f;
+            public int TargetBallAgentHashCode { get; set; } = 42;
+            public Vector3Ex TargetBallLocalPosition { get; set; } = new Vector3(1, 2, 3);
+            public bool CollectBehaviouralData { get; set; } = true;
+            public DateTime ActionTime { get; set; } = new DateTime(2023, 06, 10);
+            public DateTime Time { get; set; } = new DateTime(2023, 06, 10, 11, 30, 12);
+        }
+
+        public class Vector3Ex
+        {
+            [DisplayName("x")]
+            public float x => _value.x;
+            [DisplayName("y")]
+            public float y => _value.y;
+            [DisplayName("z")]
+            public float z => _value.z;
+
+            private Vector3 _value;
+
+            public Vector3Ex(Vector3 value)
+            {
+                _value = value;
+            }
+
+            public static implicit operator Vector3(Vector3Ex s) => s._value;
+            public static implicit operator Vector3Ex(Vector3 s) => new Vector3Ex(s);
+        }
+
+        [ChoMetadataRefType(typeof(Vector3))]
+        //[ChoCSVRecordObject(ObjectValidationMode = ChoObjectValidationMode.ObjectLevel, ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
+        public class Vector2Metadata
+        {
+            public float x { get; set; }
+            public float y;
+            //public float Y { get { return y; } }
+        }
+
+        [Test]
+        public static void WriteFieldsFromExteenalClass()
+        {
+            BehaviouralData[] data = new[] { new BehaviouralData { }, new BehaviouralData { }, new BehaviouralData { } };
+
+            string expected = @"ActionZ,ActionX,TargetBallAgentHashCode,x,y,z,CollectBehaviouralData,ActionTime,Time
+1,2,42,1,2,3,True,6/10/2023,6/10/2023
+1,2,42,1,2,3,True,6/10/2023,6/10/2023
+1,2,42,1,2,3,True,6/10/2023,6/10/2023";
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter<BehaviouralData>(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(data);
+            }
+
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+
+        public class WorkerModel
+        {
+            public string VoterId { get; set; }
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+            public string Email { get; set; }
+
+            public PhoneNumberModel PhoneNumber { get; set; }
+        }
+
+        public class PhoneNumberModel
+        {
+            public string AreaCode { get; set; }
+            public string Prefix { get; set; }
+            public string LineNumber { get; set; }
+
+            public static implicit operator PhoneNumberModel(string s) => new PhoneNumberModel
+            {
+                AreaCode = s.Split('-')[0],
+                Prefix = s.Split('-')[1],
+                LineNumber = s.Split('-')[2]
+            };
+
+            public override string ToString()
+            {
+                return $"{AreaCode}-{Prefix}-{LineNumber}";
+            }
+        }
+        [Test]
+        public static void LoadComplexFieldUsingImplicitOperator()
+        {
+            string expected = @"[
+  {
+    ""VoterId"": ""1"",
+    ""FirstName"": ""Tom"",
+    ""LastName"": ""Smith"",
+    ""Email"": ""tsmith@gmail.com"",
+    ""PhoneNumber"": {
+      ""AreaCode"": ""732"",
+      ""Prefix"": ""232"",
+      ""LineNumber"": ""1234""
+    }
+  }
+]";
+
+            var cf = new ChoCSVRecordConfiguration<WorkerModel>();
+            cf.WithFirstLineHeader();
+            cf.ClearFields();
+            cf.Map(f => f.VoterId, m =>
+            {
+                m.FieldName("Id");
+            });
+            cf.Map(f => f.FirstName);
+            cf.Map(f => f.LastName);
+            cf.Map(f => f.Email);
+            cf.Map(f => f.PhoneNumber);
+
+            string csv = @"Id,FirstName,LastName,Email,PhoneNumber
+1,Tom,Smith,tsmith@gmail.com,732-232-1234";
+
+            List<WorkerModel> records = new List<WorkerModel>();
+            using (var r = ChoCSVReader<WorkerModel>.LoadText(csv, cf)
+                )
+            {
+                var recs = r.ToArray();
+                records.AddRange(recs);
+
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var w = new ChoCSVWriter<WorkerModel>(csvOut, cf)
+                .WithFirstLineHeader())
+            {
+                w.Write(records);
+            }
+
+            var actual1 = csvOut.ToString();
+            Assert.AreEqual(csv, actual1);
+        }
+        [Test]
+        public static void LoadComplexFieldUsingValueConverter()
+        {
+            string expected = @"[
+  {
+    ""VoterId"": ""1"",
+    ""FirstName"": ""Tom"",
+    ""LastName"": ""Smith"",
+    ""Email"": ""tsmith@gmail.com"",
+    ""PhoneNumber"": {
+      ""AreaCode"": ""732"",
+      ""Prefix"": ""232"",
+      ""LineNumber"": ""1234""
+    }
+  }
+]";
+
+            var cf = new ChoCSVRecordConfiguration<WorkerModel>();
+            cf.WithFirstLineHeader();
+            cf.ClearFields();
+            cf.Map(f => f.VoterId, m =>
+            {
+                m.FieldName("Id");
+            });
+            cf.Map(f => f.FirstName);
+            cf.Map(f => f.LastName);
+            cf.Map(f => f.Email);
+            cf.Map(f => f.PhoneNumber, m =>
+            {
+                m.ValueConverter(s => new PhoneNumberModel { AreaCode = s.ToNString().Split('-')[0], Prefix = s.ToNString().Split('-')[1], LineNumber = s.ToNString().Split('-')[2] });
+                m.ValueConverterBack(s => s.ToNString());
+            });
+
+            string csv = @"Id,FirstName,LastName,Email,PhoneNumber
+1,Tom,Smith,tsmith@gmail.com,732-232-1234";
+
+            List<WorkerModel> records = new List<WorkerModel>();
+            using (var r = ChoCSVReader<WorkerModel>.LoadText(csv, cf)
+                )
+            {
+                var recs = r.ToArray();
+                records.AddRange(recs);
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var w = new ChoCSVWriter<WorkerModel>(csvOut, cf)
+                .WithFirstLineHeader())
+            {
+                w.Write(records);
+            }
+
+            var actual1 = csvOut.ToString();
+            Assert.AreEqual(csv, actual1);
+        }
+
+        [ChoCSVFileHeader(IgnoreHeader = true)]
+        public class EpiDataNames
+        {
+            [ChoFieldPosition(0)]
+            public string Type { get; set; }
+            [ChoFieldPosition(1)]
+            public string Value { get; set; }
+        }
+        [ChoCSVFileHeader(IgnoreHeader = true)]
+        public class EpiLot
+        {
+            public string GLot { get; set; }
+            public string Id { get; set; }
+            public string Slot { get; set; }
+            public string Scribe { get; set; }
+        }
+        [Test]
+        public static void ReadCSVWithDiffernetFormattedData()
+        {
+            string csv = @"Metals:,E10
+Al,0.1906
+Ca,0.1132
+Co,0.01951
+Cu,0.5824
+Cu,0.02383
+Fe,0.03828
+K,0.09577
+Li,0.03024
+Mg,0.007145
+Na,0.1833
+Ni,0.3236
+Pb,0.0005787
+Ti,0.4931
+Tl,0.001887
+Zn,0.07644
+
+GLot,id,Slot,Scribe,Diameter,MPD,SResistivity,SThickness,TTV,LTV,Warp,Bow,S_U_A,Ep,Epi_L,Epi_Layer,Epi_Layer_2,EThick,E2thick,E2Dope,E2DopeT,E2DopeMax,E2DopeMin
+31075046-001,XFB-LE00674.CP10023+001-12,1,22C1285,149.98,0,0.0217,334.71,1.91,1.03,5.35,-0.91,99.590582,1.0,1.0E18,9.8,1.12,9.9,9.6,9926193600000000,4.5574,10834500800000000,9551876800000000";
+
+            string expected = @"[
+  {
+    ""Type"": ""0.1906"",
+    ""Value"": ""Al""
+  },
+  {
+    ""Type"": ""0.1132"",
+    ""Value"": ""Ca""
+  }
+]";
+            using (var r = ChoCSVReader<EpiDataNames>.LoadText(csv)
+                .IgnoreEmptyLine(true)
+                .Setup(s => s.DoWhile += (o, e) =>
+                {
+                    e.Stop = e.Source.ToNString().StartsWith("GLot,id");
+                })
+                )
+            {
+                var recs = r.ToArray();
+
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs.Take(2), Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+
+            string expected1 = @"[
+  {
+    ""GLot"": ""31075046-001"",
+    ""Id"": ""XFB-LE00674.CP10023+001-12"",
+    ""Slot"": ""1"",
+    ""Scribe"": ""22C1285""
+  }
+]";
+            using (var r = ChoCSVReader<EpiLot>.LoadText(csv)
+                 .IgnoreEmptyLine(true)
+                 .Setup(s => s.SkipUntil += (o, e) =>
+                 {
+                     e.Skip = !e.Source.ToNString().StartsWith("GLot,id");
+                 })
+                 )
+            {
+                var recs = r.ToArray();
+
+                recs.Print();
+
+                var actual1 = JsonConvert.SerializeObject(recs.Take(2), Formatting.Indented);
+                Assert.AreEqual(expected1, actual1);
+            }
+        }
+
+        [Test]
+        public static void QuoteValuesTest()
+        {
+            string expected = @"[
+  {
+    ""Id"": ""1"",
+    ""Message"": ""\""Close Time @ 3:00 P.M, 48\"" L x 40\"" W x 49\"" H""
+  },
+  {
+    ""Id"": ""2"",
+    ""Message"": ""Triple \""R\"" Truck Parts ""
+  },
+  {
+    ""Id"": ""3"",
+    ""Message"": ""KEEP SHRINK WRAP AND BLUE TAPE INTACT NON-STACKABLE -----\""APPOINTMENTS TO BE SCHEDULED VIA OPEN DOCK\"" ""
+  },
+  {
+    ""Id"": ""4"",
+    ""Message"": ""150Lx3Wx3\""H (3) / 150LX4Wx3 (2)""
+  },
+  {
+    ""Id"": ""5"",
+    ""Message"": ""** DO NOT STACK FREIGHT**. FCFS - Handle with care. (GPS may show \""east\"" Business Center Dr. That is ok)""
+  }
+]";
+            using (var r = new ChoCSVReader("QuotedValues.csv")
+                .WithFirstLineHeader()
+                .MayHaveQuotedFields()
+                .Configure(c => c.QuoteEscapeChar = '"')
+                .Configure(c => c.FieldValueTrimOption = ChoFieldValueTrimOption.None)
+                .ThrowAndStopOnBadData(false)
+                )
+            {
+                var recs = r.ToArray();
+
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void TrimCSVValuesTest()
+        {
+            string expected = @"[
+  {
+    ""Id"": ""1"",
+    ""Message"": ""\""Close Time @ 3:00 P.M, 48\"" L x 40\"" W x 49\"" H""
+  },
+  {
+    ""Id"": ""2"",
+    ""Message"": ""Triple \""R\"" Truck Parts""
+  },
+  {
+    ""Id"": ""3"",
+    ""Message"": ""KEEP SHRINK WRAP AND BLUE TAPE INTACT NON-STACKABLE -----\""APPOINTMENTS TO BE SCHEDULED VIA OPEN DOCK\""""
+  },
+  {
+    ""Id"": ""4"",
+    ""Message"": ""150Lx3Wx3\""H (3) / 150LX4Wx3 (2)""
+  },
+  {
+    ""Id"": ""5"",
+    ""Message"": ""** DO NOT STACK FREIGHT**. FCFS - Handle with care. (GPS may show \""east\"" Business Center Dr. That is ok)""
+  }
+]";
+            using (var r = new ChoCSVReader("QuotedValues.csv")
+                .WithFirstLineHeader()
+                .MayHaveQuotedFields()
+                .Configure(c => c.QuoteEscapeChar = '"')
+                .Configure(c => c.FieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+                .ThrowAndStopOnBadData(false)
+                )
+            {
+                var recs = r.ToArray();
+
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void QuoteValuesTest_WithEOLInsideValue()
+        {
+            string expected = @"[
+  {
+    ""Id"": ""1"",
+    ""Message"": ""\""Close Time @ 3:00 P.M, 48\"" L x 40\"" W x 49\"" H""
+  },
+  {
+    ""Id"": ""2"",
+    ""Message"": ""Triple \""R\"" Truck Parts""
+  },
+  {
+    ""Id"": ""3"",
+    ""Message"": ""KEEP SHRINK WRAP AND BLUE TAPE INTACT NON-STACKABLE -----\""APPOINTMENTS TO BE SCHEDULED VIA OPEN DOCK\""""
+  },
+  {
+    ""Id"": ""4"",
+    ""Message"": ""150Lx3Wx3\""\""H (3) / 150LX4Wx3 (2)""
+  },
+  {
+    ""Id"": ""5"",
+    ""Message"": ""** DO NOT STACK FREIGHT**. FCFS - Handle with care. (GPS may show \""east\"" Business Center Dr. That is ok)""
+  },
+  {
+    ""Id"": ""6"",
+    ""Message"": ""Line 3 Field 3\r\nx\""Line 4 Field 1""
+  }
+]";
+            using (var r = new ChoCSVReader("QuotedValuesWithEOLInside.csv")
+                .WithFirstLineHeader()
+                .MayHaveQuotedFields()
+                .MayContainEOLInData()
+                .Configure(c => c.QuoteEscapeChar = '"')
+                .ThrowAndStopOnBadData(false)
+                )
+            {
+                var recs = r.ToArray();
+
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void LoadBadDataValesTest()
+        {
+            string expected = @"[
+  {
+    ""Id"": ""1"",
+    ""Message"": ""Close Time @ 3:00 P.M, 48\"" L x 40\"" W x 49\"" H, 38\"" L x 38\"" W x 20\"" H""
+  },
+  {
+    ""Id"": ""2"",
+    ""Message"": ""Triple \""R\"" Truck Parts ""
+  },
+  {
+    ""Id"": ""3"",
+    ""Message"": ""KEEP SHRINK WRAP AND BLUE TAPE INTACT NON-STACKABLE -----\""APPOINTMENTS TO BE SCHEDULED VIA OPEN DOCK\"" ""
+  },
+  {
+    ""Id"": ""4"",
+    ""Message"": ""150Lx3Wx3\""H (3) / 150LX4Wx3 (2)""
+  },
+  {
+    ""Id"": ""5"",
+    ""Message"": ""** DO NOT STACK FREIGHT**. FCFS - Handle with care. (GPS may show \""east\"" Business Center Dr. That is ok)""
+  }
+]";
+            using (var r = new ChoCSVReader("QuotedValues.csv")
+                .WithFirstLineHeader()
+                .MayHaveQuotedFields()
+                .JoinExtraFieldValues(true, true)
+                .Configure(c => c.FieldValueTrimOption = ChoFieldValueTrimOption.None)
+                )
+            {
+                var recs = r.ToArray();
+
+                recs.Print();
+
+                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void IncorrectCSVFieldsTest()
+        {
+            string expected = @"[
+  {
+    ""Id"": ""1"",
+    ""Message"": ""\""Close Time @ 3:00 P.M, 48\"" L x 40\"" W x 49\"" H""
+  },
+  {
+    ""Id"": ""2"",
+    ""Message"": ""Triple \""R\"" Truck Parts""
+  },
+  {
+    ""Id"": ""3"",
+    ""Message"": ""KEEP SHRINK WRAP AND BLUE TAPE INTACT NON-STACKABLE -----\""APPOINTMENTS TO BE SCHEDULED VIA OPEN DOCK\""""
+  },
+  {
+    ""Id"": ""4"",
+    ""Message"": ""150Lx3Wx3\""H (3) / 150LX4Wx3 (2)""
+  },
+  {
+    ""Id"": ""5"",
+    ""Message"": ""** DO NOT STACK FREIGHT**. FCFS - Handle with care. (GPS may show \""east\"" Business Center Dr. That is ok)""
+  }
+]";
+            using (var r = new ChoCSVReader("QuotedValues.csv")
+                .WithFirstLineHeader()
+                .MayHaveQuotedFields()
+                .Configure(c => c.QuoteEscapeChar = '"')
+                .Configure(c => c.FieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+                .ThrowAndStopOnMissingField(true)
+                .ThrowAndStopOnBadData(true)
+                )
+            {
+                Assert.Catch<ChoBadDataException>(() =>
+                {
+                    var recs = r.ToArray();
+
+                    recs.Print();
+
+                    var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+                    Assert.AreEqual(expected, actual);
+                });
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            string line1 = "\"Close Time @ 3:00 P.M, 48\" L x 40\" W x 49\" H, 38\" L x 38\" W x 20\" H\"";
+            string line = @"""Line 3 Field 1""	""""	""Line 3 Field 3
+x""Line 4 Field 1""	""""	""Line 4 Field 3""";
+            string line2 = @"v-dakash@catalysis.com,""HEY""? Tester, 12345789,""Catalysis"", LLC., Enterprise 6 TEST, etc,etc ,etc";
+            var vals = line.Split(",", ChoStringSplitOptions.AllowQuotes, '"');
+            return;
             CSV2ComplexObj();
             return;
 
@@ -9972,6 +10607,9 @@ a;b;;2021-05-06;e;11:00;3;9";
         [ChoTypeConverter(typeof(Name1Formatter))]
         public string Name { get; set; }
 
+        [ChoCSVRecordField]
+        public string City { get; set; }
+
         public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
         {
             throw new NotImplementedException();
@@ -10046,7 +10684,7 @@ a;b;;2021-05-06;e;11:00;3;9";
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }
 
-        [ChoCSVRecordField]
+        [ChoCSVRecordField(3, FieldName = "City")]
         public string City { get; set; }
 
         public bool AfterRecordFieldLoad(object target, long index, string propName, object value)

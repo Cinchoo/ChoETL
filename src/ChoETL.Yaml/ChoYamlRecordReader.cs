@@ -79,6 +79,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            Configuration.ResetStates();
             if (source == null)
                 yield break;
 
@@ -405,7 +406,7 @@ namespace ChoETL
                             RaiseMembersDiscovered(dict);
 
                             foreach (object rec1 in buffer)
-                                yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+                                yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec));
 
                             buffer.Clear();
                         }
@@ -447,7 +448,7 @@ namespace ChoETL
                     RaiseMembersDiscovered(dict);
 
                     foreach (object rec1 in buffer)
-                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec));
                 }
             }
 
@@ -934,7 +935,7 @@ namespace ChoETL
                         if (pi != null)
                             rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                         else if (RecordType.IsSimple())
-                            rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
+                            rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture, config: Configuration);
                         else
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 
@@ -970,9 +971,9 @@ namespace ChoETL
                         {
                             var dict = rec as IDictionary<string, Object>;
 
-                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, Configuration))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (ex is ValidationException)
                                 throw;
@@ -981,9 +982,9 @@ namespace ChoETL
                         }
                         else if (pi != null)
                         {
-                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (ex is ValidationException)
                                 throw;
@@ -1146,7 +1147,8 @@ namespace ChoETL
                     }
                     else
                     {
-                        var fv = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, propConverters, propConverterParams, Configuration.Culture);
+                        var fv = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, propConverters, propConverterParams, 
+                            Configuration.Culture, config: Configuration);
                         ChoType.SetPropertyValue(target, pd.Name, fv);
                     }
                 }
@@ -1215,7 +1217,8 @@ namespace ChoETL
                     }
                     else
                     {
-                        var fv = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, propConverters, propConverterParams, Configuration.Culture);
+                        var fv = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, propConverters, propConverterParams, 
+                            Configuration.Culture, config: Configuration);
                         ChoType.SetPropertyValue(target, pd.Name, fv);
                     }
                 }

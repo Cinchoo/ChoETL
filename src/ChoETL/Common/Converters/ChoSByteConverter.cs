@@ -18,6 +18,22 @@ namespace ChoETL
     public class ChoSByteConverter : IChoValueConverter
 #endif
     {
+        private NumberStyles? GetConvertTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.SByteNumberStyle;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.SByteNumberStyle);
+        }
+        private string GetConvertBackTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.SByteFormat;
+
+            return parameter.GetValueAt(1, ChoTypeConverterFormatSpec.Instance.SByteFormat);
+        }
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
@@ -26,7 +42,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.SByteNumberStyle);
+                NumberStyles? format = GetConvertTypeFormat(parameter); //.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.SByteNumberStyle);
                 return format == null ? sbyte.Parse(text, culture) : sbyte.Parse(text, format.Value, culture);
             }
 
@@ -38,9 +54,11 @@ namespace ChoETL
             if (value is sbyte && targetType == typeof(string))
             {
                 sbyte convValue = (sbyte)value;
-                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.SByteFormat);
+                string format = GetConvertBackTypeFormat(parameter); //.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.SByteFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
+            else if (value == DBNull.Value)
+                return null;
             else
                 return value;
         }

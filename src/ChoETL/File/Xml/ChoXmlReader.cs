@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -412,11 +413,13 @@ namespace ChoETL
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
                     dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
-                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
                 else
                 {
                     dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
-                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
                 }
 
                 selector?.Invoke(dict);
@@ -592,6 +595,7 @@ namespace ChoETL
 
         public ChoXmlReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
@@ -995,7 +999,7 @@ namespace ChoETL
 
         public ChoXmlReader<T> WithCustomNodeSelector(Func<XElement, XElement> nodeSelector)
         {
-            Configuration.CustomNodeSelecter = nodeSelector;
+            Configuration.CustomNodeSelector = nodeSelector;
             return this;
         }
 
@@ -1284,6 +1288,32 @@ namespace ChoETL
             where T : class, new()
         {
             return new ChoXmlReader<T>(xElement, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static IDictionary<string, string> GetXmlNamespacesInScope(string xmlFilePath)
+        {
+            using (var r = new ChoXmlReader(xmlFilePath)
+                .WithXPath("/")
+                )
+            {
+                var rec = r.FirstOrDefault();
+                return r.Configuration.GetXmlNamespacesInScope();
+            }
+        }
+        public static IDictionary<string, string> GetXmlNamespacesInScope(ChoXmlReader reader)
+        {
+            var rec = reader.FirstOrDefault();
+            return reader.Configuration.GetXmlNamespacesInScope();
+        }
+        public static IDictionary<string, string> GetXmlNamespacesInScopeFromXml(string xml)
+        {
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("/")
+                )
+            {
+                var rec = r.FirstOrDefault();
+                return r.Configuration.GetXmlNamespacesInScope();
+            }
         }
     }
 }

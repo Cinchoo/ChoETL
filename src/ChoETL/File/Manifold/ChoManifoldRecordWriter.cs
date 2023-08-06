@@ -24,6 +24,7 @@ namespace ChoETL
             get;
             private set;
         }
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
 
         public ChoManifoldRecordWriter(ChoManifoldRecordConfiguration configuration) : base(typeof(object))
         {
@@ -33,6 +34,7 @@ namespace ChoETL
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            Configuration.ResetStates();
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 

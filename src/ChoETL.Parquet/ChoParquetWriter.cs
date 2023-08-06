@@ -20,6 +20,7 @@ namespace ChoETL
         private ChoParquetRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+        public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoNewRowGroupEventArgs> NewRowGroup;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         private bool _isDisposed = false;
@@ -137,6 +138,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
+            _writer.MembersDiscovered += MembersDiscovered;
             _writer.WriteTo(_streamWriter.Value, records.OfType<object>()).Loop();
         }
 
@@ -155,6 +157,7 @@ namespace ChoETL
 
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
+            _writer.MembersDiscovered += MembersDiscovered;
             if (record is ArrayList)
             {
                 _writer.WriteTo(_streamWriter.Value, ((IEnumerable)record).AsTypedEnumerable<object>()).Loop();
@@ -224,6 +227,7 @@ namespace ChoETL
 
         public ChoParquetWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
@@ -362,6 +366,7 @@ namespace ChoETL
             bool truncate = true, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, string nullValue = null)
@@ -371,7 +376,7 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
-                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+                fieldName, valueConverter, valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, field.GetReflectedType());
         }
 
@@ -380,6 +385,7 @@ namespace ChoETL
             bool truncate = true, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, string nullValue = null)
@@ -389,7 +395,7 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
-                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+                fieldName, valueConverter, valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, field.GetReflectedType());
         }
 
@@ -419,6 +425,7 @@ namespace ChoETL
             bool truncate = true, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, string nullValue = null)
@@ -427,7 +434,7 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), position, fieldType == null ? field.GetPropertyType() : fieldType, quoteField, fillChar, fieldValueJustification, truncate,
-                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+                fieldName, valueConverter, valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
@@ -436,6 +443,7 @@ namespace ChoETL
             bool truncate = true, string fieldName = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, 
             string formatText = null, string nullValue = null)
@@ -444,7 +452,7 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), (int?)null, fieldType == null ? field.GetPropertyType() : fieldType, quoteField, fillChar, fieldValueJustification, truncate, 
-                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+                fieldName, valueConverter, valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
@@ -453,12 +461,13 @@ namespace ChoETL
             bool truncate = true, string fieldName = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, 
             string formatText = null, string nullValue = null)
         {
             return WithField(name, null, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, valueConverter, valueSelector, headerSelector, 
+                truncate, fieldName, valueConverter, valueSelector, customSerializer, headerSelector, 
                 defaultValue, fallbackValue, null, formatText, nullValue);
         }
 
@@ -467,6 +476,7 @@ namespace ChoETL
             bool? truncate = null, string fieldName = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null,
@@ -481,7 +491,7 @@ namespace ChoETL
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, null, fieldName,
-                    valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText,
+                    valueConverter, valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText,
                     nullValue, typeof(T), subRecordType, fieldValueJustification);
             }
 
@@ -521,6 +531,13 @@ namespace ChoETL
         public ChoParquetWriter<T> ThrowAndStopOnMissingField(bool flag = true)
         {
             Configuration.ThrowAndStopOnMissingField = flag;
+            return this;
+        }
+
+        public ChoParquetWriter<T> TreatDateTimeAsDateTimeOffset(bool flag = true, TimeSpan? offset = null)
+        {
+            Configuration.TreatDateTimeAsDateTimeOffset = flag;
+            Configuration.DateTimeOffset = offset;
             return this;
         }
 

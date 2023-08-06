@@ -266,7 +266,8 @@ namespace ChoETL
             {
                 if (s is IDictionary<string, object>)
                     return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
-                        Configuration.IgnoreDictionaryFieldPrefix).ToDictionary() as object;
+                        Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary() as object;
                 else
                     return s;
             }).AsDataReader();
@@ -379,6 +380,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoParquetReader<T> UseNestedKeyFormat(bool flag = true)
+        {
+            Configuration.UseNestedKeyFormat = flag;
+            return this;
+        }
+
         public ChoParquetReader<T> DetectEncodingFromByteOrderMarks(bool value = true)
         {
             Configuration.DetectEncodingFromByteOrderMarks = value;
@@ -429,6 +436,7 @@ namespace ChoETL
 
         public ChoParquetReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
@@ -540,7 +548,9 @@ namespace ChoETL
         public ChoParquetReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field, int? position,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null, bool excelField = false)
             where TClass : class
@@ -549,14 +559,16 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
-                valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
+                valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoParquetReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null, 
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null, bool excelField = false)
             where TClass : class
@@ -565,7 +577,7 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
-                valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
+                valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
         }
 
@@ -593,7 +605,9 @@ namespace ChoETL
         public ChoParquetReader<T> WithField<TField>(Expression<Func<T, TField>> field,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null, 
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null, bool excelField = false)
         {
@@ -601,14 +615,16 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
-                valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
+                valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoParquetReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null,
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             bool excelField = false)
         {
@@ -616,37 +632,43 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName,
-                valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
+                valueConverter, valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, excelField, field.GetReflectedType());
         }
 
         public ChoParquetReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null, 
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null, bool excelField = false, Type subRecordType = null)
         {
             return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
-                valueSelector, headerSelector,
+                valueSelector, customSerializer, headerSelector,
                 defaultValue, fallbackValue, altFieldNames, formatText, nullValue, excelField, subRecordType);
         }
 
         public ChoParquetReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null, 
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null, bool excelField = false, Type subRecordType = null)
         {
-            return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, valueSelector, headerSelector,
+            return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, valueSelector, customSerializer, headerSelector,
                 defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue, excelField, subRecordType);
         }
 
         private ChoParquetReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
+            Func<dynamic, object> valueSelector = null, 
+            Func<object, object> customSerializer = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null, bool excelField = false, Type subRecordType = null)
@@ -660,7 +682,7 @@ namespace ChoETL
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName,
-                    valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames, fullyQualifiedMemberName, formatText,
+                    valueConverter, valueSelector, customSerializer, headerSelector, defaultValue, fallbackValue, altFieldNames, fullyQualifiedMemberName, formatText,
                     nullValue, typeof(T), subRecordType);
             }
 

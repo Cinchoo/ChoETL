@@ -18,6 +18,22 @@ namespace ChoETL
     public class ChoFloatConverter : IChoValueConverter
 #endif
     {
+        private NumberStyles? GetConvertTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.FloatNumberStyle;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.FloatNumberStyle);
+        }
+        private string GetConvertBackTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.FloatFormat;
+
+            return parameter.GetValueAt(1, ChoTypeConverterFormatSpec.Instance.FloatFormat);
+        }
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
@@ -26,7 +42,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.FloatNumberStyle);
+                NumberStyles? format = GetConvertTypeFormat(parameter); //.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.FloatNumberStyle);
                 if (format == null)
                 {
                     float decResult = 0;
@@ -44,9 +60,11 @@ namespace ChoETL
             if (value is float && targetType == typeof(string))
             {
                 float convValue = (float)value;
-                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.FloatFormat);
+                string format = GetConvertBackTypeFormat(parameter); //.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.FloatFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
+            else if (value == DBNull.Value)
+                return null;
             else
                 return value;
         }

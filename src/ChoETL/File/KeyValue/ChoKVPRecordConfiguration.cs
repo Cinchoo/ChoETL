@@ -46,7 +46,6 @@ namespace ChoETL
             get;
             set;
         }
-        public readonly dynamic Context = new ChoDynamicObject();
 
         [DataMember]
         public List<ChoKVPRecordFieldConfiguration> KVPRecordFieldConfigurations
@@ -151,6 +150,13 @@ namespace ChoETL
                 if (RecordFieldConfigurationsDict.ContainsKey(key) && dict[key] != null)
                     RecordFieldConfigurationsDict[key].FieldType = dict[key];
             }
+        }
+
+        public ChoKVPRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
         }
 
         public new ChoKVPRecordConfiguration ClearFields()

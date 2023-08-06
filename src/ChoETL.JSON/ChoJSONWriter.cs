@@ -307,6 +307,13 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            Configuration.CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoJSONWriter<T> WithJSONConverter(JsonConverter converter)
         {
             Configuration.WithJSONConverter(converter);
@@ -381,12 +388,6 @@ namespace ChoETL
         public ChoJSONWriter<T> JsonSerializerContext(Action<dynamic> ctxSettings)
         {
             ctxSettings?.Invoke((dynamic)Configuration.JsonSerializer.Context.Context);
-            return this;
-        }
-
-        public ChoJSONWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
-        {
-            spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
 

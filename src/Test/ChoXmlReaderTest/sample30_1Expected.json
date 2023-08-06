@@ -1,0 +1,86 @@
+{
+  {
+    "Packages": [
+      null,
+      {
+        "id": "1",
+        "emps": [
+          {
+            "#text": "Tom"
+          },
+          {
+            "#text": "Mark"
+          },
+          {
+            "#text": null
+          }
+        ],
+        "trackingNumber": "23780498191986",
+        "shipCost": "14",
+        "shipDate": "2018-04-12T15:33:39.887",
+        "items": [
+          {
+            "dscoItemId": {
+              "Id": "4",
+              "#text": "sdsd"
+            },
+            "sku": "sdsd",
+            "quantity": "1",
+            "lineNumber": "1",
+            "originalLineNumber": "1",
+            "originalOrderQuantity": "1"
+          },
+          {
+            "dscoItemId": "CCCVSD33",
+            "sku": "TESRRST123",
+            "quantity": "2",
+            "lineNumber": "2",
+            "originalLineNumber": "2",
+            "originalOrderQuantity": "2"
+          }
+        ],
+        "shipCarrier": null,
+        "shipMethod": null,
+        "shippingServiceLevelCode": "FESDPO",
+        "numberOfLineItems": "2",
+        "shipFrom": {
+          "id": "3",
+          "attention": "OPERATIONS m",
+          "firstName": "SD",
+          "lastName": "SD",
+          "company": null,
+          "address1": "ADD1",
+          "address2": null,
+          "city": "URBANCREST",
+          "region": "OH",
+          "postal": "43123",
+          "country": "US",
+          "phone": "123.125.1265",
+          "email": null,
+          "locationCode": null
+        },
+        "shipTo": {
+          "id": "3",
+          "attentions": [
+            "Raj",
+            "SD"
+          ],
+          "firstName": "DD",
+          "lastName": "DD",
+          "company": "ABC CORPORATION",
+          "address1": "123 FINE WAY",
+          "address2": "BUILDING F-1",
+          "city": "BALTIMORE",
+          "region": "MD",
+          "postal": "21234",
+          "country": "US",
+          "phone": "222-222-2222",
+          "email": "XYZ@ACOMP.COM",
+          "locationCode": null
+        },
+        "shipWeight": "35.00"
+      },
+      null
+    ]
+  }
+}

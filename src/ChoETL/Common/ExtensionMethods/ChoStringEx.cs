@@ -21,7 +21,7 @@ namespace ChoETL
     public static class ChoString
     {
         public static Func<string, bool?> IsTextPlural = null;
-        public static string FormatXml(this string xml, bool indent = true, bool newLineOnAttributes = false, string indentChars = "  ", ConformanceLevel conformanceLevel = ConformanceLevel.Document) =>
+        public static string FormatXml(this string xml, bool indent = true, bool newLineOnAttributes = false, string indentChars = "  ", ConformanceLevel conformanceLevel = ConformanceLevel.Auto) =>
             xml.FormatXml(new XmlWriterSettings { Indent = indent, NewLineOnAttributes = newLineOnAttributes, IndentChars = indentChars, ConformanceLevel = conformanceLevel });
 
         public static string FormatXml(this string xml, XmlWriterSettings settings)
@@ -41,6 +41,26 @@ namespace ChoETL
             get;
             set;
         }
+        public static string AddXsiTypeIfApplicable(this string xml, Type type, XNamespace xsiNS = null)
+        {
+            try
+            {
+                XDocument doc = XDocument.Parse(xml);
+                var topElement = doc.Elements().FirstOrDefault();
+                if (topElement != null)
+                {
+                    XAttribute attribute = new XAttribute(xsiNS+"Type", type.Name);
+                    topElement.Add(attribute);
+                }
+
+                return doc.GetOuterXml().FormatXml();
+            }
+            catch
+            {
+                return xml;
+            }
+        }
+
         private static readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+)\:(\w+)(.*)", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
         private static readonly Regex _endNSTagRegex = new Regex(@"(.*)(</\w+)\:(\w+)$", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
         private static readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
@@ -537,7 +557,7 @@ namespace ChoETL
             {
                 var ret = ChoETLSettings.ToPlural(text);
                 if (ret != null)
-                    return ret; 
+                    return ret;
             }
 
             if (text.IsPlural())
@@ -708,7 +728,11 @@ namespace ChoETL
             if (type.IsDynamicType())
             {
                 return ToDynamic(element, true, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
-                    defaultNSPrefix: defaultNSPrefix, nsMgr: nsMgr);
+                    defaultNSPrefix: defaultNSPrefix, nsMgr: nsMgr,
+                    config != null ? config.IgnoreFieldValueMode : null,
+                    config != null && config.TurnOffPluralization != null ? config.TurnOffPluralization.Value : false,
+                    config != null ? config.IgnoreNSPrefix : false,
+                    config != null ? config.IncludeAllSchemaNS : false);
             }
             else
             {
@@ -728,7 +752,7 @@ namespace ChoETL
 
                         var proxyType = typeof(ChoXmlSerializerProxy<>).MakeGenericType(type);
 
-                        if (overrides == null)
+                        if (true) //overrides == null)
                             overrides = GetXmlOverrrides(element, type, NS, pd, proxyType);
 
                         // deserialize the xml into the proxy type
@@ -741,12 +765,12 @@ namespace ChoETL
                     else
                     {
                         if (ChoUtility.HasXmlSerializer(element.Name.ToString(), type))
-                            return ChoUtility.GetXmlSerializer(element.ToString(), type).Deserialize(reader);
+                            return ChoUtility.GetXmlSerializer(element.Name.ToString(), type).Deserialize(reader);
 
-                        if (overrides == null)
+                        if (true) //overrides == null)
                             overrides = GetXmlOverrrides(element, type, NS, pd);
 
-                        XmlSerializer serializer = ChoUtility.GetXmlSerializer(element.ToString(), type, overrides, config != null ? config.UnknownNode : null); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                        XmlSerializer serializer = ChoUtility.GetXmlSerializer(element.Name.ToString(), type, overrides, config != null ? config.UnknownNode : null); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                         return serializer.Deserialize(reader);
                     }
                 }
@@ -843,10 +867,13 @@ namespace ChoETL
         }
 
         public static object ToDynamic(XElement element, bool topLevel = true, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
-            bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null)
+            bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false,
+            bool ignoreNSPrefix = false, bool includeAllSchemaNS = false)
         {
             return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml(), null, null, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling,
-                retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr));
+                retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix: ignoreNSPrefix,
+                includeAllSchemaNS: includeAllSchemaNS));
 
             if (element.Name.LocalName == ChoDynamicObject.DefaultName)
             {

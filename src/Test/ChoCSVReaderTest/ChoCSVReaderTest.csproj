@@ -62,7 +62,10 @@
   <ItemGroup>
     <Compile Include="Test\BaseTests.cs" />
     <Compile Include="Test\Issues.cs" />
+    <Compile Include="Vector3.cs" />
     <None Include="020180412_045106Cropped.csv" />
+    <None Include="QuotedValuesWithEOLInside.csv" />
+    <None Include="QuotedValues.csv" />
     <None Include="Empty.csv" />
     <None Include="InterfaceTest.csv" />
     <None Include="EmptyLines.csv" />

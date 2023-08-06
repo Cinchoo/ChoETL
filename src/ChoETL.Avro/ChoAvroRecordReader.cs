@@ -92,6 +92,7 @@ namespace ChoETL
 
         public IEnumerable<object> AsEnumerable<T>(object source, Func<object, bool?> filterFunc = null)
         {
+            Configuration.ResetStates();
             if (source == null)
                 yield break;
 

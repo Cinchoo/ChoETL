@@ -100,6 +100,29 @@ namespace ChoETL
 
     public static class ChoXmlNodeEx
     {
+        public static IDictionary<string, string> GetNamespacesInScope(this XmlNode xDoc)
+        {
+            IDictionary<string, string> AllNamespaces = new Dictionary<string, string>();
+            IDictionary<string, string> localNamespaces;
+
+            XmlNode temp = xDoc;
+            XPathNavigator xNav;
+            while (temp.ParentNode != null)
+            {
+                xNav = temp.CreateNavigator();
+                localNamespaces = xNav.GetNamespacesInScope(XmlNamespaceScope.Local);
+                foreach (var item in localNamespaces)
+                {
+                    if (!AllNamespaces.ContainsKey(item.Key))
+                    {
+                        AllNamespaces.Add(item);
+                    }
+                }
+                temp = temp.ParentNode;
+            }
+            return AllNamespaces;
+        }
+
         #region Instance Members (Public)
 
         public static TInstanceType XmlDeserializeWithProxy<TProxyType, TInstanceType>(this string xml)
@@ -201,6 +224,19 @@ namespace ChoETL
                 return propName.LocalName;
         }
 
+        public static string GetNamespacePrefix(this ChoXmlNamespaceManager nsMgr, XName name)
+        {
+            if (name.NamespaceName.IsNullOrWhiteSpace())
+                return null;
+
+            if (!name.NamespaceName.IsNullOrWhiteSpace())
+            {
+                return nsMgr.GetNamespacePrefix(name.NamespaceName);
+            }
+        
+            return null;
+        }
+
         public static bool IsInNamespace(this ChoXmlNamespaceManager nsMgr, XName name)
         {
             if (name.NamespaceName.IsNullOrWhiteSpace())
@@ -209,7 +245,7 @@ namespace ChoETL
             if (!name.NamespaceName.IsNullOrWhiteSpace())
             {
                 string prefix = nsMgr.GetNamespacePrefix(name.NamespaceName);
-                if (prefix.IsNullOrWhiteSpace()) return false;
+                if (prefix == null) return false;
 
                 return true;
             }
@@ -331,17 +367,19 @@ namespace ChoETL
             nsTable.IsLoaded = true;
             foreach (var attr in element.Attributes())
             {
-                var nodeName = attr.Name.ToString();
-                if (nodeName.StartsWith("xmlns:"))
-                    nsTable.NamespaceTable.Add(nodeName.Substring(6), attr.Value);
-                else if (nodeName.StartsWith("xmlns"))
-                    nsTable.NamespaceTable.Add(nodeName.Substring(5), attr.Value);
+                try
+                {
+                    nsTable.NamespaceTable.Add(attr.Name.LocalName, attr.Value);
+                }
+                catch { }
             }
         }
 
         public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath, XmlNamespaceManager nsMgr,
             bool allowComplexXmlPath = false, Action<ChoXmlNamespaceTable> nsTableCallback = null)
         {
+            bool loadNSCalled = true;
+
             xmlReader.MoveToContent();
             ChoXmlNamespaceTable nsTable = new ChoXmlNamespaceTable();
             //if (xPath.IsNullOrWhiteSpace()) yield break;
@@ -353,9 +391,14 @@ namespace ChoETL
 
                 var ele = XElement.ReadFrom(xmlReader)
                       as XElement;
-                LoadNameSpaces(ele, nsTable);
-                if (nsTableCallback != null)
-                    nsTableCallback(nsTable);
+
+                if (!loadNSCalled)
+                {
+                    //loadNSCalled = true;
+                    LoadNameSpaces(ele, nsTable);
+                    if (nsTableCallback != null)
+                        nsTableCallback(nsTable);
+                }
 
                 yield return ele;
             }
@@ -382,8 +425,12 @@ namespace ChoETL
                     xmlReader.ReadStartElement();
                     if (xmlReader.NodeType == XmlNodeType.Element)
                     {
-                        LoadNameSpaces(xmlReader, nsTable);
-                        nsTableCallback?.Invoke(nsTable);
+                        if (!loadNSCalled)
+                        {
+                            LoadNameSpaces(xmlReader, nsTable);
+                            nsTableCallback?.Invoke(nsTable);
+                            //loadNSCalled = true;
+                        }
                     }
 
                     do
@@ -393,6 +440,12 @@ namespace ChoETL
 
                         if (xmlReader.NodeType == XmlNodeType.Element)
                         {
+                            if (!loadNSCalled)
+                            {
+                                LoadNameSpaces(xmlReader, nsTable);
+                                nsTableCallback?.Invoke(nsTable);
+                                //loadNSCalled = true;
+                            }
                             string elementName = xmlReader.LocalName;
 
                             // Empty element?
@@ -415,6 +468,12 @@ namespace ChoETL
                 }
                 else
                 {
+                    if (!loadNSCalled)
+                    {
+                        LoadNameSpaces(xmlReader, nsTable);
+                        nsTableCallback?.Invoke(nsTable);
+                        //loadNSCalled = true;
+                    }
                     // Decode child element
                     XElement el = XElement.ReadFrom(xmlReader)
                                           as XElement;
@@ -431,7 +490,16 @@ namespace ChoETL
                     //string rootName = null;
                     if (matchNames.Length == 0) yield break;
                     foreach (var ele in StreamElements(xmlReader, matchNames))
+                    {
+                        if (!loadNSCalled)
+                        {
+                            LoadNameSpaces(xmlReader, nsTable);
+                            nsTableCallback?.Invoke(nsTable);
+                            loadNSCalled = true;
+                        }
+
                         yield return ele;
+                    }
                 }
                 else
                 {
@@ -439,8 +507,12 @@ namespace ChoETL
                         throw new XmlException("Complex Xml path not supported.");
 
                     var document = XDocument.Load(xmlReader);
-                    LoadNameSpaces(document.Root, nsTable);
-                    nsTableCallback?.Invoke(nsTable);
+                    if (!loadNSCalled)
+                    {
+                        LoadNameSpaces(xmlReader, nsTable);
+                        nsTableCallback?.Invoke(nsTable);
+                        loadNSCalled = true;
+                    }
                     foreach (var ele in ((IEnumerable<object>)document.XPathEvaluate(xPath, nsMgr)))
                     {
                         if (ele is XElement)
@@ -1132,9 +1204,9 @@ namespace ChoETL
             element.Add(xsType);
         }
 
-        public static bool IsNilElement(this XElement element, string xmlSchemaNS = null)
+        public static bool IsNilElement(this XElement element, string xmlSchemaInstanceNS = null)
         {
-            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
+            XNamespace ns = xmlSchemaInstanceNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaInstanceNS;
 
             XAttribute nil = element.Attribute(ns + "nil");
             return nil != null;
@@ -1145,12 +1217,28 @@ namespace ChoETL
             return element.FirstNode != null ? element.FirstNode.NodeType == XmlNodeType.CDATA : false;
         }
 
-        public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
+        public static string NilAwareValue(this XElement element, string xmlSchemaInstanceNS = null)
         {
-            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
+            XNamespace ns = xmlSchemaInstanceNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaInstanceNS;
 
             XAttribute nil = element.Attribute(ns + "nil");
             return nil != null && (bool)nil ? null : element.IsEmpty ? null : element.Value;
+        }
+
+        public static bool IsNilAttributeSpecified(this XElement element, string xmlSchemaNS = null)
+        {
+            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaNamespace : xmlSchemaNS;
+
+            XAttribute nil = element.Attribute(ns + "nil");
+            return nil != null;
+        }
+
+        public static bool IsJsonArrayAttributeSpecified(this XElement element, string jsonSchemaNS = null)
+        {
+            XNamespace ns = jsonSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.JSONSchemaNamespace : jsonSchemaNS;
+
+            XAttribute nil = element.Attribute(ns + "Array");
+            return nil != null;
         }
 
         public static bool IsJsonArray(this XElement element, string jsonSchemaNS = null)
@@ -1193,7 +1281,7 @@ namespace ChoETL
             return true;
         }
 
-        private static bool HasAttributes(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoXmlNamespaceManager nsMgr = null)
+        public static bool HasAttributes(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoXmlNamespaceManager nsMgr = null)
         {
             bool hasAttr = false;
             foreach (var attribute in element.Attributes())
@@ -1223,7 +1311,8 @@ namespace ChoETL
 
         public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, bool turnOffPluralization = false, bool ignoreNSPrefix = false,
+            bool includeAllSchemaNS = false)
         {
             if (nsMgr != null && defaultNSPrefix != null)
             {
@@ -1234,18 +1323,21 @@ namespace ChoETL
 
             // loop through child elements
             // define an Expando Dynamic
-            var nsPrefix1 = nsMgr.GetNamespacePrefix(element.Name.Namespace.ToString());
+            var nsPrefix1 = ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(element.Name.Namespace.ToString());
             ChoDynamicObject obj = nsPrefix1.IsNullOrWhiteSpace() ? new ChoDynamicObject(element.Name.LocalName) : new ChoDynamicObject($"{nsPrefix1}:{element.Name.LocalName}"); ;
-            obj.SetNSPrefix(nsPrefix1);
+            if (!ignoreNSPrefix) obj.SetNSPrefix(nsPrefix1);
 
             bool hasAttr = false;
             // cater for attributes as properties
-            if (element.HasAttributes(xmlSchemaNS, jsonSchemaNS, nsMgr))
+            if (true) //element.HasAttributes(xmlSchemaNS, jsonSchemaNS, nsMgr))
             {
                 foreach (var attribute in element.Attributes())
                 {
-                    //if (!attribute.IsValidAttribute(xmlSchemaNS, jsonSchemaNS, nsMgr))
-                    //    continue;
+                    if (!attribute.IsValidAttribute(xmlSchemaNS, jsonSchemaNS, nsMgr))
+                    {
+                        if (!includeAllSchemaNS)
+                            continue;
+                    }
 
                     if (nsMgr != null && defaultNSPrefix != null)
                     {
@@ -1257,7 +1349,7 @@ namespace ChoETL
                         continue;
 
                     hasAttr = true;
-                    var nsPrefix = nsMgr.GetNamespacePrefix(attribute.Name.Namespace.ToString());
+                    var nsPrefix = ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(attribute.Name.Namespace.ToString());
                     if (nsPrefix.IsNullOrWhiteSpace())
                         obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
                     else
@@ -1286,24 +1378,27 @@ namespace ChoETL
                             continue;
 
                         var nodeName = subElement.Name.LocalName;
-                        var nsPrefix = nsMgr.GetNamespacePrefix(subElement.Name.NamespaceName);
-                        if (nsPrefix != defaultNSPrefix && nsPrefix != ChoXmlNamespaceManager.DefaultNSToken)
-                            nodeName = $"{nsPrefix}:{nodeName}";
+                        var nsPrefix = ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(subElement.Name.NamespaceName);
+                        if (!ignoreNSPrefix)
+                        {
+                            if (nsPrefix != defaultNSPrefix && nsPrefix != ChoXmlNamespaceManager.DefaultNSToken && !nsPrefix.IsNullOrWhiteSpace())
+                                nodeName = $"{nsPrefix}:{nodeName}";
+                        }
 
                         if (subElement.HasAttributes(xmlSchemaNS, jsonSchemaNS) || subElement.HasElements)
                         {
                             object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
-                                defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization);
+                                defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix);
                             if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                             {
-                                obj.SetElement(nodeName, dobj, IsCDATANode(subElement));
+                                obj.SetNSElement(nodeName, dobj, IsCDATANode(subElement), ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(subElement.Name));
                             }
                         }
                         else
                         {
                             if (subElement.IsNilElement())
                             {
-                                obj.SetElement(nodeName, subElement.NilAwareValue(xmlSchemaNS), IsCDATANode(subElement));
+                                obj.SetNSElement(nodeName, subElement.NilAwareValue(xmlSchemaNS), IsCDATANode(subElement), ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(subElement.Name));
                             }
                             else
                             {
@@ -1322,7 +1417,7 @@ namespace ChoETL
                                     }
                                 }
                                 else
-                                    obj.SetElement(nodeName, value, IsCDATANode(subElement));
+                                    obj.SetNSElement(nodeName, value, IsCDATANode(subElement), ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(subElement.Name));
                             }
                         }
                     }
@@ -1345,20 +1440,29 @@ namespace ChoETL
                             foreach (XElement subsubElement in subElement2.Elements())
                             {
                                 var sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
-                                    defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization);
+                                    defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix);
                                 if (sd != null || (sd == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                                     subDynamic.Add(sd);
                             }
-                            obj.SetElement(subElement2.Name.LocalName, subDynamic.ToArray(), IsCDATANode(subElement2));
+                            var subElementName = nsMgr != null && !ignoreNSPrefix ? nsMgr.GetNameWithNamespace(subElement2.Name) : subElement2.Name.LocalName;
+                            obj.SetNSElement(subElementName, subDynamic.ToArray(), IsCDATANode(subElement2), 
+                                ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(subElement2.Name));
+                            if (subElement2.IsJsonArrayAttributeSpecified(jsonSchemaNS))
+                                obj.SetAsJsonArrayElement(subElementName, IsJsonArray(subElement2));
+                            if (subElement2.IsNilElement(xmlSchemaNS))
+                                obj.SetAsNillableElement(subElementName, IsNilElement(subElement2));
                         }
                         else
                         {
                             List<object> list = new List<object>();
                             string keyName = null;
+                            XElement subElement2 = null; 
                             foreach (var subElement in kvp.Value)
                             {
                                 if (subElement == null)
                                     continue;
+
+                                subElement2 = subElement;
 
                                 if (nsMgr != null && defaultNSPrefix != null)
                                 {
@@ -1368,14 +1472,14 @@ namespace ChoETL
                                 }
 
                                 dynamic dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
-                                    defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization);
-                                if (dobj != null && dobj.Count == 1 && dobj.HasText())
-                                    dobj = dobj.GetText();
+                                    defaultNSPrefix, nsMgr, ignoreFieldValueMode, turnOffPluralization, ignoreNSPrefix);
 
                                 if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                                 {
                                     if (dobj is IList && ((IList)dobj).OfType<ChoDynamicObject>().Count() == ((IList)dobj).Count)
                                         list.AddRange(((IList)dobj).Cast<object>());
+                                    else if (dobj != null && dobj is ChoDynamicObject && dobj.Count == 1 && dobj.HasText())
+                                        list.Add(dobj.GetText());
                                     else
                                         list.Add(dobj);
                                 }
@@ -1387,21 +1491,30 @@ namespace ChoETL
 
                                 if (keyName.IndexOf(":") < 0)
                                 {
-                                    if (dobj is ChoDynamicObject && !ChoExtensions.IsNullOrWhiteSpace(dobj.GetNSPrefix()))
-                                        keyName = $"{dobj.GetNSPrefix()}:{keyName}";
+                                    if (!ignoreNSPrefix)
+                                    {
+                                        if (dobj is ChoDynamicObject && !ChoExtensions.IsNullOrWhiteSpace(dobj.GetNSPrefix()))
+                                            keyName = $"{dobj.GetNSPrefix()}:{keyName}";
+                                    }
                                 }
                             }
+
                             if (!hasAttr && obj.Count == 0)
                                 return list.ToArray();
-                            else
-                                obj.SetElement(keyName, list.ToArray());
+                            else if (subElement2 != null)
+                            {
+                                var subElementName = nsMgr != null && !ignoreNSPrefix ? nsMgr.GetNameWithNamespace(subElement2.Name) : subElement2.Name.LocalName;
+                                obj.SetNSElement(subElementName, list.ToArray(), IsCDATANode(subElement2),
+                                    ignoreNSPrefix ? null : nsMgr.GetNamespacePrefix(subElement2.Name));
+                                //obj.SetElement(keyName, list.ToArray());
+                            }
                         }
                     }
                 }
             }
             else
             {
-                if (element.IsNilElement())
+                if (element.IsNilElement(xmlSchemaNS))
                 {
                     obj.SetText(System.Net.WebUtility.HtmlDecode(element.NilAwareValue(xmlSchemaNS)));
                 }
@@ -1523,6 +1636,10 @@ namespace ChoETL
         public ChoXmlNamespaceTable()
         {
             NamespaceTable = new Dictionary<string, string>();
+        }
+        public ChoXmlNamespaceTable(IDictionary<string, string> dict)
+        {
+            NamespaceTable = dict;
         }
     }
 }

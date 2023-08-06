@@ -32,6 +32,8 @@ namespace ChoETL
             {
                 return ((ChoCDATA)value).Value;
             }
+            else if (value == DBNull.Value)
+                return null;
 
             return value;
         }

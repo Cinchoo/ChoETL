@@ -26,9 +26,14 @@ namespace ChoXmlToCSVConverterTest
             ChoXmlSettings.Reset();
         }
 
-        //[Test]
+        [Test]
         public static void XMLToCSVConverterTest()
         {
+            string expected = @"Id,Name,FullName
+1,Washington,George Washington
+2,Lincoln,Abraham Lincoln";
+
+            StringBuilder csv = new StringBuilder();
             using (var xmlReader = new ChoXmlReader("Users.xml")
                 .WithXPath("users/user")
                 )
@@ -36,11 +41,17 @@ namespace ChoXmlToCSVConverterTest
                 //foreach (var rec in xmlReader)
                 //    Console.WriteLine(rec.Dump());
                 //return;
-                using (var csvWriter = new ChoCSVWriter("Users.csv").WithFirstLineHeader()
+                using (var csvWriter = new ChoCSVWriter(csv).WithFirstLineHeader()
                     .Configure(c => c.UseNestedKeyFormat = false)
-                    .WithField("Id").WithField("last_name", fieldName: "Name").ThrowAndStopOnMissingField())
+                    .WithField("Id")
+                    .WithField("last_name", fieldName: "Name")
+                    .WithField("full_name", fieldName: "FullName", valueSelector: o => $"{o.Cast().first_name} {o.Cast().last_name}")
+                    .ThrowAndStopOnMissingField())
                     csvWriter.Write(xmlReader);
             }
+
+            var actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
     }
 }

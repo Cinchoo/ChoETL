@@ -38,6 +38,7 @@ namespace ChoETL
             get;
             private set;
         }
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
 
         public ChoJSONRecordWriter(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType, true)
         {
@@ -154,6 +155,7 @@ namespace ChoETL
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            Configuration.ResetStates();
             _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
@@ -562,16 +564,16 @@ namespace ChoETL
                 if (Configuration.NodeName.IsNullOrWhiteSpace())
                 {
                     if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
-                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, ((ChoDynamicObject)rec).DynamicObjectName);
+                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, ResolveName(((ChoDynamicObject)rec).DynamicObjectName));
                     else if (!RecordType.IsSimple())
                         msg.AppendFormat("{{{0}", EOLDelimiter);
                 }
                 else
                 {
                     if (!RecordType.IsSimple())
-                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, Configuration.NodeName);
+                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, ResolveName(Configuration.NodeName));
                     else
-                        msg.AppendFormat(@"""{0}"": ", Configuration.NodeName);
+                        msg.AppendFormat(@"""{0}"": ", ResolveName(Configuration.NodeName));
                 }
             }
             else if (!RecordType.IsSimple())
@@ -584,9 +586,9 @@ namespace ChoETL
                     {
                         hasTypeConverter = true;
                         if (Configuration.SourceType != null)
-                            rec = ChoConvert.ConvertTo(rec, Configuration.SourceType, rec, new object[] { tc }, null, Configuration.Culture, null);
+                            rec = ChoConvert.ConvertTo(rec, Configuration.SourceType, rec, new object[] { tc }, null, Configuration.Culture, null, config: Configuration);
                         else
-                            rec = ChoConvert.ConvertTo(rec, rec.GetType() /*typeof(ExpandoObject)*/, rec, new object[] { tc }, null, Configuration.Culture, null);
+                            rec = ChoConvert.ConvertTo(rec, rec.GetType() /*typeof(ExpandoObject)*/, rec, new object[] { tc }, null, Configuration.Culture, null, config: Configuration);
                     }
                 }
 
@@ -636,18 +638,21 @@ namespace ChoETL
 
                     if (Configuration.ThrowAndStopOnMissingField)
                     {
-                        if (Configuration.IsDynamicObject)
+                        if (fieldConfig.ValueSelector == null)
                         {
-                            var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                            if (!dict.ContainsKey(kvp.Key))
-                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
-                        }
-                        else
-                        {
-                            if (pi == null)
+                            if (Configuration.IsDynamicObject)
                             {
-                                if (!RecordType.IsSimple() && RecordType != typeof(object))
+                                var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                                if (!dict.ContainsKey(kvp.Key))
                                     throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                            }
+                            else
+                            {
+                                if (pi == null)
+                                {
+                                    if (!RecordType.IsSimple() && RecordType != typeof(object))
+                                        throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                                }
                             }
                         }
                     }
@@ -721,12 +726,23 @@ namespace ChoETL
                         if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                             return false;
 
-                        if (fieldConfig.ValueConverter != null)
-                            fieldValue = fieldConfig.ValueConverter(fieldValue);
-                        else if (RecordType.IsSimple())
-                            fieldValue = rec;
+                        if (fieldConfig.ValueSelector == null)
+                        {
+                            if (Configuration.ValueConverterBack != null)
+                                fieldValue = Configuration.ValueConverterBack(kvp.Key, fieldValue);
+                            else if (fieldConfig.ValueConverterBack != null)
+                                fieldValue = fieldConfig.ValueConverterBack(fieldValue);
+                            else if (fieldConfig.ValueConverter != null)
+                                fieldValue = fieldConfig.ValueConverter(fieldValue);
+                            else if (RecordType.IsSimple())
+                                fieldValue = rec;
+                            else
+                                rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true, config: Configuration);
+                        }
                         else
-                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true, config: Configuration);
+                        {
+                            fieldValue = fieldConfig.ValueSelector(rec);
+                        }
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                             rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -756,9 +772,9 @@ namespace ChoETL
                             {
                                 var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
-                                if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                     dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                                else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                     dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                                 else
                                 {
@@ -769,9 +785,9 @@ namespace ChoETL
                             }
                             else if (pi != null)
                             {
-                                if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                     rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                                else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                     rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                                 else
                                 {
@@ -964,17 +980,33 @@ namespace ChoETL
 
         private string ResolveName(string name)
         {
-            if (Configuration.JSONSerializerContractResolver != null && Configuration.JSONSerializerContractResolver.NamingStrategy != null)
+            try
             {
-                return Configuration.JSONSerializerContractResolver.NamingStrategy.GetPropertyName(name, false);
+                if (Configuration.JSONSerializerContractResolver != null && Configuration.JSONSerializerContractResolver.NamingStrategy != null)
+                {
+                    name = Configuration.JSONSerializerContractResolver.NamingStrategy.GetPropertyName(name, false);
+                }
+                else if (Configuration.JsonSerializerSettings != null && Configuration.JsonSerializerSettings.ContractResolver is DefaultContractResolver
+                    && ((DefaultContractResolver)Configuration.JsonSerializerSettings.ContractResolver).NamingStrategy != null)
+                {
+                    name = ((DefaultContractResolver)Configuration.JsonSerializerSettings.ContractResolver).NamingStrategy.GetPropertyName(name, false);
+                }
+                //else
+                //    name = name;
             }
-            else if (Configuration.JsonSerializerSettings != null && Configuration.JsonSerializerSettings.ContractResolver is DefaultContractResolver
-                && ((DefaultContractResolver)Configuration.JsonSerializerSettings.ContractResolver).NamingStrategy != null)
+            finally
             {
-                return ((DefaultContractResolver)Configuration.JsonSerializerSettings.ContractResolver).NamingStrategy.GetPropertyName(name, false);
+                if (!Configuration.KeepNSPrefix)
+                {
+                    if (name.Contains(":"))
+                        name = name.Substring(name.IndexOf(":") + 1);
+                }
+                else if (!name.Contains(":"))
+                {
+                }
             }
-            else
-                return name;
+
+            return name;
         }
         private string ToJSONToken(string name)
         {

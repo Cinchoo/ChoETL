@@ -2406,6 +2406,68 @@ User Two,10/31/2019,am**********************************,7/22/2019,443333,*****,
             string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
   <header>myheader</header>
   <transaction date=""2019-09-24"">
+    <item number=""123"" unit=""EA"" qty=""6"" />
+    <item number=""456"" unit=""CS"" qty=""4"" />
+  </transaction>
+</Root>";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                r.AfterRecordLoad += (o, e) =>
+                {
+                    var rec = e.Record as dynamic;
+
+                    rec.transaction.SetAsAttribute("date");
+                    var items = ((IList)rec.transaction.items).Cast<dynamic>()
+                        .Select(i =>
+                        {
+                            i.SetAsAttribute("number");
+                            i.SetAsAttribute("unit");
+                            i.SetAsAttribute("qty");
+                            return i;
+                        }).ToArray();
+                };
+
+                using (var w = new ChoXmlWriter(xml)
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.NodeName = "Root")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            string actual = xml.ToString();
+            Console.WriteLine(xml.ToString());
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void JSON2XmlArray_1()
+        {
+            string json = @"{
+  ""header"": ""myheader"",
+  ""transaction"": {
+    ""date"": ""2019-09-24"",
+    ""items"": [
+      {
+        ""number"": ""123"",
+        ""unit"": ""EA"",
+        ""qty"": 6
+      },
+      {
+        ""number"": ""456"",
+        ""unit"": ""CS"",
+        ""qty"": 4
+      }
+    ]
+  }
+}";
+            string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
+  <header>myheader</header>
+  <transaction date=""2019-09-24"">
     <items number=""123"" unit=""EA"" qty=""6"" />
     <items number=""456"" unit=""CS"" qty=""4"" />
   </transaction>
@@ -2432,6 +2494,7 @@ User Two,10/31/2019,am**********************************,7/22/2019,443333,*****,
                 using (var w = new ChoXmlWriter(xml)
                     .Configure(c => c.IgnoreRootName = true)
                     .Configure(c => c.NodeName = "Root")
+                    .Configure(c => c.KeepOriginalNodeName = true)
                     )
                 {
                     w.Write(r);
@@ -8391,7 +8454,7 @@ Elevator2,123";
         <paymentMethodInfo>Payment Method Info...</paymentMethodInfo>
       </paymentMethodDetails>
     </paymentMethods>
-    <invoiceDetails>
+    <invoiceDetail>
       <lineNumber>1</lineNumber>
       <netValue>1000.00</netValue>
       <vatCategory>1</vatCategory>
@@ -8402,8 +8465,8 @@ Elevator2,123";
         <icls:classificationCategory>category1_2</icls:classificationCategory>
         <icls:amount>1000.00</icls:amount>
       </incomeClassification>
-    </invoiceDetails>
-    <invoiceDetails>
+    </invoiceDetail>
+    <invoiceDetail>
       <lineNumber>2</lineNumber>
       <netValue>500.00</netValue>
       <vatCategory>1</vatCategory>
@@ -8414,7 +8477,7 @@ Elevator2,123";
         <icls:classificationCategory>category1_3</icls:classificationCategory>
         <icls:amount>500.00</icls:amount>
       </incomeClassification>
-    </invoiceDetails>
+    </invoiceDetail>
     <taxesTotals>
       <taxes>
         <taxType>1</taxType>
@@ -8456,6 +8519,134 @@ Elevator2,123";
                     .WithXmlNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0")
                     .WithXmlNamespace("ecls", "https://www.aade.gr/myDATA/expensesClassificaton/v1.0")
                     .WithXmlNamespace("schemaLocation", "http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd")
+                    )
+                    w.Write(r.Select(r1 =>
+                    {
+                        foreach (var id in r1.invoice.invoiceDetails)
+                            id.incomeClassification.AddNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0", true);
+                        foreach (var ic in r1.invoice.invoiceSummary.incomeClassification)
+                            ic.AddNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0", true);
+
+                        return r1;
+                    }));
+
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+            }
+
+            Console.WriteLine(xml.ToString());
+            var actual = xml.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void Json2Xml50_1()
+        {
+            string expected = @"<InvoicesDoc xmlns=""http://www.aade.gr/myDATA/invoice/v1.0"" xmlns:xml=""http://www.w3.org/XML/1998/namespace"" xmlns:icls=""https://www.aade.gr/myDATA/incomeClassificaton/v1.0"" xmlns:ecls=""https://www.aade.gr/myDATA/expensesClassificaton/v1.0"" xmlns:schemaLocation=""http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd"">
+  <invoice>
+    <issuer>
+      <vatNumber>888888888</vatNumber>
+      <country>GR</country>
+      <branch>1</branch>
+    </issuer>
+    <counterpart>
+      <vatNumber>999999999</vatNumber>
+      <country>GR</country>
+      <branch>0</branch>
+      <address>
+        <postalCode>12345</postalCode>
+        <city>TEST</city>
+      </address>
+    </counterpart>
+    <invoiceHeader>
+      <series>A</series>
+      <aa>101</aa>
+      <issueDate>2021-04-27</issueDate>
+      <invoiceType>1.1</invoiceType>
+      <currency>EUR</currency>
+    </invoiceHeader>
+    <paymentMethods>
+      <paymentMethodDetails>
+        <type>3</type>
+        <amount>1760.00</amount>
+        <paymentMethodInfo>Payment Method Info...</paymentMethodInfo>
+      </paymentMethodDetails>
+    </paymentMethods>
+    <invoiceDetails>
+      <invoiceDetail>
+        <lineNumber>1</lineNumber>
+        <netValue>1000.00</netValue>
+        <vatCategory>1</vatCategory>
+        <vatAmount>240.00</vatAmount>
+        <discountOption>true</discountOption>
+        <incomeClassification>
+          <icls:classificationType>E3_561_001</icls:classificationType>
+          <icls:classificationCategory>category1_2</icls:classificationCategory>
+          <icls:amount>1000.00</icls:amount>
+        </incomeClassification>
+      </invoiceDetail>
+      <invoiceDetail>
+        <lineNumber>2</lineNumber>
+        <netValue>500.00</netValue>
+        <vatCategory>1</vatCategory>
+        <vatAmount>120.00</vatAmount>
+        <discountOption>true</discountOption>
+        <incomeClassification>
+          <icls:classificationType>E3_561_001</icls:classificationType>
+          <icls:classificationCategory>category1_3</icls:classificationCategory>
+          <icls:amount>500.00</icls:amount>
+        </incomeClassification>
+      </invoiceDetail>
+    </invoiceDetails>
+    <taxesTotals>
+      <taxes>
+        <taxType>1</taxType>
+        <taxCategory>2</taxCategory>
+        <underlyingValue>500.00</underlyingValue>
+        <taxAmount>100.00</taxAmount>
+      </taxes>
+    </taxesTotals>
+    <invoiceSummary>
+      <totalNetValue>1500.00</totalNetValue>
+      <totalVatAmount>360.00</totalVatAmount>
+      <totalWithheldAmount>100.00</totalWithheldAmount>
+      <totalFeesAmount>0.00</totalFeesAmount>
+      <totalStampDutyAmount>0.00</totalStampDutyAmount>
+      <totalOtherTaxesAmount>0.00</totalOtherTaxesAmount>
+      <totalDeductionsAmount>0.00</totalDeductionsAmount>
+      <totalGrossValue>1760.00</totalGrossValue>
+      <incomeClassifications>
+        <incomeClassification>
+          <icls:classificationType>E3_561_001</icls:classificationType>
+          <icls:classificationCategory>category1_2</icls:classificationCategory>
+          <icls:amount>1000.00</icls:amount>
+        </incomeClassification>
+        <incomeClassification>
+          <icls:classificationType>E3_561_001</icls:classificationType>
+          <icls:classificationCategory>category1_3</icls:classificationCategory>
+          <icls:amount>500.00</icls:amount>
+        </incomeClassification>
+      </incomeClassifications>
+    </invoiceSummary>
+  </invoice>
+</InvoicesDoc>";
+            StringBuilder xml = new StringBuilder();
+            using (var r = new ChoJSONReader("sample50.json"))
+            {
+                using (var w = new ChoXmlWriter(xml)
+                    .WithRootName("InvoicesDoc")
+                    .IgnoreNodeName()
+                    .WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+                    .WithXmlNamespace("", "http://www.aade.gr/myDATA/invoice/v1.0")
+                    .WithXmlNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0")
+                    .WithXmlNamespace("ecls", "https://www.aade.gr/myDATA/expensesClassificaton/v1.0")
+                    .WithXmlNamespace("schemaLocation", "http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd")
+                    .Configure(c => c.XmlArrayQualifier = (key, obj) =>
+                    {
+                        if (key == "invoiceDetail"
+                            || key == "invoiceDetails")
+                            return true;
+                        return null;
+                    })
                     )
                     w.Write(r.Select(r1 =>
                     {
@@ -16780,6 +16971,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                     .Configure(c => c.IgnoreNodeName = true)
                     .WithXmlNamespace("ns3", "http://www.CCKS.org/XRT/Form")
                     .Configure(c => c.DoNotEmitXmlNamespace = true)
+                    .Configure(c => c.KeepOriginalNodeName = true)
                     )
                 {
                     w.Write(p);

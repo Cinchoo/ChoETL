@@ -208,6 +208,13 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoAvroWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            Configuration.CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoAvroWriter<T> AvroSerializerSettings(Action<AvroSerializerSettings> action)
         {
             action?.Invoke(Configuration.AvroSerializerSettings);

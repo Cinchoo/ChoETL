@@ -52,6 +52,13 @@ namespace ChoETL
             }
         }
 
+        private Func<object, List<object>> _customNodeSelecter = null;
+        public Func<object, List<object>> CustomNodeSelector
+        {
+            get { return _customNodeSelecter; }
+            set { if (value == null) return; _customNodeSelecter = value; }
+        }
+
         private string _defaultXPath;
         internal string GetXPath(string nsPrefix)
         {
@@ -159,6 +166,12 @@ namespace ChoETL
                 UseXmlSerialization = attr.UseXmlSerialization;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
                 IsXmlAttribute = attr is ChoXmlAttributeRecordFieldAttribute;
+            }
+            if (otherAttrs != null)
+            {
+                ChoXPathAttribute xpAttr = otherAttrs.OfType<ChoXPathAttribute>().FirstOrDefault();
+                if (xpAttr != null && !xpAttr.XPath.IsNullOrWhiteSpace())
+                    XPath = xpAttr.XPath;
             }
         }
 

@@ -17,7 +17,8 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoHeaderedReader, IChoSanitizableReader, IChoMultiLineHeaderReader, IChoCommentLineReader
+    public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoHeaderedReader, IChoSanitizableReader, 
+        IChoMultiLineHeaderReader, IChoCommentLineReader, IChoBadDataFoundReader
         where T : class
     {
         private MemoryMappedFile _memoryMappedFile;
@@ -36,6 +37,7 @@ namespace ChoETL
         public event EventHandler<ChoMultiLineHeaderEventArgs> MultiLineHeader;
         public event EventHandler<ChoCommentLineEventArgs> CommentLineFound;
         public event EventHandler<ChoHeaderLineEventArgs> PrepareHeaderLineForMatch;
+        public event EventHandler<ChoBadDataEventArgs> BadDataFound;
 
         public override dynamic Context
         {
@@ -411,6 +413,17 @@ namespace ChoETL
             commentLineFound(this, ea);
         }
 
+        public bool RaiseBadDataFound(long lineNo, string line)
+        {
+            EventHandler<ChoBadDataEventArgs> badDataFound = BadDataFound;
+            if (badDataFound == null)
+                return false;
+
+            var ea = new ChoBadDataEventArgs(lineNo, line);
+            badDataFound(this, ea);
+            return ea.Handled;
+        }
+
         public string RaisePrepareHeaderLineForMatch(string line)
         {
             EventHandler<ChoHeaderLineEventArgs> prepareHeaderLineForMatch = PrepareHeaderLineForMatch;
@@ -586,6 +599,7 @@ namespace ChoETL
 
         public ChoCSVReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
+            Configuration.CreateTypeConverterSpecsIfNull();
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
@@ -675,6 +689,19 @@ namespace ChoETL
         public ChoCSVReader<T> MayHaveQuotedFields(bool flag = true, char quoteChar = '"')
         {
             QuoteAllFields(flag, quoteChar);
+            return this;
+        }
+
+        public ChoCSVReader<T> ThrowAndStopOnBadData(bool flag = false)
+        {
+            Configuration.ThrowAndStopOnBadData = flag;
+            return this;
+        }
+
+        public ChoCSVReader<T> JoinExtraFieldValues(bool flag = true, bool includeFieldDelimiterWhileJoining = false)
+        {
+            Configuration.JoinExtraFieldValues = flag;
+            Configuration.IncludeFieldDelimiterWhileJoining = includeFieldDelimiterWhileJoining;
             return this;
         }
 
@@ -1270,5 +1297,10 @@ namespace ChoETL
     internal interface IChoHeaderedReader
     {
         string RaisePrepareHeaderLineForMatch(string line);
+    }
+
+    internal interface IChoBadDataFoundReader
+    {
+        bool RaiseBadDataFound(long lineNo, string line);
     }
 }

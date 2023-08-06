@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Configuration;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -152,15 +153,33 @@ namespace ChoETL
             get;
             private set;
         }
+        //private string _xmlSchemaInstanceNamespace = null;
+        //[DataMember]
+        //public string XmlSchemaInstanceNamespace
+        //{
+        //    get { return _xmlSchemaInstanceNamespace.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : _xmlSchemaInstanceNamespace; }
+        //    set { _xmlSchemaInstanceNamespace = value; }
+        //}
+        private string _xmlSchemaNamespace = null;
         [DataMember]
-        public string XmlSchemaNamespace { get; set; }
+        public string XmlSchemaNamespace
+        {
+            get { return _xmlSchemaNamespace.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaNamespace : _xmlSchemaNamespace; }
+            set { _xmlSchemaNamespace = value; }
+        }
+        private string _JSONSchemaNamespace = null;
         [DataMember]
-        public string JSONSchemaNamespace { get; set; }
+        public string JSONSchemaNamespace
+        {
+            get { return _JSONSchemaNamespace.IsNullOrWhiteSpace() ? ChoXmlSettings.JSONSchemaNamespace : _JSONSchemaNamespace; }
+            set { _JSONSchemaNamespace = value; }
+        }
+
         [DataMember]
         public ChoEmptyXmlNodeValueHandling EmptyXmlNodeValueHandling { get; set; }
 
         private Func<XElement, XElement> _customNodeSelecter = null;
-        public Func<XElement, XElement> CustomNodeSelecter
+        public Func<XElement, XElement> CustomNodeSelector
         {
             get { return _customNodeSelecter; }
             set { if (value == null) return; _customNodeSelecter = value; }
@@ -251,11 +270,13 @@ namespace ChoETL
         }
 
         internal ChoXmlNamespaceTable XmlNamespaceTable { get; set; }
-        public bool UseXmlArray { get; set; }
+        public bool? UseXmlArray { get; set; }
         public bool UseJsonNamespaceForObjectType { get; set; }
         public XmlNodeEventHandler UnknownNode { get; set; }
-
-        public readonly dynamic Context = new ChoDynamicObject();
+        public bool IgnoreNSPrefix { get; set; }
+        public bool IncludeAllSchemaNS { get; set; }
+        public bool KeepOriginalNodeName { get; set; }
+        public bool AutoDiscoverXmlNamespaces { get; set; } = true;
 
         public ChoXmlRecordFieldConfiguration this[string name]
         {
@@ -387,7 +408,7 @@ namespace ChoETL
             xconfig.XmlSchemaNamespace = XmlSchemaNamespace;
             xconfig.JSONSchemaNamespace = JSONSchemaNamespace;
             xconfig.EmptyXmlNodeValueHandling = EmptyXmlNodeValueHandling;
-            xconfig.CustomNodeSelecter = CustomNodeSelecter;
+            xconfig.CustomNodeSelector = CustomNodeSelector;
             xconfig.IgnoreCase = IgnoreCase;
 
             xconfig.RetainAsXmlAwareObjects = RetainAsXmlAwareObjects;
@@ -562,7 +583,7 @@ namespace ChoETL
                         pt = pd.PropertyType.GetUnderlyingType();
                         //if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                         if ((pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
-                            || (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo())))
+                            /*|| (pt != typeof(object) && !pt.IsSimple() && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo()))*/)
                         {
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, recordFieldConfigurations, false);
                         }
@@ -652,6 +673,23 @@ namespace ChoETL
                 }
             }
             return recordType;
+        }
+
+        private string GetDefaultNSPrefix()
+        {
+            return XmlNamespaceManager.Value.GetNamespacePrefixOrDefault(NamespaceManager.DefaultNamespace, DefaultNamespacePrefix);
+
+            //string nsPrefix = Configuration.XmlNamespaceManager.Value.GetNamespacePrefix(Configuration.NamespaceManager.DefaultNamespace);
+            //if (nsPrefix.IsNullOrWhiteSpace())
+            //{
+            //    nsPrefix = Configuration.DefaultNamespacePrefix;
+            //    if (nsPrefix.IsNullOrWhiteSpace())
+            //    {
+            //        nsPrefix = ChoXmlNamespaceManager.DefaultNSToken;
+            //    }
+            //}
+
+            //return nsPrefix;
         }
 
         public override void Validate(object state)
@@ -759,6 +797,7 @@ namespace ChoETL
                 }
                 else if (!fieldNames.IsNullOrEmpty())
                 {
+                    string nsPrefix = !NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace() ? GetDefaultNSPrefix() : null;
                     foreach (string fn in fieldNames)
                     {
                         if (IgnoredFields.Contains(fn))
@@ -770,7 +809,7 @@ namespace ChoETL
                             if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
                                 fn1 = $"{DefaultNamespacePrefix}:{fn1}";
 
-                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
+                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: GetXPath(nsPrefix, fn1) /*$"./{fn1}"*/);
                             obj.FieldName = fn1;
                             obj.IsXmlAttribute = true;
                             XmlRecordFieldConfigurations.Add(obj);
@@ -780,7 +819,7 @@ namespace ChoETL
                             string fn1 = fn.Substring(0, fn.Length - 1);
                             if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
                                 fn1 = $"{DefaultNamespacePrefix}:{fn1}";
-                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
+                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: GetXPath(nsPrefix, fn1) /*$"./{fn1}"*/);
                             obj.FieldName = fn1;
                             obj.IsXmlCDATA = true;
                             XmlRecordFieldConfigurations.Add(obj);
@@ -790,7 +829,7 @@ namespace ChoETL
                             string fn1 = fn.Substring(0, fn.Length - 1);
                             if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
                                 fn1 = $"{DefaultNamespacePrefix}:{fn1}";
-                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
+                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: GetXPath(nsPrefix, fn1) /*$"./{fn1}"*/);
                             obj.FieldName = fn1;
                             obj.IsXmlCDATA = true;
                             XmlRecordFieldConfigurations.Add(obj);
@@ -800,7 +839,7 @@ namespace ChoETL
                             string fn1 = fn;
                             if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
                                 fn1 = $"{DefaultNamespacePrefix}:{fn1}";
-                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
+                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: GetXPath(nsPrefix, fn1) /*$"./{fn1}"*/);
                             XmlRecordFieldConfigurations.Add(obj);
                         }
                     }
@@ -927,10 +966,40 @@ namespace ChoETL
 
             LoadNCacheMembers(XmlRecordFieldConfigurations);
         }
+        internal string GetXPath(string nsPrefix, string fieldName, bool isAttribute = false)
+        {
+            string xpath = null;
 
+            if (nsPrefix.IsNullOrWhiteSpace())
+            {
+                if (isAttribute)
+                    xpath = $"@{fieldName}";
+                else
+                    xpath = $"{fieldName}|/{fieldName}|@{fieldName}";
+            }
+            else
+            {
+                if (fieldName.Contains(":"))
+                {
+                    if (isAttribute)
+                        xpath = $"@{fieldName}";
+                    else
+                        xpath = $"/{fieldName}|{fieldName}|@{fieldName}";
+                }
+                else
+                {
+                    if (isAttribute)
+                        xpath = $"@{fieldName}|{nsPrefix}:{fieldName}";
+                    else
+                        xpath = $"/{fieldName}|{fieldName}|@{fieldName}|/{nsPrefix}:{fieldName}|{nsPrefix}:{fieldName}";
+                }
+            }
+            return xpath;
+        }
         internal ChoXmlRecordFieldConfiguration[] DiscoverRecordFieldsFromXElement(XElement xpr)
         {
             ChoXmlNamespaceManager nsMgr = XmlNamespaceManager.Value;
+            string nsPrefix = !NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace() ? GetDefaultNSPrefix() : null;
 
             Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
             string name = null;
@@ -949,7 +1018,7 @@ namespace ChoETL
                 if (name.IsValidXNode(DefaultNamespacePrefix))
                 {
                     if (!dict.ContainsKey(name))
-                        dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"@{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
+                        dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, GetXPath(nsPrefix, name, true)) { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
                     else
                     {
                         throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
@@ -968,13 +1037,14 @@ namespace ChoETL
                     if (!IsInNamespace(ele.Name))
                         continue;
 
-                    name = GetNameWithNamespace(ele.Name);
+                    var NSName = GetNameWithNamespace(ele.Name);
+                    name = IgnoreNSPrefix ? ele.Name.LocalName : GetNameWithNamespace(ele.Name);
 
                     if (name.IsValidXNode(DefaultNamespacePrefix))
                     {
                         hasElements = true;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, GetXPath(nsPrefix, NSName)) { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
                         else
                         {
                             if (dict[name].IsXmlAttribute)
@@ -990,13 +1060,14 @@ namespace ChoETL
                     if (!IsInNamespace(ele.Name))
                         continue;
 
-                    name = GetNameWithNamespace(ele.Name);
+                    var NSName = GetNameWithNamespace(ele.Name);
+                    name = IgnoreNSPrefix ? ele.Name.LocalName : GetNameWithNamespace(ele.Name);
 
                     if (name.IsValidXNode(DefaultNamespacePrefix))
                     {
                         hasElements = true;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, GetXPath(nsPrefix, NSName)) { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
                         else
                         {
                             if (dict[name].IsXmlAttribute)
@@ -1032,7 +1103,8 @@ namespace ChoETL
                 if (IsInNamespace(xpr.Name))
                 {
                     //name = xpr.Name.LocalName;
-                    name = GetNameWithNamespace(xpr.Name);
+                    //name = GetNameWithNamespace(xpr.Name);
+                    name = IgnoreNSPrefix ? xpr.Name.LocalName : GetNameWithNamespace(xpr.Name);
                     dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
                 }
             }
@@ -1203,6 +1275,13 @@ namespace ChoETL
         public void ClearRecordFieldsForType<T>()
         {
             ClearRecordFieldsForType(typeof(T));
+        }
+
+        public ChoXmlRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
         }
 
         public ChoXmlRecordConfiguration<T> MapRecordFieldsForType<T>()
@@ -1458,12 +1537,16 @@ namespace ChoETL
 
     public class ChoXmlNamespaceManager
     {
-        public const string DefaultNSToken = "x";
+        public const string DefaultNSToken = "_x_";
 
         public readonly IDictionary<string, string> NSDict;
         public readonly XmlNamespaceManager NSMgr;
         public readonly XmlSerializerNamespaces XmlSerializerNamespaces;
         public readonly List<string> ReservedXmlNamespacePrefixes = new List<string>();
+
+        public ChoXmlNamespaceManager() : this(new XmlNamespaceManager(new NameTable()))
+        {
+        }
 
         public ChoXmlNamespaceManager(XmlNamespaceManager nsMgr)
         {
@@ -1490,7 +1573,7 @@ namespace ChoETL
             if (ns.IsNullOrWhiteSpace())
                 return null;
 
-            return NSDict.Where(Xml => Xml.Value == ns && !Xml.Key.IsNullOrWhiteSpace()).Select(Xml => Xml.Key).FirstOrDefault();
+            return NSDict.Where(Xml => Xml.Value == ns /*&& !Xml.Key.IsNullOrWhiteSpace()*/).Select(Xml => Xml.Key).FirstOrDefault();
         }
 
         public string GetNamespacePrefixOrDefault(string ns, string defaultValue = null)
@@ -1543,6 +1626,15 @@ namespace ChoETL
             }
 
             return msg.ToString();
+        }
+
+        public void AddNamespace(string prefix, string ns)
+        {
+            if (!NSDict.ContainsKey(prefix))
+            {
+                NSDict.Add(prefix, ns);
+                XmlSerializerNamespaces?.Add(prefix, ns);
+            }
         }
 
         public string ToString(ChoXmlRecordConfiguration config)

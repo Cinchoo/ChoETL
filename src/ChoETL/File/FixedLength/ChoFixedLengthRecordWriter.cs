@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -36,6 +37,7 @@ namespace ChoETL
             get;
             private set;
         }
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
 
         public ChoFixedLengthRecordWriter(Type recordType, ChoFixedLengthRecordConfiguration configuration) : base(recordType)
         {
@@ -173,6 +175,7 @@ namespace ChoETL
         private bool _rowScanComplete = false;
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            Configuration.ResetStates();
             _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
@@ -518,15 +521,18 @@ namespace ChoETL
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
-                    if (Configuration.IsDynamicObject)
+                    if (fieldConfig.ValueSelector == null)
                     {
-                        if (!dict.ContainsKey(kvp.Key))
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
-                    }
-                    else
-                    {
-                        if (pi == null)
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
+                        if (Configuration.IsDynamicObject)
+                        {
+                            if (!dict.ContainsKey(kvp.Key))
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
+                        }
+                        else
+                        {
+                            if (pi == null)
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
+                        }
                     }
                 }
 
@@ -601,19 +607,28 @@ namespace ChoETL
                             fieldValue = String.Empty;
                     }
 
+                    if (kvp.Value.SourceType == null)
+                        kvp.Value.SourceType = typeof(string);
+
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
                     if (fieldConfig.ValueSelector == null)
                     {
-                        if (fieldConfig.ValueConverter != null)
-                        fieldValue = fieldConfig.ValueConverter(fieldValue);
-                    else
+                        if (Configuration.ValueConverterBack != null)
+                            fieldValue = Configuration.ValueConverterBack(kvp.Key, fieldValue);
+                        else if (fieldConfig.ValueConverterBack != null)
+                            fieldValue = fieldConfig.ValueConverterBack(fieldValue);
+                        else if (fieldConfig.ValueConverter != null)
+                            fieldValue = fieldConfig.ValueConverter(fieldValue);
+                        //else
+                            
                         rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, config: Configuration);
                     }
                     else
                     {
                         fieldValue = fieldConfig.ValueSelector(rec);
+                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, config: Configuration);
                     }
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
@@ -642,9 +657,9 @@ namespace ChoETL
                     {
                         if (Configuration.IsDynamicObject)
                         {
-                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
                             {
@@ -655,9 +670,9 @@ namespace ChoETL
                         }
                         else if (pi != null)
                         {
-                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
                             {

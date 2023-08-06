@@ -33,6 +33,7 @@ namespace ChoETL
             get;
             private set;
         }
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
 
         public ChoCSVRecordWriter(Type recordType, ChoCSVRecordConfiguration configuration) : base(recordType)
         {
@@ -199,9 +200,29 @@ namespace ChoETL
             _firstLine = false;
         }
 
+        private bool firstTime = true;
         private bool _rowScanComplete = false;
+
+        private IEnumerable<object> EnumerableWrapper(IEnumerable<object> records)
+        {
+            foreach (var record in records)
+            {
+                if (Configuration.IsDynamicObject && record is ChoDynamicObject dobj)
+                {
+                    if (Configuration.IgnoreRootDictionaryFieldPrefix)
+                        dobj.ResetName();
+
+                    yield return dobj;
+                }
+                else
+                    yield return record;
+            }
+        }
+
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            Configuration.ResetStates();
+
             _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
@@ -216,7 +237,7 @@ namespace ChoETL
 
             string recText = String.Empty;
             long recCount = 0;
-            var recEnum = records.GetEnumerator();
+            var recEnum = EnumerableWrapper(records).GetEnumerator();
 
             try
             {
@@ -257,18 +278,23 @@ namespace ChoETL
                         }
 
                         _rowScanComplete = true;
+
                         var fns = GetFields(_recBuffer.Value).ToList();
                         RaiseFileHeaderArrange(ref fns);
 
                         Configuration.Validate(fns.ToArray());
-                        WriteHeaderLine(sw);
+                        WriteHeaderLine(sw, null);
                         _configCheckDone = true;
                     }
                 }
 
-                Type recordType = ElementType == null ? notNullRecord?.GetType() : ElementType;
-                Configuration.RecordType = recordType.ResolveType();
-                Configuration.IsDynamicObject = recordType.IsDynamicType();
+                if (firstTime)
+                {
+                    firstTime = false;
+                    Type recordType = ElementType == null ? notNullRecord?.GetType() : ElementType;
+                    Configuration.RecordType = recordType.ResolveType();
+                    Configuration.IsDynamicObject = recordType.IsDynamicType();
+                }
 
                 object record = null;
                 bool abortRequested = false;
@@ -313,10 +339,7 @@ namespace ChoETL
                             {
                                 if (notNullRecord != null)
                                 {
-                                    var fieldNames = GetFields(notNullRecord).ToList();
-                                    RaiseFileHeaderArrange(ref fieldNames);
-                                    Configuration.Validate(fieldNames.ToArray());
-                                    WriteHeaderLine(sw);
+                                    WriterCSVHeaderLine(sw, notNullRecord);
                                     _configCheckDone = true;
                                 }
                             }
@@ -399,6 +422,24 @@ namespace ChoETL
             }
         }
 
+        private void WriterCSVHeaderLine(TextWriter sw, object notNullRecord)
+        {
+            var fieldNames = GetFields(notNullRecord, Configuration.IgnoreDictionaryFieldPrefix).ToList();
+            string[] origFieldNames = null;
+            try
+            {
+                origFieldNames = GetFields(notNullRecord, Configuration.IgnoreDictionaryFieldPrefix).ToArray();
+            }
+            catch
+            {
+                origFieldNames = fieldNames.ToArray();
+            }
+
+            RaiseFileHeaderArrange(ref fieldNames);
+            Configuration.Validate(origFieldNames);
+            WriteHeaderLine(sw, !Configuration.IsDynamicObject ? null : fieldNames?.ToArray());
+        }
+
         private string[] GetFields(List<object> records)
         {
             string[] fieldNames = null;
@@ -436,7 +477,7 @@ namespace ChoETL
             return fieldNames;
         }
 
-        private string[] GetFields(object record)
+        private string[] GetFields(object record, bool ignoreDictionaryFieldPrefix = false)
         {
             string[] fieldNames = null;
             Type recordType = ElementType == null ? record.GetType() : ElementType;
@@ -452,17 +493,24 @@ namespace ChoETL
             if (Configuration.IsDynamicObject)
             {
                 var dict = record.ToDynamicObject() as IDictionary<string, Object>;
-                if (Configuration.UseNestedKeyFormat)
+                if (Configuration.CSVRecordFieldConfigurations.Count == 0)
                 {
-                    if (Configuration.IgnoreRootNodeName && dict is ChoDynamicObject)
+                    if (Configuration.UseNestedKeyFormat)
                     {
-                        ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
+                        if (Configuration.IgnoreRootNodeName && dict is ChoDynamicObject)
+                        {
+                            ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
+                        }
+                        fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                            ignoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix, Configuration.IgnoreRootDictionaryFieldPrefix).ToArray().ToDictionary().Keys.ToArray();
                     }
-                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
-                        Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary().Keys.ToArray();
+                    else
+                        fieldNames = dict.Keys.ToArray();
                 }
                 else
-                    fieldNames = dict.Keys.ToArray();
+                {
+                    fieldNames = Configuration.CSVRecordFieldConfigurations.Select(f => f.FieldName).ToArray();
+                }
             }
             else
             {
@@ -548,23 +596,26 @@ namespace ChoETL
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
-                    if (Configuration.IsDynamicObject)
+                    if (fieldConfig.ValueSelector == null)
                     {
-                        if (!dict.ContainsKey(kvp.Key))
+                        if (Configuration.IsDynamicObject)
                         {
-                            if (!Configuration.FileHeaderConfiguration.IgnoreHeader)
-                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
-                            if (fieldConfig.FieldPosition > dict.Count)
+                            if (!dict.ContainsKey(kvp.Key))
+                            {
+                                if (!Configuration.FileHeaderConfiguration.IgnoreHeader)
+                                    throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                                if (fieldConfig.FieldPosition > dict.Count)
+                                    throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                            }
+                        }
+                        else
+                        {
+                            if (pi == null)
+                                pi = Configuration.PIDict.Where(kvp1 => kvp.Value.FieldPosition == kvp.Value.FieldPosition).FirstOrDefault().Value;
+
+                            if (pi == null)
                                 throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
                         }
-                    }
-                    else
-                    {
-                        if (pi == null)
-                            pi = Configuration.PIDict.Where(kvp1 => kvp.Value.FieldPosition == kvp.Value.FieldPosition).FirstOrDefault().Value;
-
-                        if (pi == null)
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
                     }
                 }
 
@@ -653,7 +704,11 @@ namespace ChoETL
                         kvp.Value.SourceType = typeof(string);
                     if (fieldConfig.ValueSelector == null)
                     {
-                        if (fieldConfig.ValueConverter != null)
+                        if (Configuration.ValueConverterBack != null)
+                            fieldValue = Configuration.ValueConverterBack(kvp.Key, fieldValue);
+                        else if (fieldConfig.ValueConverterBack != null)
+                            fieldValue = fieldConfig.ValueConverterBack(fieldValue);
+                        else if (fieldConfig.ValueConverter != null)
                             fieldValue = fieldConfig.ValueConverter(fieldValue);
                         //else
 
@@ -691,9 +746,9 @@ namespace ChoETL
                     {
                         if (Configuration.IsDynamicObject)
                         {
-                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
                             {
@@ -704,9 +759,9 @@ namespace ChoETL
                         }
                         else if (pi != null)
                         {
-                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, Configuration, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
                             {
@@ -886,14 +941,14 @@ namespace ChoETL
             }
         }
 
-        private void WriteHeaderLine(TextWriter sw)
+        private void WriteHeaderLine(TextWriter sw, string[] fieldNames)
         {
             if (HasExcelSeparator && _firstLine)
                 Write(sw, "sep={0}".FormatString(Configuration.Delimiter));
 
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
             {
-                string header = ToHeaderText();
+                string header = ToHeaderText(fieldNames);
                 if (RaiseFileHeaderWrite(ref header))
                 {
                     if (header.IsNullOrWhiteSpace())
@@ -914,7 +969,7 @@ namespace ChoETL
             }
         }
 
-        private string ToHeaderText()
+        private string ToHeaderText(string[] fieldNames)
         {
             if (!_customHeader.IsNullOrWhiteSpace())
                 return _customHeader;
@@ -922,38 +977,62 @@ namespace ChoETL
             string delimiter = Configuration.Delimiter;
             StringBuilder msg = new StringBuilder();
             string value;
-            foreach (var member in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority).Select(kvp => kvp.Value).ToArray())
+            if (fieldNames == null)
             {
-                if (Configuration.IgnoredFields.Contains(member.Name))
-                    continue;
-
-                if (member.HeaderSelector == null)
+                foreach (var member in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority).Select(kvp => kvp.Value).ToArray())
                 {
-                    var ignoreCheckDelimiter = false;
-                    var fv = member.FieldName;
-                    if (member.PropConverters != null)
+                    if (Configuration.IgnoredFields.Contains(member.Name))
+                        continue;
+
+                    if (member.HeaderSelector == null)
                     {
-                        var vc = member.PropConverters.OfType<IChoHeaderConverter>().FirstOrDefault();
-                        if (vc != null)
+                        var ignoreCheckDelimiter = false;
+                        var fv = member.FieldName;
+                        if (member.PropConverters != null)
                         {
-                            fv = vc.GetHeader(member.Name, member.FieldName, member.PropConverterParams, Configuration.Culture);
-                            ignoreCheckDelimiter = true;
+                            var vc = member.PropConverters.OfType<IChoHeaderConverter>().FirstOrDefault();
+                            if (vc != null)
+                            {
+                                fv = vc.GetHeader(member.Name, member.FieldName, member.PropConverterParams, Configuration.Culture);
+                                ignoreCheckDelimiter = true;
+                            }
                         }
+                        value = NormalizeFieldValue(member.Name, fv, null,
+                        Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
+                            Configuration.FileHeaderConfiguration.QuoteAllHeaders,
+                            Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.None : Configuration.FileHeaderConfiguration.Justification.Value,
+                            Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
+                            true, null, null, member, ignoreCheckDelimiter);
                     }
-                    value = NormalizeFieldValue(member.Name, fv, null,
-                    Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
+                    else
+                        value = member.HeaderSelector();
+
+                    if (msg.Length == 0)
+                        msg.Append(value);
+                    else
+                        msg.AppendFormat("{0}{1}", delimiter, value);
+                }
+            }
+            else
+            {
+                var ignoreCheckDelimiter = false;
+                foreach (var fieldName in fieldNames)
+                {
+                    if (Configuration.IgnoredFields.Contains(fieldName))
+                        continue;
+                    value = NormalizeFieldValue(fieldName, fieldName, null,
+                        Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
                         Configuration.FileHeaderConfiguration.QuoteAllHeaders,
                         Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.None : Configuration.FileHeaderConfiguration.Justification.Value,
                         Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
-                        true, null, null, member, ignoreCheckDelimiter);
-                }
-                else
-                    value = member.HeaderSelector();
+                        true, null, null, null, ignoreCheckDelimiter);
 
-                if (msg.Length == 0)
-                    msg.Append(value);
-                else
-                    msg.AppendFormat("{0}{1}", delimiter, value);
+                    if (msg.Length == 0)
+                        msg.Append(value);
+                    else
+                        msg.AppendFormat("{0}{1}", delimiter, value);
+                }
+
             }
 
             return msg.ToString();

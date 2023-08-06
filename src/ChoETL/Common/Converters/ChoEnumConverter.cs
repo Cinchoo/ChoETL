@@ -16,6 +16,14 @@ namespace ChoETL
     public class ChoEnumConverter : IChoValueConverter
 #endif
     {
+        private ChoEnumFormatSpec GetTypeFormat(object parameter)
+        {
+            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+            if (ts != null)
+                return ts.EnumFormat;
+
+            return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
+        }
         public virtual object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string && targetType.IsEnum)
@@ -26,7 +34,7 @@ namespace ChoETL
                 if (txt.IsNull())
                     return Activator.CreateInstance(targetType);
 
-                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
+                ChoEnumFormatSpec EnumFormat = GetTypeFormat(parameter); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
                 switch (EnumFormat)
                 {
                     case ChoEnumFormatSpec.Name:
@@ -45,7 +53,7 @@ namespace ChoETL
         {
             if ((value != null && value.GetType().IsEnum))
             {
-                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
+                ChoEnumFormatSpec EnumFormat = GetTypeFormat(parameter); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
                 switch (EnumFormat)
                 {
                     case ChoEnumFormatSpec.Name:
@@ -64,6 +72,8 @@ namespace ChoETL
                         }
                 }
             }
+            else if (value == DBNull.Value)
+                return null;
 
             return value;
         }

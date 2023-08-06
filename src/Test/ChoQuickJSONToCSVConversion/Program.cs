@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChoETL;
-
+using NUnit.Framework;
 
 namespace ChoQuickJSONToCSVConversion
 {
@@ -15,53 +15,108 @@ namespace ChoQuickJSONToCSVConversion
 			//ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
 			UsingProjection();
 		}
-
-        private static void QuickConversion()
+        [Test]
+        public static void QuickConversion()
         {
-            using (var csv = new ChoCSVWriter("emp.csv").WithFirstLineHeader())
+            string expected = @"firstName,lastName,age,address_streetAddress,address_city,address_state,address_postalCode,phoneNumber_0_type,phoneNumber_0_number,phoneNumber_1_type,phoneNumber_1_number
+John,Smith,25,21 2nd Street,New York,NY,10021,home,212 555-1234,fax,646 555-4567
+Tom,Mark,50,10 Main Street,Edison,NJ,08837,home,732 555-1234,fax,609 555-4567";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var csv = new ChoCSVWriter(csvOut).WithFirstLineHeader())
             {
                 using (var json = new ChoJSONReader("emp.json"))
                 {
                     csv.Write(json);
                 }
             }
-        }
 
-		private static void SelectiveConversion()
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void QuickConversion_1()
+        {
+            string expected = @"firstName,lastName,age,address_streetAddress,address_city,address_state,address_postalCode,phoneNumber_0_type,phoneNumber_0_number,phoneNumber_1_type,phoneNumber_1_number
+John,Smith,25,21 2nd Street,New York,NY,10021,home,212 555-1234,fax,646 555-4567
+Tom,Mark,50,10 Main Street,Edison,NJ,08837,home,732 555-1234,fax,609 555-4567";
+
+            string expected1 = @"firstName,lastName,age,streetAddress,city,state,postalCode,phoneNumber_0_type,phoneNumber_0_number,phoneNumber_1_type,phoneNumber_1_number
+John,Smith,25,21 2nd Street,New York,NY,10021,home,212 555-1234,fax,646 555-4567
+Tom,Mark,50,10 Main Street,Edison,NJ,08837,home,732 555-1234,fax,609 555-4567";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var csv = new ChoCSVWriter(csvOut)
+                .WithFirstLineHeader()
+                .Configure(c => c.IgnoreDictionaryFieldPrefix = false)
+                )
+            {
+                using (var json = new ChoJSONReader("emp.json"))
+                {
+                    csv.Write(json);
+                }
+            }
+
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+		public static void SelectiveConversion()
 		{
-			using (var csv = new ChoCSVWriter("emp.csv").WithFirstLineHeader())
+            string expected = @"FirstName,LastName,Age,StreetAddress,City,State,PostalCode,Phone,Fax
+John,Smith,25,21 2nd Street,New York,NY,10021,212 555-1234,646 555-4567
+Tom,Mark,50,10 Main Street,Edison,NJ,08837,732 555-1234,609 555-4567";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var csv = new ChoCSVWriter(csvOut).WithFirstLineHeader())
 			{
 				using (var json = new ChoJSONReader("emp.json")
 					.WithField("FirstName")
 					.WithField("LastName")
 					.WithField("Age", fieldType: typeof(int))
-					.WithField("StreetAddress", jsonPath: "$.address.streetAddress")
-					.WithField("City", jsonPath: "$.address.city")
-					.WithField("State", jsonPath: "$.address.state")
-					.WithField("PostalCode", jsonPath: "$.address.postalCode")
-					.WithField("Phone", jsonPath: "$.phoneNumber[?(@.type=='home')].number")
-					.WithField("Fax", jsonPath: "$.phoneNumber[?(@.type=='fax')].number")
+					.WithField("StreetAddress", jsonPath: "$.address.streetAddress", isArray: false)
+					.WithField("City", jsonPath: "$.address.city", isArray: false)
+					.WithField("State", jsonPath: "$.address.state", isArray: false)
+					.WithField("PostalCode", jsonPath: "$.address.postalCode", isArray: false)
+					.WithField("Phone", jsonPath: "$.phoneNumber[?(@.type=='home')].number", isArray: false)
+					.WithField("Fax", jsonPath: "$.phoneNumber[?(@.type=='fax')].number", isArray: false)
 				)
 				{
 					csv.Write(json);
 				}
 			}
-		}
 
-		private static void UsingPOCO()
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void UsingPOCO()
         {
-            using (var csv = new ChoCSVWriter<Employee>("emp.csv").WithFirstLineHeader())
+            string expected = @"FirstName,LastName,Age,StreetAddress,City,State,PostalCode,Phone,Fax
+John,Smith,25,21 2nd Street,New York,NY,10021,212 555-1234,646 555-4567
+Tom,Mark,50,10 Main Street,Edison,NJ,08837,732 555-1234,609 555-4567";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var csv = new ChoCSVWriter<Employee>(csvOut).WithFirstLineHeader())
             {
                 using (var json = new ChoJSONReader<Employee>("emp.json"))
                 {
                     csv.Write(json);
                 }
             }
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
-
-        private static void UsingProjection()
+        [Test]
+        public static void UsingProjection()
         {
-            using (var csv = new ChoCSVWriter("emp.csv").WithFirstLineHeader())
+            string expected = @"FirstName,LastName,Age,StreetAddress,City,State,PostalCode,Phone,Fax
+John,Smith,25,21 2nd Street,New York,NY,10021,212 555-1234,646 555-4567
+Tom,Mark,50,10 Main Street,Edison,NJ,08837,732 555-1234,609 555-4567";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var csv = new ChoCSVWriter(csvOut).WithFirstLineHeader())
             {
                 using (var json = new ChoJSONReader("emp.json"))
                 {
@@ -78,6 +133,8 @@ namespace ChoQuickJSONToCSVConversion
                     }));
                 }
             }
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
         }
     }
 

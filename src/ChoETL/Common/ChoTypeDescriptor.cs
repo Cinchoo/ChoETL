@@ -127,7 +127,10 @@
                 .OrderBy(x => orderList.IndexOf(x.ComponentType))
                 .ToArray();
 
-            return new PropertyDescriptorCollection(props);
+            var map = props.GroupBy(p => p.GetType())
+                .Select(g => new { g.Key, Values = g.ToArray() }).ToArray();
+                
+            return new PropertyDescriptorCollection(map.FirstOrDefault()?.Values);
         }
 
         public static IEnumerable<PropertyDescriptor> GetProperties<T>(Type type)
@@ -701,6 +704,30 @@
                 else
                     _typeTypeConverterCache[objType] = ChoArray.Combine<object>(_typeTypeConverterCache[objType], converters);
             }
+        }
+
+        public static void RegisterTypeConverter(Type type)
+        {
+#if !NETSTANDARD2_0
+            if (typeof(IValueConverter).IsAssignableFrom(type))
+            {
+                var attr = ChoType.GetCustomAttribute<ChoSourceTypeAttribute>(type, true);
+                if (attr == null || attr.Type == null) return;
+                RegisterTypeConverterForTypeInternal(attr.Type, ChoActivator.CreateInstance(type));
+                return;
+            }
+#endif
+            if (typeof(IChoValueConverter).IsAssignableFrom(type))
+            {
+                var attr = ChoType.GetCustomAttribute<ChoSourceTypeAttribute>(type, true);
+                if (attr == null || attr.Type == null) return;
+                RegisterTypeConverterForTypeInternal(attr.Type, ChoActivator.CreateInstance(type));
+            }
+        }
+
+        public static void RegisterTypeConverter<T>()
+        {
+            RegisterTypeConverter(typeof(T));
         }
 
 #if !NETSTANDARD2_0

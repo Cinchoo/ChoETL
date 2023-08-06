@@ -293,7 +293,18 @@ namespace ChoETL
             if (source == null) return source;
 
             if (source is IDictionary<string, object>)
-                return ((IDictionary<string, object>)source).ToObject(type);
+            {
+                if (type == typeof(object))
+                    return source;
+                else if (typeof(IDictionary<string, object>).IsAssignableFrom(type))
+                    return source;
+                else if (typeof(IDictionary).IsAssignableFrom(type))
+                {
+                    return source;
+                }
+                else
+                    return ((IDictionary<string, object>)source).ToObject(type);
+            }
             else
             {
                 if (source is IDictionary)
@@ -439,7 +450,10 @@ namespace ChoETL
                 return dict1;
             }
             if (target is IEnumerable<KeyValuePair<string, object>>)
-                return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value.ToDictionaryInternal());
+            {
+                var list = new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>);
+                return list.ToDictionary(x => x.Key, x => x.Value.ToDictionaryInternal());
+            }
             if (target is IEnumerable<Tuple<string, object>>)
                 return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2.ToDictionaryInternal());
             if (target is IList)

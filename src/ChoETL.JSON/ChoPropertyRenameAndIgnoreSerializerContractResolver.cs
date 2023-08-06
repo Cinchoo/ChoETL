@@ -669,7 +669,9 @@ namespace ChoETL
                                     if (_fc != null)
                                         ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
                                     else
-                                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, 
+                                            ChoTypeDescriptor.GetTypeConverters(_mi), 
+                                            ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture, config: Configuration);
                                 }
                                 ValidateORead(ref retValue);
                             }
@@ -681,7 +683,7 @@ namespace ChoETL
                                         retValue = ((JObject)retValue).ToObject(objectType, serializer);
 
                                     if (_fc != null)
-                                        ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                                        ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture, config: Configuration);
                                     else
                                         retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
                                 }
@@ -697,7 +699,7 @@ namespace ChoETL
                                     retValue = ((JObject)retValue).ToObject(objectType, serializer);
 
                                 if (_fc != null)
-                                    ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                                    ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture, config: Configuration);
                                 else
                                     retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
                             }

@@ -20,6 +20,13 @@ namespace ChoETL
     {
         private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
         internal readonly Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>> CSVRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>>();
+        private readonly string _defaultEmptyColumnHeaderPrefix = "Column_";
+        private string _emptyColumnHeaderPrefix;
+        public string EmptyColumnHeaderPrefix
+        {
+            get { return _emptyColumnHeaderPrefix.IsNullOrWhiteSpace() ? _defaultEmptyColumnHeaderPrefix : _emptyColumnHeaderPrefix; }
+            set { _emptyColumnHeaderPrefix = value; }
+        }
         public char? ArrayValueItemSeparator
         {
             get;
@@ -158,7 +165,6 @@ namespace ChoETL
             get;
             set;
         }
-        public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool AreAllFieldTypesNull
         {
@@ -208,6 +214,9 @@ namespace ChoETL
         }
 
         public bool EscapeUsingDoubleQuoteChar { get; set; }
+        public bool JoinExtraFieldValues { get; set; }
+        public bool IncludeFieldDelimiterWhileJoining { get; set; }
+        public bool ThrowAndStopOnBadData { get; set; } = false;
 
         //internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
 
@@ -265,7 +274,7 @@ namespace ChoETL
                     if (RecordTypeConfiguration.Position <= 0)
                         return RecordTypeConfiguration.DefaultRecordType;
 
-                    string[] fieldValues = line.Split(Delimiter, StringSplitOptions, QuoteChar);
+                    string[] fieldValues = line.Split(Delimiter, StringSplitOptions, QuoteChar, mayContainEOLInData: MayContainEOLInData);
                     if (fieldValues.Length > 0 && RecordTypeConfiguration.Position - 1 < fieldValues.Length)
                     {
                         if (RecordTypeConfiguration.Contains(fieldValues[RecordTypeConfiguration.Position - 1]))
@@ -623,7 +632,7 @@ namespace ChoETL
                 if (!ignoreAttrs)
                 {
                     ChoFieldPositionAttribute fpAttr = pd.Attributes.OfType<ChoFieldPositionAttribute>().FirstOrDefault();
-                    if (fpAttr != null && fpAttr.Position > 0)
+                    if (fpAttr != null && fpAttr.Position >= 0)
                         obj.FieldPosition = fpAttr.Position;
                 }
             }
@@ -1664,6 +1673,13 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoCSVRecordConfiguration ConfigureTypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            CreateTypeConverterSpecsIfNull();
+            spec?.Invoke(TypeConverterFormatSpec);
+            return this;
+        }
 
         public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
         {
