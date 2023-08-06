@@ -3285,8 +3285,12 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
         [Test]
         public static void DataTableTest()
         {
+            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\src\assets\db\Northwind.mdf");
+            dbFilePath.Print();
+
             StringBuilder sb = new StringBuilder();
-            string connectionstring = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True";
+            string connectionstring = $"Data Source=(localdb)\\MSSQLLocalDB;AttachDbFilename={dbFilePath};Integrated Security=True";
+
             using (var conn = new SqlConnection(connectionstring))
             {
                 conn.Open();

@@ -1762,7 +1762,8 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
         public static void Issue144()
         {
             string filePath = @$"emp.parquet";
-            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\..\data\db\Northwind.mdf");
+            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\assets\db\Northwind.mdf");
+            dbFilePath.Print();
 
             string connectionString = $"Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename={dbFilePath};Integrated Security=True;Connect Timeout=30";
             SqlConnection conn = new SqlConnection(connectionString);
@@ -1841,7 +1842,8 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
         public static void Issue144_UsingFieldLevelValueConverter()
         {
             string filePath = @$"emp.parquet";
-            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\..\data\db\Northwind.mdf");
+            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\assets\db\Northwind.mdf");
+            dbFilePath.Print();
 
             string connectionString = $"Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename={dbFilePath};Integrated Security=True;Connect Timeout=30";
             SqlConnection conn = new SqlConnection(connectionString);
@@ -1904,8 +1906,9 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
         public static void Issue144_UsingCustomConverter()
         {
             string filePath = @$"emp.parquet";
-            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\..\data\db\Northwind.mdf");
-
+            var dbFilePath = Path.GetFullPath(@"..\..\..\..\..\assets\db\Northwind.mdf");
+            dbFilePath.Print();
+            //C:\Users\nraj39\source\repos\ChoETL\src\Assets\Db\Northwind.MDF
             string connectionString = $"Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename={dbFilePath};Integrated Security=True;Connect Timeout=30";
             SqlConnection conn = new SqlConnection(connectionString);
             conn.Open();
