@@ -1974,6 +1974,119 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             Assert.AreEqual(expected, actual);
         }
 
+        static string nestedJsonData = @"{
+  ""meta"": {
+    ""warnings"": [],
+    ""page"": {
+      ""current"": 1,
+      ""total_pages"": 1,
+      ""total_results"": 2,
+      ""size"": 10
+    },
+    ""request_id"": ""6887a53f701a59574a0f3a7012e01aa8""
+  },
+  ""results"": [
+    {
+      ""phone"": {
+        ""raw"": 3148304280.0
+      },
+      ""accounts_balance_ach"": {
+        ""raw"": 27068128.71
+      },
+      ""accounts_balance_pending"": {
+        ""raw"": ""46809195.64""
+      },
+      ""email"": {
+        ""raw"": ""Brisa34@hotmail.com""
+      },
+      ""accounts_count"": {
+        ""raw"": 6.0
+      },
+      ""id"": {
+        ""raw"": ""c98808a2-d7d6-4444-834d-2fe4f6858f6b""
+      },
+      ""display_name"": {
+        ""raw"": ""The Johnstons""
+      },
+      ""type"": {
+        ""raw"": ""Couple""
+      },
+      ""advisor_email"": {
+        ""raw"": ""Cornelius_Schiller14@hotmail.com""
+      },
+      ""created_at"": {
+        ""raw"": ""2018-10-02T10:42:07+00:00""
+      },
+      ""source"": {
+        ""raw"": ""event""
+      },
+      ""accounts_balance"": {
+        ""raw"": 43629003.47
+      },
+      ""accounts_donations"": {
+        ""raw"": 38012278.75
+      },
+      ""advisor_name"": {
+        ""raw"": ""Cloyd Jakubowski""
+      },
+      ""_meta"": {
+        ""score"": 0.42934617
+      }
+    },
+    {
+      ""phone"": {
+        ""raw"": 2272918612.0
+      },
+      ""accounts_balance_ach"": {
+        ""raw"": 35721452.35
+      },
+      ""accounts_balance_pending"": {
+        ""raw"": ""35117465.2""
+      },
+      ""email"": {
+        ""raw"": ""Ruby87@yahoo.com""
+      },
+      ""accounts_count"": {
+        ""raw"": 1.0
+      },
+      ""id"": {
+        ""raw"": ""687af11f-0f73-4112-879c-1108303cb07a""
+      },
+      ""display_name"": {
+        ""raw"": ""Kennith Johnston""
+      },
+      ""type"": {
+        ""raw"": ""Individual""
+      },
+      ""advisor_email"": {
+        ""raw"": ""Evangeline_Wisoky92@hotmail.com""
+      },
+      ""created_at"": {
+        ""raw"": ""2018-10-02T16:16:02+00:00""
+      },
+      ""source"": {
+        ""raw"": ""website""
+      },
+      ""accounts_balance"": {
+        ""raw"": 23063874.19
+      },
+      ""accounts_donations"": {
+        ""raw"": 33025175.79
+      },
+      ""advisor_name"": {
+        ""raw"": ""Ernie Mertz""
+      },
+      ""_meta"": {
+        ""score"": 0.39096162
+      }
+    }
+  ]
+}";
+        [Test]
+        public static void DeserializeNestedData_Dynamic()
+        {
+        }
+
         static void Main(string[] args)
         {
             Issue285();
