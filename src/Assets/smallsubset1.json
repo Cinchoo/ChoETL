@@ -1,0 +1,123 @@
+{
+  "Job": {
+    "Keys": {
+      "JobID": "test123",
+      "DeviceID": "TEST01"
+    },
+    "Props": {
+      "FileType": "Measurements",
+      "InstrumentDescriptions": [
+        {
+          "InstrumentID": "1723007",
+          "InstrumentType": "Actual1",
+          "Name": "U",
+          "DataType": "Double",
+          "Units": "degC"
+        },
+        {
+          "InstrumentID": "2424009",
+          "InstrumentType": "Actual2",
+          "Name": "VG03",
+          "DataType": "Double",
+          "Units": "Pa"
+        }
+      ]
+    },
+    "Steps": [
+      {
+        "Keys": {
+          "StepID": "START",
+          "StepResult": "NormalEnd"
+        },
+        "InstrumentData": [
+          {
+            "Keys": {
+              "InstrumentID": "1723007"
+            },
+            "Measurements": [
+              {
+                "DateTime": "2021-11-16 21:18:37.000",
+                "Value": 540
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.100",
+                "Value": 539
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.200",
+                "Value": 540
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.300",
+                "Value": 540
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.400",
+                "Value": 540
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.500",
+                "Value": 540
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.600",
+                "Value": 540
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.700",
+                "Value": 538
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.800",
+                "Value": 540
+              }
+            ]
+          },
+          {
+            "Keys": {
+              "InstrumentID": "2424009"
+            },
+            "Measurements": [
+              {
+                "DateTime": "2021-11-16 21:18:37.000",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.100",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.200",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.300",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.400",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.500",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.600",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.700",
+                "Value": 1333.22
+              },
+              {
+                "DateTime": "2021-11-16 21:18:37.800",
+                "Value": 1333.22
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

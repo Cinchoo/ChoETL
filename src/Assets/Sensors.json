@@ -1,0 +1,49 @@
+{
+  "ControlJob": {
+    "Keys": {
+      "CtrJobID": "KE-CJ0000000409",
+      "EquipmentID": "TEST01"
+    },
+    "Attributes": {
+      "FileType": "SensorData",
+      "JsonSchemaVersion": "Draft",
+      "SensorDescriptions": [
+        {
+          "SensorID": "1723007",
+          "SVID": "1723007",
+          "Group": "Temp",
+          "SensorType": "Actual_01",
+          "Name": "U",
+          "DataType": "Double",
+          "Units": "degC"
+        },
+        {
+          "SensorID": "2424009",
+          "SVID": "2424009",
+          "Group": "Press",
+          "SensorType": "Actual_VG03_1Hz",
+          "Name": "VG03",
+          "DataType": "Double",
+          "Units": "Pa"
+        }
+      ]
+    },
+    "RecipeSteps": [
+      {
+        "Keys": {
+          "RecipeStepID": "START",
+          "StepResult": "NormalEnd"
+        },
+      },
+      {
+        "Keys": {
+          "RecipeStepID": "END",
+          "StepResult": "NormalEnd"
+        },
+      }
+
+    ]
+
+
+  }
+}
