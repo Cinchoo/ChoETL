@@ -381,7 +381,9 @@ namespace ChoETL
             else
                 Console.WriteLine(message);
             //System.Diagnostics.Trace.WriteLine(message);
-            Environment.Exit(-1);
+
+            //Issue294 - User reported not able to catch exception in the debugger
+            //Environment.Exit(-1);
         }
 
         private static void RegisterConsoleControlHandler()

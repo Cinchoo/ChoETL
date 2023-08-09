@@ -374,6 +374,12 @@ namespace ChoETL
                             //if (Configuration.NodeConvertersForType.ContainsKey(RecordType) && Configuration.NodeConvertersForType[RecordType] != null)
                             //    record = Configuration.NodeConvertersForType[RecordType](record);
 
+                            if (record is ChoDynamicObject dobj)
+                            {
+                                if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                                    record = dobj.IgnoreNullValues();
+                            }
+
                             if (record == null)
                             {
                                 if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)

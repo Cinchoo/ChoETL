@@ -580,6 +580,7 @@ namespace ChoXmlReaderTest
         [XmlAttribute]
         public string Project { get; set; } = string.Empty;
     }
+
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
     public class Program
@@ -587,7 +588,13 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            XmlArray2JSON();
+            //XmlArray2JSON();
+
+            var configuration = new ChoXmlRecordConfiguration { ErrorMode = ChoErrorMode.ThrowAndStop };
+            //throw new Exception("Debugger catches this");
+            var x = new ChoXmlReader<MyObject>("XmlFile5.xml", configuration);
+            throw new Exception("Uncaught by debugger, shows \"An application error occurred\" in debugger console.");
+
             return;
 
             LoadProducts();
@@ -3065,6 +3072,7 @@ fizeofnpj-dzeifjzenf-ezfizef,6000009251";
                 Assert.AreEqual(expected, actual);
             }
         }
+
         [Serializable]
         public class ChoEazyCopyPropertyReplacer : IChoKeyValuePropertyReplacer
         {
@@ -4199,7 +4207,7 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
             }
 
             Console.WriteLine(csv.ToString());
-         
+
             var actual = csv.ToString();
             Assert.AreEqual(expected, actual);
         }
@@ -4453,7 +4461,7 @@ Corporate Office,Egypt,988915,01/03/1986,hesh.a.metwally@gmail.com,07/01/2020 11
         {
             string expected = @"CentreName,Country,CustomerId,DOB,Email,ExpiryDate
 Corporate Office,Austria,379,25/02/1991,farah@gmail.com,2020-03-01T08:01:00.0000000
-Corporate Office,Egypt,988915,01/03/1986,hesh.a.metwally@gmail.com,2020-07-01T11:38:00.0000000"; 
+Corporate Office,Egypt,988915,01/03/1986,hesh.a.metwally@gmail.com,2020-07-01T11:38:00.0000000";
             string actual = null;
 
             StringBuilder sb = new StringBuilder();
@@ -5166,7 +5174,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
  }
 ]";
 
-            actual = ChoXmlWriter.ToTextAll(ChoJSONReader.LoadText(json), 
+            actual = ChoXmlWriter.ToTextAll(ChoJSONReader.LoadText(json),
                 new ChoXmlRecordConfiguration()
                 .Configure(c => c.RootName = "ContrastDoseReport")
                 .Configure(c => c.NodeName = "Patient")
@@ -8845,7 +8853,7 @@ GA-H110M-S2H,""GIGABYTE Main Board Desktop INTEL H110 (Socket LGA1151,2xDDR4,VGA
             </Employees>
         ";
 
-        DataTable expected = new DataTable();
+            DataTable expected = new DataTable();
             expected.Columns.Add("Id", typeof(Int32)).AllowDBNull = false;
             expected.Columns.Add("Name", typeof(string));
             expected.Columns.Add("IsActive", typeof(bool)).AllowDBNull = true;

@@ -1671,6 +1671,13 @@ namespace ChoETL
             {
                 rec = rootRec;
             }
+
+            if (rec is ChoDynamicObject dobj)
+            {
+                if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                    rec = dobj.IgnoreNullValues();
+            }
+
             return true;
         }
 

@@ -9179,6 +9179,49 @@ GLot,id,Slot,Scribe,Diameter,MPD,SResistivity,SThickness,TTV,LTV,Warp,Bow,S_U_A,
             }
 
         }
+
+        [Test]
+        public static void CSV2JSONWithDynamicObjectNames()
+        {
+            string csv = @"VE NUMMER;VE NAAM;EFFECTDATUM;EINDDATUM
+123;abc;20221001;
+124;def;20221001;
+125;ter;20221001;
+126;ddf;20221001;";
+
+            string expected = @"[
+  {
+    ""Id"": ""123"",
+    ""Name"": ""abc"",
+    ""Date"": ""20221001""
+  },
+  {
+    ""Id"": ""124"",
+    ""Name"": ""def"",
+    ""Date"": ""20221001""
+  },
+  {
+    ""Id"": ""125"",
+    ""Name"": ""ter"",
+    ""Date"": ""20221001""
+  },
+  {
+    ""Id"": ""126"",
+    ""Name"": ""ddf"",
+    ""Date"": ""20221001""
+  }
+]";
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFields("Id", "Name", "Date")
+                .WithFirstLineHeader(true)
+                .WithDelimiter(";")
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;

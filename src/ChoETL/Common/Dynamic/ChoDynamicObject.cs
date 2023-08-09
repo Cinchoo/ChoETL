@@ -2288,6 +2288,69 @@ namespace ChoETL
         {
             return this;
         }
+
+        public ChoDynamicObject IgnoreNullValues()
+        {
+            ChoDynamicObject dest = new ChoDynamicObject();
+            foreach (var kvp in (ChoDynamicObject)this)
+            {
+                if (kvp.Value is ChoDynamicObject dobj)
+                {
+                    if (HasAllNullValues(dobj))
+                        continue;
+
+                    dest.Add(kvp.Key, kvp.Value);
+                }
+                else if (kvp.Value is IList list)
+                {
+                    List<object> output = new List<object>();
+                    foreach (var item in list)
+                    {
+                        if (item is ChoDynamicObject dobj1)
+                        {
+                            if (HasAllNullValues(dobj1))
+                                continue;
+                        }
+
+                        output.Add(item);
+                    }
+                    if (output.Count > 0)
+                        dest.Add(kvp.Key, output.ToArray());
+                }
+                else
+                    dest.Add(kvp.Key, kvp.Value);
+            }
+
+            return HasAllNullValues(dest) ? null : dest;
+
+        }
+        private bool HasAllNullValues(ChoDynamicObject src)
+        {
+            foreach (var v in src.Values)
+            {
+                if (v == null)
+                    continue;
+                else if (v is IList list)
+                {
+                    foreach (var item in list.OfType<ChoDynamicObject>())
+                    {
+                        if (!HasAllNullValues(item))
+                            return false;
+                    }
+                }
+                else if (v is ChoDynamicObject v1)
+                {
+                    if (HasAllNullValues(v1))
+                        continue;
+                    else
+                        return false;
+                }
+                else
+                    return false;
+            }
+
+            return true;
+        }
     }
 
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]

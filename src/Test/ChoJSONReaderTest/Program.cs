@@ -2165,7 +2165,7 @@ K,L,M,N,O,P,Q,R,S,T";
             using (var r = ChoJSONReader.LoadText(json)
                 )
             {
-                var dt = r.Select(rec => ((object[])rec.Value).ToDictionary(valueNamePrefix:"Column_")).AsDataTable();
+                var dt = r.Select(rec => ((object[])rec.Value).ToDictionary(valueNamePrefix: "Column_")).AsDataTable();
 
                 DataTableAssert.AreEqual(expected, dt);
             }
@@ -10663,7 +10663,7 @@ Mark,Mandrian,spoken,C";
                 )
             {
                 //r.Print();
-            
+
                 var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
                 Assert.AreEqual(expected, actual);
             }
@@ -11621,7 +11621,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
     ""Name"": ""Mark""
   }
 ]";
-           
+
             MyCollectionClass coll = new MyCollectionClass();
             coll.Add(new MyClass2 { Id = 1, Name = "Tom" });
             coll.Add(new MyClass2 { Id = 2, Name = "Mark" });
@@ -13874,6 +13874,438 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                 }
             }
         }
+        [Test]
+        public static void Issue263_1()
+        {
+            string json = @"[
+  {
+    ""id"": 104004101,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 133
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400401
+        }
+      ]
+    }
+  },
+  {
+    ""id"": 104004102,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 133
+        },
+        {
+          ""type"": ""sub"",
+          ""value"": 233
+        },
+        {
+          ""type"": ""sub"",
+          ""value"": 433
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400401
+        },
+        {
+          ""type"": ""add"",
+          ""subid"": 10400402
+        }
+      ]
+    }
+  },
+  {
+    ""id"": 104004103,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 333
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400403
+        }
+      ]
+    }
+  }
+]";
+            string expectedCSV = @"id,objs/aList/0/type,objs/aList/0/value,objs/aList/1/type,objs/aList/1/value,objs/aList/2/type,objs/aList/2/value,objs/bList/0/type,objs/bList/0/subid,objs/bList/1/type,objs/bList/1/subid
+""104004101"",""sub"",""133"","""","""","""","""",""add"",""10400401"","""",""""
+""104004102"",""sub"",""133"",""sub"",""233"",""sub"",""433"",""add"",""10400401"",""add"",""10400402""
+""104004103"",""sub"",""333"","""","""","""","""",""add"",""10400403"","""",""""";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(csv).WithFirstLineHeader()
+                             .QuoteAllFields()
+                             .WithMaxScanRows(3)
+                             .ThrowAndStopOnMissingField(false)
+                             .NestedColumnSeparator('/')
+                             .ErrorMode(ChoErrorMode.IgnoreAndContinue))
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine("print csv====");
+            csv.Print();
+            var actualCSV = csv.ToString();
+            Assert.AreEqual(expectedCSV, actualCSV);
+
+            Console.WriteLine("print json====");
+
+            StringBuilder jsonOut = new StringBuilder();
+            // how to restore the csv to original json ?
+            using (var r = ChoCSVReader.LoadText(csv.ToString())
+                .NestedColumnSeparator('/')
+                .WithFirstLineHeader()
+                .WithMaxScanRows(3) // convert string to number
+                .QuoteAllFields())
+            {
+                var recs = r.ToArray();
+
+                using (var w = new ChoJSONWriter(jsonOut)
+                       .Configure(c => c.ThrowAndStopOnMissingField = false)
+                       .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
+                       {
+                           if (e.Source is ChoDynamicObject dobj)
+                           {
+                               e.Source = dobj.IgnoreNullValues();
+                           }
+                       })
+                      )
+                {
+                    w.Write(recs);
+                }
+            }
+            json.Print();
+            var actualJSON = jsonOut.ToString();
+            Assert.AreEqual(json, actualJSON);
+        }
+        [Test]
+        public static void Issue263_2()
+        {
+            string json = @"[
+  {
+    ""id"": 104004101,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 133
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400401
+        }
+      ]
+    }
+  },
+  {
+    ""id"": 104004102,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 133
+        },
+        {
+          ""type"": ""sub"",
+          ""value"": 233
+        },
+        {
+          ""type"": ""sub"",
+          ""value"": 433
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400401
+        },
+        {
+          ""type"": ""add"",
+          ""subid"": 10400402
+        }
+      ]
+    }
+  },
+  {
+    ""id"": 104004103,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 333
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400403
+        }
+      ]
+    }
+  }
+]";
+            string expectedCSV = @"id,objs/aList/0/type,objs/aList/0/value,objs/aList/1/type,objs/aList/1/value,objs/aList/2/type,objs/aList/2/value,objs/bList/0/type,objs/bList/0/subid,objs/bList/1/type,objs/bList/1/subid
+""104004101"",""sub"",""133"","""","""","""","""",""add"",""10400401"","""",""""
+""104004102"",""sub"",""133"",""sub"",""233"",""sub"",""433"",""add"",""10400401"",""add"",""10400402""
+""104004103"",""sub"",""333"","""","""","""","""",""add"",""10400403"","""",""""";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(csv).WithFirstLineHeader()
+                             .QuoteAllFields()
+                             .WithMaxScanRows(3)
+                             .ThrowAndStopOnMissingField(false)
+                             .NestedColumnSeparator('/')
+                             .ErrorMode(ChoErrorMode.IgnoreAndContinue))
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine("print csv====");
+            csv.Print();
+            var actualCSV = csv.ToString();
+            Assert.AreEqual(expectedCSV, actualCSV);
+
+            Console.WriteLine("print json====");
+
+            StringBuilder jsonOut = new StringBuilder();
+            // how to restore the csv to original json ?
+            using (var r = ChoCSVReader.LoadText(csv.ToString())
+                .NestedColumnSeparator('/')
+                .WithFirstLineHeader()
+                .WithMaxScanRows(3) // convert string to number
+                .QuoteAllFields())
+            {
+                var recs = r.ToArray();
+
+                using (var w = new ChoJSONWriter(jsonOut)
+                       .Configure(c => c.ThrowAndStopOnMissingField = false)
+                       .NullValueHandling(ChoNullValueHandling.Ignore)
+                       .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
+                       {
+                           if (e.Source is ChoDynamicObject dobj)
+                           {
+                               e.Source = dobj.IgnoreNullValues();
+                           }
+                       })
+                      )
+                {
+                    w.Write(recs);
+                }
+            }
+            json.Print();
+            var actualJSON = jsonOut.ToString();
+            Assert.AreEqual(json, actualJSON);
+        }
+        [Test]
+        public static void Issue263_3()
+        {
+            string json = @"[
+  {
+    ""id"": 104004101,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 133
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400401
+        }
+      ]
+    }
+  },
+  {
+    ""id"": 104004102,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 133
+        },
+        {
+          ""type"": ""sub"",
+          ""value"": 233
+        },
+        {
+          ""type"": ""sub"",
+          ""value"": 433
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400401
+        },
+        {
+          ""type"": ""add"",
+          ""subid"": 10400402
+        }
+      ]
+    }
+  },
+  {
+    ""id"": 104004103,
+    ""objs"": {
+      ""aList"": [
+        {
+          ""type"": ""sub"",
+          ""value"": 333
+        }
+      ],
+      ""bList"": [
+        {
+          ""type"": ""add"",
+          ""subid"": 10400403
+        }
+      ]
+    }
+  }
+]";
+            string expectedCSV = @"id,objs/aList/0/type,objs/aList/0/value,objs/aList/1/type,objs/aList/1/value,objs/aList/2/type,objs/aList/2/value,objs/bList/0/type,objs/bList/0/subid,objs/bList/1/type,objs/bList/1/subid
+""104004101"",""sub"",""133"","""","""","""","""",""add"",""10400401"","""",""""
+""104004102"",""sub"",""133"",""sub"",""233"",""sub"",""433"",""add"",""10400401"",""add"",""10400402""
+""104004103"",""sub"",""333"","""","""","""","""",""add"",""10400403"","""",""""";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(csv).WithFirstLineHeader()
+                             .QuoteAllFields()
+                             .WithMaxScanRows(3)
+                             .ThrowAndStopOnMissingField(false)
+                             .NestedColumnSeparator('/')
+                             .ErrorMode(ChoErrorMode.IgnoreAndContinue))
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine("print csv====");
+            csv.Print();
+            var actualCSV = csv.ToString();
+            Assert.AreEqual(expectedCSV, actualCSV);
+
+            Console.WriteLine("print json====");
+
+            StringBuilder jsonOut = new StringBuilder();
+            // how to restore the csv to original json ?
+            using (var r = ChoCSVReader.LoadText(csv.ToString())
+                .NestedColumnSeparator('/')
+                .WithFirstLineHeader()
+                .WithMaxScanRows(3) // convert string to number
+                .QuoteAllFields())
+            {
+                var recs = r.ToArray();
+
+                using (var w = new ChoJSONWriter(jsonOut)
+                       .Configure(c => c.ThrowAndStopOnMissingField = false)
+                       .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
+                       {
+                           if (e.Source is ChoDynamicObject dobj)
+                           {
+                               e.Source = IgnoreNullValues(dobj);
+                           }
+                       })
+                      )
+                {
+                    w.Write(recs);
+                }
+            }
+            json.Print();
+            var actualJSON = jsonOut.ToString();
+            Assert.AreEqual(json, actualJSON);
+        }
+        public static object IgnoreNullValues(object src)
+        {
+            if (!(src is ChoDynamicObject)) return src;
+
+            ChoDynamicObject dest = new ChoDynamicObject();
+            foreach (var kvp in (ChoDynamicObject)src)
+            {
+                if (kvp.Value is ChoDynamicObject dobj)
+                {
+                    if (HasAllNullValues(dobj))
+                        continue;
+
+                    dest.Add(kvp.Key, kvp.Value);
+                }
+                else if (kvp.Value is IList list)
+                {
+                    List<object> output = new List<object>();
+                    foreach (var item in list)
+                    {
+                        if (item is ChoDynamicObject dobj1)
+                        {
+                            if (HasAllNullValues(dobj1))
+                                continue;
+                        }
+
+                        output.Add(item);
+                    }
+                    if (output.Count > 0)
+                        dest.Add(kvp.Key, output.ToArray());
+                }
+                else
+                    dest.Add(kvp.Key, kvp.Value);
+            }
+
+            return HasAllNullValues(dest) ? null : dest;
+        }
+
+
+        private static bool HasAllNullValues(ChoDynamicObject src)
+        {
+            foreach (var v in src.Values)
+            {
+                if (v == null)
+                    continue;
+                else if (v is IList list)
+                {
+                    foreach (var item in list.OfType<ChoDynamicObject>())
+                    {
+                        if (!HasAllNullValues(item))
+                            return false;
+                    }
+                }
+                else if (v is ChoDynamicObject v1)
+                {
+                    if (HasAllNullValues(v1))
+                        continue;
+                    else
+                        return false;
+                }
+                else
+                    return false;
+            }
+
+            return true;
+        }
 
         static void Issue263()
         {
@@ -13931,9 +14363,24 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
 
         }
 
+        public class MetaResults
+        {
+            [JsonProperty("meta")]
+            public Meta Meta { get; set; }
+            [JsonProperty("results")]
+            public List<Result2> Results { get; set; }
+        }
+        public class Meta
+        {
+            [JsonProperty("request_id")]
+            public string RequestId { get; set; }
+            [JsonProperty("warnings")]
+            public string[] Warnings { get; set; }
+        }
+
         static string nestedJsonData = @"{
   ""meta"": {
-    ""warnings"": [],
+    ""warnings"": [  ],
     ""page"": {
       ""current"": 1,
       ""total_pages"": 1,
@@ -14039,13 +14486,361 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
     }
   ]
 }";
-        [Test]
-        public static void DeserializeNestedData_Dynamic()
+
+        public class Result2
         {
-            using (var r = ChoJSONReader.LoadText(nestedJsonData)
+            [JsonProperty("phone")]
+            public string Phone { get; set; }
+            [JsonProperty("accounts_balance_ach")]
+            public string AccountsBalanceACH { get; set; }
+        }
+
+        [Test]
+        public static void DeserializeNestedData_1()
+        {
+            string expected = @"[
+  {
+    ""meta"": {
+      ""request_id"": ""6887a53f701a59574a0f3a7012e01aa8"",
+      ""warnings"": []
+    },
+    ""results"": [
+      {
+        ""phone"": ""3148304280"",
+        ""accounts_balance_ach"": ""27068128.71""
+      },
+      {
+        ""phone"": ""2272918612"",
+        ""accounts_balance_ach"": ""35721452.35""
+      }
+    ]
+  }
+]";
+
+            using (var r = ChoJSONReader<MetaResults>.LoadText(nestedJsonData)
+                .WithJSONPath("$", true)
+                .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    var src = e.Source as JObject;
+                    if (src != null && src.ContainsKey("raw"))
+                        e.Source = src["raw"];
+                })
                 )
             {
-                r.Print();
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void DeserializeNestedData_2()
+        {
+            string expected = @"[
+  {
+    ""phone"": ""3148304280"",
+    ""accounts_balance_ach"": ""27068128.71""
+  },
+  {
+    ""phone"": ""2272918612"",
+    ""accounts_balance_ach"": ""35721452.35""
+  }
+]";
+
+            using (var r = ChoJSONReader<Result2>.LoadText(nestedJsonData)
+                .WithJSONPath("$..results")
+                .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    var src = e.Source as JObject;
+                    e.Source = src["raw"];
+                })
+                )
+            {
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        public class Result3
+        {
+            [JsonProperty("phone")]
+            [ChoJSONPath("phone.raw")]
+            public string Phone { get; set; }
+            [JsonProperty("accounts_balance_ach")]
+            [ChoJSONPath("accounts_balance_ach.raw")]
+            public string AccountsBalanceACH { get; set; }
+        }
+
+        [Test]
+        public static void DeserializeNestedData_3()
+        {
+            string expected = @"[
+  {
+    ""phone"": ""3148304280"",
+    ""accounts_balance_ach"": ""27068128.71""
+  },
+  {
+    ""phone"": ""2272918612"",
+    ""accounts_balance_ach"": ""35721452.35""
+  }
+]";
+
+            using (var r = ChoJSONReader<Result3>.LoadText(nestedJsonData)
+                .WithJSONPath("$..results")
+                )
+            {
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        public class MetaResults4
+        {
+            [JsonProperty("meta")]
+            public Meta4 Meta { get; set; }
+            [JsonProperty("results")]
+            public List<Result4> Results { get; set; }
+        }
+        public class Meta4
+        {
+            [JsonProperty("request_id")]
+            public string RequestId { get; set; }
+            [JsonProperty("warnings")]
+            public string[] Warnings { get; set; }
+        }
+
+        [JsonConverter(typeof(ChoJsonPathJsonConverter))]
+        public class Result4
+        {
+            [JsonProperty("phone")]
+            [ChoJSONPath("phone.raw")]
+            public string Phone { get; set; }
+            [JsonProperty("accounts_balance_ach")]
+            [ChoJSONPath("accounts_balance_ach.raw")]
+            public string AccountsBalanceACH { get; set; }
+        }
+
+        [Test]
+        public static void DeserializeNestedData_4()
+        {
+            string expected = @"[
+  {
+    ""meta"": {
+      ""request_id"": ""6887a53f701a59574a0f3a7012e01aa8"",
+      ""warnings"": []
+    },
+    ""results"": [
+      {
+        ""phone"": ""3148304280"",
+        ""accounts_balance_ach"": ""27068128.71""
+      },
+      {
+        ""phone"": ""2272918612"",
+        ""accounts_balance_ach"": ""35721452.35""
+      }
+    ]
+  }
+]";
+
+            using (var r = ChoJSONReader<MetaResults4>.LoadText(nestedJsonData)
+                .WithJSONPath("$", true)
+                )
+            {
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        public class MyObject1
+        {
+            public string Label { get; set; }  // JSON Property Name less "ABC_" ("Column1", "Column2", or "Whatever")
+            public string Option { get; set; } // JSON Property Value
+        }
+
+        public class MyDto
+        {
+            [JsonProperty(PropertyName = "Known Column 1")]
+            public string KnownColumn1 { get; set; }
+
+            [JsonProperty(PropertyName = "Known Column 2")]
+            public string KnownColumn2 { get; set; }
+
+            [JsonProperty(PropertyName = "Known Column 3")]
+            public string KnownColumn3 { get; set; }
+
+            public List<MyObject1> ABCs { get; set; } = new List<MyObject1>();
+        }
+
+        [Test]
+        public static void DeserializeDynamicNameJSONPropertiesToListOfObjects()
+        {
+            string json = @"[
+    {
+        ""Known Column 1"": ""val 1"",
+        ""Known Column 2"": ""val 2"",
+        ""Known Column 3"": ""val 3"",
+        ""ABC_Column1"": ""xxx"",
+        ""ABC_Column2"": ""yyy"",
+        ""ABC_Whatever"": ""zzz""
+    },
+    {
+        ""Known Column 1"": ""val 4"",
+        ""Known Column 2"": ""val 5"",
+        ""Known Column 3"": ""val 6"",
+        ""ABC_Column1"": ""aaa"",
+        ""ABC_Column2"": ""bbb"",
+        ""ABC_Whatever"": ""ccc""
+    }
+]";
+
+            string expected = @"[
+  {
+    ""Known Column 1"": ""val 1"",
+    ""Known Column 2"": ""val 2"",
+    ""Known Column 3"": ""val 3"",
+    ""ABCs"": [
+      {
+        ""Label"": ""ABC_Column1"",
+        ""Option"": ""xxx""
+      },
+      {
+        ""Label"": ""ABC_Column2"",
+        ""Option"": ""yyy""
+      },
+      {
+        ""Label"": ""ABC_Whatever"",
+        ""Option"": ""zzz""
+      }
+    ]
+  },
+  {
+    ""Known Column 1"": ""val 4"",
+    ""Known Column 2"": ""val 5"",
+    ""Known Column 3"": ""val 6"",
+    ""ABCs"": [
+      {
+        ""Label"": ""ABC_Column1"",
+        ""Option"": ""aaa""
+      },
+      {
+        ""Label"": ""ABC_Column2"",
+        ""Option"": ""bbb""
+      },
+      {
+        ""Label"": ""ABC_Whatever"",
+        ""Option"": ""ccc""
+      }
+    ]
+  }
+]";
+            using (var r = ChoJSONReader<MyDto>.LoadText(json)
+                .WithField(f => f.ABCs, customSerializer: o =>
+                {
+                    List<MyObject1> list = new List<MyObject1>();
+                    JObject obj = o as JObject;
+                    foreach (var kvp in obj)
+                    {
+                        if (!kvp.Key.StartsWith("ABC_"))
+                            continue;
+
+                        list.Add(new MyObject1 { Label = kvp.Key, Option = kvp.Value.ToNString() });
+                    }
+                    return list;
+                })
+                )
+            {
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        [Test]
+        public static void ReadJsonDateFieldTest()
+        {
+            string json = @"{
+  ""Abbrev"": ""ALEX"",
+  ""MeetingDate"": ""\/Date(1679058000000+1100)\/""
+}";
+
+            string expected = @"[
+  {
+    ""Abbrev"": ""ALEX"",
+    ""MeetingDate"": ""2023-03-17T09:00:00-04:00""
+  }
+]";
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        public class PFGetForm
+        {
+            public string Abbrev { get; set; }
+            public DateTime MeetingDate { get; set; }
+        }
+
+        [Test]
+        public static void ReadJsonDateFieldTest_1()
+        {
+            string json = @"{
+  ""Abbrev"": ""ALEX"",
+  ""MeetingDate"": ""\/Date(1679058000000+1100)\/""
+}";
+
+            string expected = @"[
+  {
+    ""Abbrev"": ""ALEX"",
+    ""MeetingDate"": ""2023-03-17T09:00:00-04:00""
+  }
+]";
+            using (var r = ChoJSONReader<PFGetForm>.LoadText(json))
+            {
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+
+        public class PFGetForm2
+        {
+            public string Abbrev { get; set; }
+            public string MeetingDate { get; set; }
+        }
+
+        [Test]
+        public static void ReadJsonDateFieldTest_2()
+        {
+            string json = @"{
+  ""Abbrev"": ""ALEX"",
+  ""MeetingDate"": ""\/Date(1679058000000+1100)\/""
+}";
+
+            string expected = @"[
+  {
+    ""Abbrev"": ""ALEX"",
+    ""MeetingDate"": ""3/17/2023 9:00:00 AM""
+  }
+]";
+            using (var r = ChoJSONReader<PFGetForm2>.LoadText(json))
+            {
+                var recs = r.ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
             }
         }
 
@@ -17637,7 +18432,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             StringBuilder sb = new StringBuilder();
             using (var p = ChoJSONReader<RootObject>.LoadText(json)
-                //.WithField(m => m.Custom_fields, itemConverter: v => v)
+            //.WithField(m => m.Custom_fields, itemConverter: v => v)
             )
             {
                 //var x = p.ToArray();
