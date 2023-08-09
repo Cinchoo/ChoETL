@@ -14843,6 +14843,33 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                 Assert.AreEqual(expected, actual);
             }
         }
+        [Test]
+        public static void AsDataTableWithArrayNodeTest()
+        {
+            string json = @"
+	{
+		""user"": {
+			""name"": ""asdf"",
+			""teamname"": ""b"",
+			""email"": ""c"",
+			""players"": [""1"", ""2""]
+		}
+	}";
+
+            string expected = @"name,teamname,email,players_0,players_1
+name,teamname,email,players_0,players_1
+asdf,b,c,1,2";
+
+            using (var r = ChoJSONReader<UserInfo>.LoadText(json)
+                .WithJSONPath("$.user")
+                .Configure(c => c.ArrayValueNamePrefix = String.Empty)
+                )
+            {
+                var dt = r.AsDataTable();
+                var actual = dt.ToStringEx();
+                Assert.AreEqual(expected, actual);
+            }
+        }
 
         static void Main(string[] args)
         {

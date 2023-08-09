@@ -83,7 +83,7 @@ namespace ChoETL
         }
         internal static string GetValueNamePrefixOrDefault(string prefix = null)
         {
-            if (prefix.IsNullOrWhiteSpace())
+            if (prefix == null)
                 return ValueNamePrefix.IsNullOrWhiteSpace() ? "Value" : _valueNamePrefix;
             else
                 return prefix;

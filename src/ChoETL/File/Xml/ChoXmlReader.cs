@@ -417,7 +417,7 @@ namespace ChoETL
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
                 else
                 {
-                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                    dict = s.ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
                         Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
                 }
