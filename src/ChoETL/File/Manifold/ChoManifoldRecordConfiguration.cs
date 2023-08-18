@@ -56,6 +56,11 @@ namespace ChoETL
                 yield break;
             }
         }
+        public static new bool LiteParsing
+        {
+            get;
+            set;
+        }
 
         private readonly Dictionary<Type, ChoFileRecordConfiguration> SubRecordConfigurations = new Dictionary<Type, ChoFileRecordConfiguration>();
         public ChoFileRecordConfiguration this[Type recordType]
@@ -129,7 +134,7 @@ namespace ChoETL
             throw new NotSupportedException();
         }
 
-        public override void Validate(object state)
+        protected override void Validate(object state)
         {
             base.Validate(state);
 

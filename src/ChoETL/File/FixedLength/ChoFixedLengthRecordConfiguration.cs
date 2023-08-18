@@ -202,7 +202,7 @@ namespace ChoETL
             if (FixedLengthRecordFieldConfigurations.Count == 0)
                 MapRecordFields<T>();
 
-            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == field.GetFullyQualifiedMemberName()).FirstOrDefault();
             if (fc != null)
                 FixedLengthRecordFieldConfigurations.Remove(fc);
 
@@ -211,7 +211,7 @@ namespace ChoETL
 
         public ChoFixedLengthRecordConfiguration IgnoreField(string fieldName)
         {
-            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == fieldName || f.FieldName == fieldName).FirstOrDefault();
             if (fc != null)
                 FixedLengthRecordFieldConfigurations.Remove(fc);
 
@@ -317,8 +317,8 @@ namespace ChoETL
                         {
                             var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (!FixedLengthRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 FixedLengthRecordFieldConfigurations.Add(obj);
                         }
@@ -360,8 +360,8 @@ namespace ChoETL
 
                                     var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
                                     obj.FieldType = pt;
-                                    obj.PropertyDescriptor = pd;
-                                    obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                                    obj.PropertyDescriptorInternal = pd;
+                                    obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                                     StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                                     if (slAttr != null && slAttr.MaximumLength > 0)
                                         obj.Size = slAttr.MaximumLength;
@@ -414,7 +414,7 @@ namespace ChoETL
             }
         }
 
-        public override void Validate(object state)
+        protected override void Validate(object state)
         {
             base.Validate(state);
 
@@ -547,34 +547,34 @@ namespace ChoETL
                 }
             }
 
-            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
-            PDDict = new Dictionary<string, PropertyDescriptor>(FileHeaderConfiguration.StringComparer);
+            PIDictInternal = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
+            PDDictInternal = new Dictionary<string, PropertyDescriptor>(FileHeaderConfiguration.StringComparer);
             foreach (var fc in FixedLengthRecordFieldConfigurations)
             {
-                var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
-    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                var pd1 = fc.DeclaringMemberInternal.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
+    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMemberInternal);
                 if (pd1 != null)
-                    fc.PropertyDescriptor = pd1;
+                    fc.PropertyDescriptorInternal = pd1;
 
-                if (fc.PropertyDescriptor == null)
-                    fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
-                if (fc.PropertyDescriptor == null)
+                if (fc.PropertyDescriptorInternal == null)
+                    fc.PropertyDescriptorInternal = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                if (fc.PropertyDescriptorInternal == null)
                     continue;
 
                 if (!IsDynamicObject)
                 {
-                    if (fc.PropertyDescriptor != null)
+                    if (fc.PropertyDescriptorInternal != null)
                     {
                         if (!UseNestedKeyFormat)
                         {
-                            if (fc.FieldName.Contains(".") && fc.DeclaringMember == fc.FieldName)
-                                fc.FieldName = fc.PropertyDescriptor.Name;
+                            if (fc.FieldName.Contains(".") && fc.DeclaringMemberInternal == fc.FieldName)
+                                fc.FieldName = fc.PropertyDescriptorInternal.Name;
                         }
                     }
                 }
 
-                PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.Name, fc.PropertyDescriptor);
+                PIDictInternal.Add(fc.Name, fc.PropertyDescriptorInternal.ComponentType.GetProperty(fc.PropertyDescriptorInternal.Name));
+                PDDictInternal.Add(fc.Name, fc.PropertyDescriptorInternal);
             }
 
             RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);

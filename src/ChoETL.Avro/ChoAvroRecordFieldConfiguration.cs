@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,41 @@ namespace ChoETL
     [DataContract]
     public class ChoAvroRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        public static new bool? QuoteField
+        {
+            get;
+            set;
+        }
+        internal PropertyDescriptor PropertyDescriptorInternal
+        {
+            get => PropertyDescriptor;
+            set => PropertyDescriptor = value;
+        }
+        internal object[] PropConverterParamsInternal
+        {
+            get => PropConverterParams;
+            set => PropConverterParams = value;
+        }
+        internal object[] PropConvertersInternal
+        {
+            get => PropConverters;
+            set => PropConverters = value;
+        }
+        internal PropertyInfo PIInternal
+        {
+            get => PI;
+            set => PI = value;
+        }
+        internal PropertyDescriptor PDInternal
+        {
+            get => PD;
+            set => PD = value;
+        }
+        internal string DeclaringMemberInternal
+        {
+            get => DeclaringMember;
+            set => DeclaringMember = value;
+        }
         string name;
         public new string Name
         {
@@ -27,7 +63,7 @@ namespace ChoETL
 
         internal ChoAvroRecordFieldConfiguration(string name, ChoAvroRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
-            DeclaringMember = FieldName = name;
+            DeclaringMemberInternal = FieldName = name;
             if (attr != null)
             {
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
@@ -47,8 +83,8 @@ namespace ChoETL
                     ErrorMode = config.ErrorMode; // config.ErrorMode;
                 if (IgnoreFieldValueMode == null)
                     IgnoreFieldValueMode = config.IgnoreFieldValueMode;
-                if (QuoteField == null)
-                    QuoteField = config.QuoteAllFields;
+                //if (QuoteField == null)
+                //    QuoteField = config.QuoteAllFields;
                 if (NullValue == null)
                     NullValue = config.NullValue;
             }

@@ -228,7 +228,11 @@ namespace ChoETL
                 KnownTypeDiscriminator = kta.Discriminator.Trim();
         }
 
-        public ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
+        internal ChoFieldValueTrimOption GetFieldValueTrimOptionForReadInternal(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
+        {
+            return GetFieldValueTrimOptionForRead(fieldType, recordLevelFieldValueTrimOption);
+        }
+        protected ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
         {
             ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
 
@@ -238,7 +242,7 @@ namespace ChoETL
                 return recordLevelFieldValueTrimOption != null ? recordLevelFieldValueTrimOption.Value : ChoFieldValueTrimOption.Trim;
         }
 
-        public ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
+        protected ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
         {
             ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
 
@@ -268,5 +272,9 @@ namespace ChoETL
                 return ChoFieldValueTrimOption.TrimEnd;
         }
 
+        internal ChoFieldValueTrimOption GetFieldValueTrimOptionInternal(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
+        {
+            return GetFieldValueTrimOption(fieldType, recordLevelFieldValueTrimOption);
+        }
     }
 }

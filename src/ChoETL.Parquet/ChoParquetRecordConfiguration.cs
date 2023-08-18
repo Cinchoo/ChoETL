@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -126,6 +127,103 @@ namespace ChoETL
         public Func<string, Type, object> CustomDeserializer { get; set; }
         public Formatting Formatting { get; set; }
         public JsonSerializerSettings JsonSerializerSettings { get; set; }
+        public static new int MaxLineSize
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new string EOLDelimiter
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new string MayContainEOLInData
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new bool IgnoreEmptyLine
+        {
+            get { throw new NotSupportedException(); }
+        }
+        //public static new bool ColumnCountStrict
+        //{
+        //    get { throw new NotSupportedException(); }
+        //}
+        //public static new bool ColumnOrderStrict
+        //{
+        //    get { throw new NotSupportedException(); }
+        //}
+        public static new bool EscapeQuoteAndDelimiter
+        {
+            get { throw new NotSupportedException(); }
+        }
+        internal bool IsDynamicObjectInternal
+        {
+            get => IsDynamicObject;
+            set => IsDynamicObject = value;
+        }
+        public static new string Comment
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new string[] Comments
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new bool LiteParsing
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteAllFields
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteChar
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteEscapeChar
+        {
+            get;
+            set;
+        }
+        public static new bool QuoteLeadingAndTrailingSpaces
+        {
+            get;
+            set;
+        }
+        public static new bool? MayHaveQuotedFields
+        {
+            get { return QuoteAllFields; }
+            set { QuoteAllFields = value; }
+        }
+        public static new ChoStringSplitOptions StringSplitOptions
+        {
+            get;
+            set;
+        }
+        internal bool RecordTypeMappedInternal
+        {
+            get => RecordTypeMapped;
+            set => RecordTypeMapped = value;
+        }
+        internal Type RecordTypeInternal
+        {
+            get => RecordType;
+            set => RecordType = value;
+        }
+        internal Type RecordMapTypeInternal => RecordMapType;
+        internal Dictionary<string, PropertyInfo> PIDictInternal
+        {
+            get => PIDict;
+            set => PIDict = value;
+        }
+        internal Dictionary<string, PropertyDescriptor> PDDictInternal
+        {
+            get => PDDict;
+            set => PDDict = value;
+        }
 
         public ChoParquetRecordFieldConfiguration this[string name]
         {
@@ -303,8 +401,8 @@ namespace ChoETL
                         {
                             var obj = new ChoParquetRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 recordFieldConfigurations.Add(obj);
                         }
@@ -481,11 +579,11 @@ namespace ChoETL
             obj.DictKey = dictKey;
             obj.ArrayIndex = arrayIndex;
             obj.FieldType = pd != null ? pd.PropertyType : null; // pt;
-            obj.PropertyDescriptor = pd;
+            obj.PropertyDescriptorInternal = pd;
             if (pd != null)
-                obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
             else
-                obj.DeclaringMember = displayName;
+                obj.DeclaringMemberInternal = displayName;
 
             if (arrayIndex == null && pd != null)
             {
@@ -547,7 +645,7 @@ namespace ChoETL
 
             if (pd != null && pd.ComponentType != null)
             {
-                if (ContainsRecordConfigForType(pd.ComponentType))
+                if (ContainsRecordConfigForTypeInternal(pd.ComponentType))
                 {
                     var st = GetRecordConfigForType(pd.ComponentType).OfType<ChoParquetRecordFieldConfiguration>();
                     if (st != null && st.Any(fc => fc.Name == pd.Name))
@@ -565,7 +663,7 @@ namespace ChoETL
 
             if (arrayIndex != null)
             {
-                var arrayIndexSeparator = GetArrayIndexSeparator(); // ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
+                var arrayIndexSeparator = GetArrayIndexSeparatorInternal(); // ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
 
                 if (_recObject.Value is IChoArrayItemFieldNameOverrideable)
                 {
@@ -582,6 +680,14 @@ namespace ChoETL
             }
 
             return obj;
+        }
+        internal string GetArrayIndexSeparatorInternal()
+        {
+            return GetArrayIndexSeparator();
+        }
+        internal char GetArrayIndexSeparatorCharInternal()
+        {
+            return GetArrayIndexSeparatorChar();
         }
 
         //protected override void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
@@ -629,8 +735,12 @@ namespace ChoETL
         //    }
         //    base.LoadNCacheMembers(fcs);
         //}
+        internal void ValidateInternal(object state)
+        {
+            Validate(state);
+        }
 
-        public override void Validate(object state)
+        protected override void Validate(object state)
         {
             base.Validate(state);
 
@@ -756,32 +866,32 @@ namespace ChoETL
             PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var fc in ParquetRecordFieldConfigurations)
             {
-                if (fc.PropertyDescriptor == null && !IsDynamicObject)
+                if (fc.PropertyDescriptorInternal == null && !IsDynamicObject)
                 {
                     var pd = ChoTypeDescriptor.GetProperty(RecordType, fc.Name);
                     if (pd == null)
-                        pd = ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                        pd = ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMemberInternal);
 
                     if (pd != null)
                     {
-                        fc.PropertyDescriptor = pd;
+                        fc.PropertyDescriptorInternal = pd;
                         if (fc.FieldType == null)
                             fc.FieldType = pd.PropertyType.GetUnderlyingType();
                     }
                 }
 
-                var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
-                    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                var pd1 = fc.DeclaringMemberInternal.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
+                    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMemberInternal);
                 if (pd1 != null)
-                    fc.PropertyDescriptor = pd1;
+                    fc.PropertyDescriptorInternal = pd1;
 
-                if (fc.PropertyDescriptor == null)
-                    fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
-                if (fc.PropertyDescriptor == null)
+                if (fc.PropertyDescriptorInternal == null)
+                    fc.PropertyDescriptorInternal = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                if (fc.PropertyDescriptorInternal == null)
                     continue;
 
-                PIDict.Add(fc.FieldName, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.FieldName, fc.PropertyDescriptor);
+                PIDict.Add(fc.FieldName, fc.PropertyDescriptorInternal.ComponentType.GetProperty(fc.PropertyDescriptorInternal.Name));
+                PDDict.Add(fc.FieldName, fc.PropertyDescriptorInternal);
             }
 
             RecordFieldConfigurationsDict = ParquetRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
@@ -834,7 +944,7 @@ namespace ChoETL
             if (ParquetRecordFieldConfigurations.Count == 0)
                 MapRecordFields<T>();
 
-            var fc = ParquetRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            var fc = ParquetRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == field.GetFullyQualifiedMemberName()).FirstOrDefault();
             if (fc != null)
                 ParquetRecordFieldConfigurations.Remove(fc);
 
@@ -843,7 +953,7 @@ namespace ChoETL
 
         public ChoParquetRecordConfiguration IgnoreField(string fieldName)
         {
-            var fc = ParquetRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            var fc = ParquetRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == fieldName || f.FieldName == fieldName).FirstOrDefault();
             if (fc != null)
                 ParquetRecordFieldConfigurations.Remove(fc);
 
@@ -899,7 +1009,7 @@ namespace ChoETL
             if (rt == null)
                 return;
 
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 ParquetRecordFieldConfigurationsForType.Remove(rt);
         }
 
@@ -918,7 +1028,7 @@ namespace ChoETL
             if (rt == null)
                 return;
 
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return;
 
             List<ChoParquetRecordFieldConfiguration> recordFieldConfigurations = new List<ChoParquetRecordFieldConfiguration>();
@@ -941,25 +1051,45 @@ namespace ChoETL
                 ParquetRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
         }
 
-        public override bool ContainsRecordConfigForType(Type rt)
+        protected virtual new bool ContainsRecordConfigForType(Type rt)
         {
             return ParquetRecordFieldConfigurationsForType.ContainsKey(rt);
         }
-
-        public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        internal bool ContainsRecordConfigForTypeInternal(Type rt)
         {
-            if (ContainsRecordConfigForType(rt))
+            return ContainsRecordConfigForType(rt);
+        }
+
+        protected override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        {
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return ParquetRecordFieldConfigurationsForType[rt].Values.ToArray();
             else
                 return null;
         }
-
-        public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        internal void ResetStatesInternal()
         {
-            if (ContainsRecordConfigForType(rt))
+            ResetStates();
+        }
+        internal Encoding GetEncodingInternal(Stream inStream)
+        {
+            return GetEncoding(inStream);
+        }
+        internal Encoding GetEncodingInternal(string fileName)
+        {
+            return GetEncoding(fileName);
+        }
+
+        protected override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        {
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return ParquetRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
+        }
+        internal Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForTypeInternal(Type rt)
+        {
+            return GetRecordConfigDictionaryForType(rt);
         }
 
         public ChoParquetRecordConfiguration MapForType<T, TField>(Expression<Func<T, TField>> field, int? position = null, 
@@ -1034,7 +1164,7 @@ namespace ChoETL
                 var nfc = new ChoParquetRecordFieldConfiguration(fnTrim, position.Value)
                 {
                     FieldType = fieldType,
-                    QuoteField = quoteField,
+                    //QuoteField = quoteField,
                     FieldValueTrimOption = fieldValueTrimOption,
                     FieldValueJustification = fieldValueJustification,
                     FieldName = fieldName,
@@ -1050,8 +1180,8 @@ namespace ChoETL
                 };
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : fullyQualifiedMemberName;
                 }
                 else
                 {
@@ -1060,8 +1190,8 @@ namespace ChoETL
                     else
                         pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName);
 
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = pd;
+                    nfc.DeclaringMemberInternal = fullyQualifiedMemberName;
                 }
                 if (pd != null)
                 {
@@ -1097,7 +1227,7 @@ namespace ChoETL
                     fqm = propertyName;
 
                 propertyName = propertyName.SplitNTrim(".").LastOrDefault();
-                if (!ParquetRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null))
+                if (!ParquetRecordFieldConfigurations.Any(fc => fc.DeclaringMemberInternal == fqm && fc.ArrayIndex == null))
                 {
                     int fieldPosition = 0;
                     fieldPosition = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
@@ -1107,16 +1237,16 @@ namespace ChoETL
                     c.FieldPosition = fieldPosition;
                     if (pd != null)
                     {
-                        c.PropertyDescriptor = pd;
+                        c.PropertyDescriptorInternal = pd;
                         c.FieldType = pd.PropertyType.GetUnderlyingType();
                     }
 
-                    c.DeclaringMember = fqm;
+                    c.DeclaringMemberInternal = fqm;
 
                     ParquetRecordFieldConfigurations.Add(c);
                 }
 
-                return ParquetRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null);
+                return ParquetRecordFieldConfigurations.First(fc => fc.DeclaringMemberInternal == fqm && fc.ArrayIndex == null);
             }
         }
 
@@ -1188,7 +1318,7 @@ namespace ChoETL
                 var itemType = recordType.GetItemType().GetUnderlyingType();
                 if (itemType.IsSimple())
                 {
-                    var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).ToArray();
+                    var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMemberInternal == fullyQualifiedMemberName).ToArray();
                     int priority = 0;
                     foreach (var fc in fcs1)
                     {
@@ -1213,9 +1343,9 @@ namespace ChoETL
                         //if (ArrayIndexSeparator == null)
                         //    lFieldName = nfc.FieldName + "_" + index;
                         //else
-                            lFieldName = nfc.FieldName + GetArrayIndexSeparator() + index;
+                            lFieldName = nfc.FieldName + GetArrayIndexSeparatorInternal() + index;
 
-                        nfc.DeclaringMember = nfc.Name;
+                        nfc.DeclaringMemberInternal = nfc.Name;
                         nfc.Name = lFieldName;
                         nfc.FieldName = lFieldName;
                         nfc.FieldPosition = fieldPosition;
@@ -1240,7 +1370,7 @@ namespace ChoETL
                     //Remove any unused config
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
                     {
-                        var fcs = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+                        var fcs = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMemberInternal == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
                         && o.ArrayIndex != null && (o.ArrayIndex < minumum || o.ArrayIndex > maximum)).ToArray();
 
                         foreach (var fc in fcs)
@@ -1251,7 +1381,7 @@ namespace ChoETL
                     {
                         foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
                         {
-                            var fc = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+                            var fc = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMemberInternal == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
                             && o.ArrayIndex != null && o.ArrayIndex == index).FirstOrDefault();
 
                             if (fc != null) continue;
@@ -1310,7 +1440,7 @@ namespace ChoETL
                     ParquetRecordFieldConfigurations.Remove(fc);
 
                 //Remove any unused config
-                var fcs = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
+                var fcs = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMemberInternal == fieldName
                 && !o.DictKey.IsNullOrWhiteSpace() && !keys.Contains(o.DictKey)).ToArray();
 
                 foreach (var fc in fcs)
@@ -1320,7 +1450,7 @@ namespace ChoETL
                 {
                     if (!key.IsNullOrWhiteSpace())
                     {
-                        var fc = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
+                        var fc = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMemberInternal == fieldName
                             && !o.DictKey.IsNullOrWhiteSpace() && key == o.DictKey).FirstOrDefault();
 
                         if (fc != null) continue;

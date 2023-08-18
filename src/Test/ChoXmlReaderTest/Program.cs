@@ -612,6 +612,86 @@ namespace ChoXmlReaderTest
             //LoadXmlUsingConfigAndPOCO();
             //DesrializeUsingProxy();
         }
+
+        [Test]
+        public static void Issue100()
+        {
+            string xml = @"<Root xmlns:c=""Ala ma kota"">
+
+<!-- ... -->
+
+        <c:Histogram>
+            <Data Width=""10"" Height=""20"" />
+        </c:Histogram>
+
+<!-- ... -->
+
+</Root>";
+
+            string expected = @"[
+  {
+    ""Data"": {
+      ""Width"": 10,
+      ""Height"": 20
+    }
+  }
+]";
+            using (var r = ChoXmlReader<Histogram>.LoadText(xml)
+                .WithXPath("c:Histogram")
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+
+        }
+
+        [Test]
+        public static void Issue100_1()
+        {
+            string xml = @"<Root xmlns:c=""Ala ma kota"">
+
+<!-- ... -->
+
+        <c:Histogram>
+            <c:Data Width=""10"" Height=""20"" />
+        </c:Histogram>
+
+<!-- ... -->
+
+</Root>";
+
+            string expected = @"[
+  {
+    ""Data"": {
+      ""Width"": 10,
+      ""Height"": 20
+    }
+  }
+]";
+            using (var r = ChoXmlReader<Histogram>.LoadText(xml)
+                .WithXPath("c:Histogram")
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+
+        }
+
+        public class Histogram
+        {
+            public Data Data { get; set; }
+        }
+
+        public class Data
+        {
+            [XmlAttribute]
+            public int Width { get; set; }
+            [XmlAttribute]
+            public int Height { get; set; }
+        }
+
         [Test]
         public static void XmlArray2JSON()
         {

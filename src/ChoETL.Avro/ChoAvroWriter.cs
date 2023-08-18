@@ -148,7 +148,7 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoAvroRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
+                Configuration.RecordTypeInternal = recordType;
 
             _writer = new ChoAvroRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
@@ -278,7 +278,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             Configuration.IgnoreField(field);
             return this;
@@ -292,7 +292,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.AvroRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -328,7 +328,7 @@ namespace ChoETL
                     if (!_clearFields)
                     {
                         ClearFields();
-                        Configuration.MapRecordFields(Configuration.RecordType);
+                        Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                     }
 
                     fnTrim = fn.NTrim();
@@ -341,8 +341,8 @@ namespace ChoETL
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
                     var nfc = new ChoAvroRecordFieldConfiguration(fnTrim) { FieldName = fn };
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : null;
                     if (pd != null)
                     {
                         if (nfc.FieldType == null)
@@ -369,7 +369,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -405,7 +405,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, null, fieldName,
@@ -487,7 +487,7 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     Write(expando);
                 else
                 {
@@ -527,7 +527,7 @@ namespace ChoETL
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     Write(expando);
                 else
                 {

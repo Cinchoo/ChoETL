@@ -3,6 +3,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,6 +12,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -386,6 +388,108 @@ namespace ChoETL
         public string FlattenByJsonPath { get; set; }
         public Func<object, JToken> ObjectToJTokenConverter { get; set; }
         public bool FlattenIfJArrayWhenReading { get; set; } = true;
+        internal bool IsDynamicObjectInternal
+        {
+            get => IsDynamicObject;
+            set => IsDynamicObject = value;
+        }
+        public static new int MaxLineSize
+        {
+            get { throw new NotSupportedException(); }
+        }
+        //public static new string EOLDelimiter
+        //{
+        //    get { throw new NotSupportedException(); }
+        //}
+        public static new string MayContainEOLInData
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new bool IgnoreEmptyLine
+        {
+            get { throw new NotSupportedException(); }
+        }
+        //public static new bool ColumnCountStrict
+        //{
+        //    get { throw new NotSupportedException(); }
+        //}
+        public static new bool ColumnOrderStrict
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new bool EscapeQuoteAndDelimiter
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new string Comment
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new string[] Comments
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new bool LiteParsing
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteAllFields
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteChar
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteEscapeChar
+        {
+            get;
+            set;
+        }
+        public static new bool QuoteLeadingAndTrailingSpaces
+        {
+            get;
+            set;
+        }
+        public static new bool? MayHaveQuotedFields
+        {
+            get { return QuoteAllFields; }
+            set { QuoteAllFields = value; }
+        }
+        public static new ChoStringSplitOptions StringSplitOptions
+        {
+            get;
+            set;
+        }
+        internal Type SourceTypeInternal
+        {
+            get => SourceType;
+            set => SourceType = value;
+        }
+        internal bool RecordTypeMappedInternal
+        {
+            get => RecordTypeMapped;
+            set => RecordTypeMapped = value;
+        }
+        internal Type RecordTypeInternal
+        {
+            get => RecordType;
+            set => RecordType = value;
+        }
+        internal Type RecordMapTypeInternal => RecordMapType;
+        internal Dictionary<string, PropertyInfo> PIDictInternal
+        {
+            get => PIDict;
+            set => PIDict = value;
+        }
+        internal Dictionary<string, PropertyDescriptor> PDDictInternal
+        {
+            get => PDDict;
+            set => PDDict = value;
+        }
 
         public ChoJSONRecordFieldConfiguration this[string name]
         {
@@ -450,25 +554,32 @@ namespace ChoETL
                 JSONRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
         }
 
-        public override bool ContainsRecordConfigForType(Type rt)
+        protected virtual new bool ContainsRecordConfigForType(Type rt)
         {
             return JSONRecordFieldConfigurationsForType.ContainsKey(rt);
         }
-
-        public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        internal bool ContainsRecordConfigForTypeInternal(Type rt)
         {
-            if (ContainsRecordConfigForType(rt))
+            return ContainsRecordConfigForType(rt);
+        }
+        protected override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        {
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return JSONRecordFieldConfigurationsForType[rt].Values.ToArray();
             else
                 return null;
         }
 
-        public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        protected override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
         {
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return JSONRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
+        }
+        internal Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForTypeInternal(Type rt)
+        {
+            return GetRecordConfigDictionaryForType(rt);
         }
 
         protected override void Init(Type recordType)
@@ -525,7 +636,7 @@ namespace ChoETL
             if (rt == null)
                 return;
 
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 JSONRecordFieldConfigurationsForType.Remove(rt);
         }
 
@@ -551,7 +662,7 @@ namespace ChoETL
             if (rt == null)
                 return;
 
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return;
 
             List<ChoJSONRecordFieldConfiguration> recordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
@@ -638,8 +749,8 @@ namespace ChoETL
                         {
                             var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (recordFieldConfigurations != null)
                             {
                                 if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
@@ -699,8 +810,8 @@ namespace ChoETL
                                 pd.Attributes.OfType<Attribute>().ToArray());
 
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;
@@ -775,14 +886,12 @@ namespace ChoETL
             }
             return recordType;
         }
-
-        public void ApplyStateToConverters()
+        internal void ValidateInternal(object state)
         {
-
+            Validate(state);
         }
 
-
-        public override void Validate(object state)
+        protected override void Validate(object state)
         {
             if (TurnOnAutoDiscoverJsonConverters)
                 ChoJSONConvertersCache.Init();
@@ -935,18 +1044,18 @@ namespace ChoETL
             PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var fc in JSONRecordFieldConfigurations)
             {
-                var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
-                    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                var pd1 = fc.DeclaringMemberInternal.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
+                    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMemberInternal);
                 if (pd1 != null)
-                    fc.PropertyDescriptor = pd1;
+                    fc.PropertyDescriptorInternal = pd1;
 
-                if (fc.PropertyDescriptor == null)
-                    fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
-                if (fc.PropertyDescriptor == null)
+                if (fc.PropertyDescriptorInternal == null)
+                    fc.PropertyDescriptorInternal = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                if (fc.PropertyDescriptorInternal == null)
                     continue;
 
-                PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.Name, fc.PropertyDescriptor);
+                PIDict.Add(fc.Name, fc.PropertyDescriptorInternal.ComponentType.GetProperty(fc.PropertyDescriptorInternal.Name));
+                PDDict.Add(fc.Name, fc.PropertyDescriptorInternal);
             }
 
             RecordFieldConfigurationsDict = JSONRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
@@ -982,7 +1091,7 @@ namespace ChoETL
             return this;
         }
 
-        public bool HasNodeConverterForType(Type type, out Func<object, object> selector)
+        internal bool HasNodeConverterForType(Type type, out Func<object, object> selector)
         {
             selector = null;
             if (type == null)
@@ -1020,7 +1129,7 @@ namespace ChoETL
                 if (JSONRecordFieldConfigurations.Count == 0)
                     MapRecordFields<T>();
 
-                var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+                var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == field.GetFullyQualifiedMemberName()).FirstOrDefault();
                 if (fc != null)
                     JSONRecordFieldConfigurations.Remove(fc);
             }
@@ -1032,7 +1141,7 @@ namespace ChoETL
         {
             if (fieldName != null)
             {
-                var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+                var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == fieldName || f.FieldName == fieldName).FirstOrDefault();
                 if (fc != null)
                     JSONRecordFieldConfigurations.Remove(fc);
                 else
@@ -1130,8 +1239,8 @@ namespace ChoETL
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : fullyQualifiedMemberName;
                 }
                 else
                 {
@@ -1140,8 +1249,8 @@ namespace ChoETL
                     else
                         pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName);
 
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = pd;
+                    nfc.DeclaringMemberInternal = fullyQualifiedMemberName;
                 }
                 if (pd != null)
                 {
@@ -1169,8 +1278,8 @@ namespace ChoETL
             {
                 MapRecordFieldsForType(subType);
                 var fc = new ChoJSONRecordFieldConfiguration(propertyName, attr, otherAttrs);
-                fc.PropertyDescriptor = pd;
-                fc.DeclaringMember = fqm;
+                fc.PropertyDescriptorInternal = pd;
+                fc.DeclaringMemberInternal = fqm;
                 AddFieldForType(subType, fc);
 
                 return fc;
@@ -1185,8 +1294,8 @@ namespace ChoETL
                 }
 
                 var nfc = JSONRecordFieldConfigurations.First(fc => fc.Name == propertyName);
-                nfc.PropertyDescriptor = pd;
-                nfc.DeclaringMember = fqm;
+                nfc.PropertyDescriptorInternal = pd;
+                nfc.DeclaringMemberInternal = fqm;
 
                 return nfc;
             }
@@ -1212,10 +1321,42 @@ namespace ChoETL
         internal ChoJSONRecordFieldConfiguration GetFieldConfigurationForType(Type type, string fn)
         {
             fn = fn.NTrim();
-            if (ContainsRecordConfigForType(type) && GetRecordConfigForType(type).Any(fc => fc.Name == fn))
+            if (ContainsRecordConfigForTypeInternal(type) && GetRecordConfigForType(type).Any(fc => fc.Name == fn))
                 return GetRecordConfigForType(type).FirstOrDefault(fc => fc.Name == fn) as ChoJSONRecordFieldConfiguration;
 
             return null;
+        }
+        internal Encoding GetEncodingInternal(Stream inStream)
+        {
+            return GetEncoding(inStream);
+        }
+        internal Encoding GetEncodingInternal(string fileName)
+        {
+            return GetEncoding(fileName);
+        }
+        internal void ResetStatesInternal()
+        {
+            ResetStates();
+        }
+
+        bool IChoJSONRecordConfiguration.ContainsRecordConfigForType(Type rt)
+        {
+            return ContainsRecordConfigForType(rt);
+        }
+
+        Dictionary<string, ChoRecordFieldConfiguration> IChoJSONRecordConfiguration.GetRecordConfigDictionaryForType(Type rt)
+        {
+            return GetRecordConfigDictionaryForType(rt);
+        }
+
+        object[] IChoDynamicObjectRecordConfiguration.GetConvertersForType(Type fieldType, object value)
+        {
+            return GetConvertersForTypePrivate(fieldType, value);
+        }
+
+        object[] IChoDynamicObjectRecordConfiguration.GetConverterParamsForType(Type fieldType, object value = null)
+        {
+            return GetConverterParamsForTypePrivate(fieldType, value);
         }
 
         //protected override void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)

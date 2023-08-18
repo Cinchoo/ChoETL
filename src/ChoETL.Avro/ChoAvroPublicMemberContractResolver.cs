@@ -65,7 +65,8 @@ namespace ChoETL
                     if (Configuration.IgnoredFields.Contains(fd.Name))
                         continue;
 
-                    var c = Configuration.RecordFieldConfigurations.FirstOrDefault(f => f.DeclaringMember == fd.MemberInfo.Name) as ChoAvroRecordFieldConfiguration;
+                    var c = Configuration.RecordFieldConfigurations.OfType<ChoAvroRecordFieldConfiguration>()
+                        .FirstOrDefault(f => f.DeclaringMemberInternal == fd.MemberInfo.Name) as ChoAvroRecordFieldConfiguration;
                     if (c != null)
                     {
                         fd.Name = c.FieldName;

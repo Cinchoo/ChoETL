@@ -129,7 +129,7 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoXmlRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
+                Configuration.RecordTypeInternal = recordType;
 
             _writer = new ChoXmlRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
@@ -523,7 +523,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             Configuration.IgnoreField(field);
             return this;
@@ -537,7 +537,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -573,7 +573,7 @@ namespace ChoETL
                     if (!_clearFields)
                     {
                         ClearFields();
-                        Configuration.MapRecordFields(Configuration.RecordType);
+                        Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                     }
                     fnTrim = fn.NTrim();
                     if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -585,8 +585,8 @@ namespace ChoETL
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
                     var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"/{fnTrim}");
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : null;
 
                     Configuration.XmlRecordFieldConfigurations.Add(nfc);
                 }
@@ -689,7 +689,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -737,7 +737,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 string fnTrim = name.NTrim();
@@ -772,14 +772,14 @@ namespace ChoETL
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : fullyQualifiedMemberName;
                 }
                 else
                 {
                     pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = pd;
+                    nfc.DeclaringMemberInternal = fullyQualifiedMemberName;
                 }
 
                 Configuration.XmlRecordFieldConfigurations.Add(nfc);
@@ -792,7 +792,7 @@ namespace ChoETL
         {
             Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
             ClearFields();
-            Configuration.MapRecordFields(Configuration.RecordType);
+            Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             return this;
         }
 
@@ -874,7 +874,7 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     Write(expando);
                 else
                 {
@@ -927,7 +927,7 @@ namespace ChoETL
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     Write(expando);
                 else
                 {

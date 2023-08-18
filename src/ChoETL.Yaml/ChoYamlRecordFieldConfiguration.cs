@@ -15,6 +15,41 @@ namespace ChoETL
     [DataContract]
     public class ChoYamlRecordFieldConfiguration : ChoFileRecordFieldConfiguration, IChoJSONRecordFieldConfiguration
     {
+        public static new bool? QuoteField
+        {
+            get;
+            set;
+        }
+        internal PropertyDescriptor PropertyDescriptorInternal
+        {
+            get => PropertyDescriptor;
+            set => PropertyDescriptor = value;
+        }
+        internal object[] PropConverterParamsInternal
+        {
+            get => PropConverterParams;
+            set => PropConverterParams = value;
+        }
+        internal object[] PropConvertersInternal
+        {
+            get => PropConverters;
+            set => PropConverters = value;
+        }
+        internal PropertyInfo PIInternal
+        {
+            get => PI;
+            set => PI = value;
+        }
+        internal PropertyDescriptor PDInternal
+        {
+            get => PD;
+            set => PD = value;
+        }
+        internal string DeclaringMemberInternal
+        {
+            get => DeclaringMember;
+            set => DeclaringMember = value;
+        }
         [DataMember]
         public string YamlPath
         {
@@ -47,6 +82,8 @@ namespace ChoETL
 
         public IContractResolver ContractResolver { get; set; }
         public string JSONPath { get; set; }
+        PropertyDescriptor IChoJSONRecordFieldConfiguration.PD { get => PDInternal; set => PDInternal = value; }
+        string IChoJSONRecordFieldConfiguration.DeclaringMember { get => DeclaringMember; set => DeclaringMember = value; }
 
         public ChoYamlRecordFieldConfiguration(string name, string yamlPath = null) : this(name, (ChoYamlRecordFieldAttribute)null)
         {
@@ -87,13 +124,39 @@ namespace ChoETL
                     ErrorMode = config.ErrorMode; // config.ErrorMode;
                 if (IgnoreFieldValueMode == null)
                     IgnoreFieldValueMode = config.IgnoreFieldValueMode;
-                if (QuoteField == null)
-                    QuoteField = config.QuoteAllFields;
+                //if (QuoteField == null)
+                //    QuoteField = config.QuoteAllFields;
             }
             catch (Exception ex)
             {
                 throw new ChoRecordConfigurationException("Invalid configuration found at '{0}' field.".FormatString(Name), ex);
             }
         }
+
+        object[] IChoJSONRecordFieldConfiguration.GetConverters()
+        {
+            return GetConverters();
+        }
+        internal ChoFieldValueTrimOption GetFieldValueTrimOptionInternal(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
+        {
+            return GetFieldValueTrimOption(fieldType, recordLevelFieldValueTrimOption);
+        }
+        internal ChoFieldValueTrimOption GetFieldValueTrimOptionForReadInternal(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
+        {
+            return GetFieldValueTrimOptionForRead(fieldType, recordLevelFieldValueTrimOption);
+        }
+        internal bool IsDefaultValueSpecifiedInternal
+        {
+            get { return IsDefaultValueSpecified; }
+            set { IsDefaultValueSpecified = value; }
+        }
+        internal bool IsFallbackValueSpecifiedInternal
+        {
+            get { return IsFallbackValueSpecified; }
+            set { IsFallbackValueSpecified = value; }
+        }
+
+        object[] IChoJSONRecordFieldConfiguration.PropConverters { get => PropConverters; set => PropConverters = value; }
+        object[] IChoJSONRecordFieldConfiguration.PropConverterParams { get => PropConverterParams; set => PropConverterParams = value; }
     }
 }

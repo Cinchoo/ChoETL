@@ -17,7 +17,7 @@ namespace ChoETL
 
         public static ChoXmlRecordConfiguration AddRecordConfiguration(ChoXmlRecordConfiguration cf)
         {
-            Type recordType = cf.RecordType;
+            Type recordType = cf.RecordTypeInternal;
             if (XmlRecordFieldConfiguration.ContainsKey(recordType))
             {
                 XmlRecordFieldConfiguration.TryGetValue(recordType, out cf);

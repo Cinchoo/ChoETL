@@ -69,7 +69,7 @@ namespace ChoETL
                 Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
 
 
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
@@ -109,7 +109,7 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
@@ -149,7 +149,7 @@ namespace ChoETL
                 _textReader = new Lazy<TextReader>(() =>
                 {
                     if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
                     else
                         return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
@@ -182,7 +182,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
 
@@ -227,7 +227,7 @@ namespace ChoETL
                 _textReader = new Lazy<TextReader>(() =>
                 {
                     if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
                     else
                         return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
@@ -299,8 +299,8 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoXmlRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
-            Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
+                Configuration.RecordTypeInternal = recordType;
+            Configuration.IsDynamicObjectInternal = Configuration.RecordTypeInternal.IsDynamicType();
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
             {
@@ -658,7 +658,7 @@ namespace ChoETL
             {
                 Configuration.ClearFields();
                 _clearFields = true;
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             return this;
         }
@@ -726,8 +726,8 @@ namespace ChoETL
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
                     var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"/{fnTrim}");
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : null;
                     if (pd != null)
                     {
                         if (nfc.FieldType == null)
@@ -846,7 +846,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -958,7 +958,7 @@ namespace ChoETL
         {
             Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
             ClearFields();
-            Configuration.MapRecordFields(Configuration.RecordType);
+            Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             return this;
         }
 

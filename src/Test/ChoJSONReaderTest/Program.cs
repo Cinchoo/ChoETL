@@ -5007,7 +5007,9 @@ this is a test line   but still value for this record";
             config.JSONPath = "$..getUsers[*].UserInformation";
             config.AllowComplexJSONPath = true;
 
-            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("Id"));
+            var idFieldConfig = new ChoJSONRecordFieldConfiguration("Id");
+
+            config.JSONRecordFieldConfigurations.Add(idFieldConfig);
             config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("FirstName"));
             var userTypeRC = new ChoJSONRecordFieldConfiguration("UserType", "$.UserType.name");
             userTypeRC.IsArray = false;
@@ -14857,7 +14859,6 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
 	}";
 
             string expected = @"name,teamname,email,players_0,players_1
-name,teamname,email,players_0,players_1
 asdf,b,c,1,2";
 
             using (var r = ChoJSONReader<UserInfo>.LoadText(json)
@@ -14869,6 +14870,218 @@ asdf,b,c,1,2";
                 var actual = dt.ToStringEx();
                 Assert.AreEqual(expected, actual);
             }
+        }
+
+        [Test]
+        public static void DesrializeComplexJSON_Dynamic()
+        {
+            string json = @"[{
+  ""id"": 1111,
+  ""product_id"": [
+    2222,
+    ""test 1""
+  ],
+  ""product_qty"": 1.0,
+  ""picking_date"": false,
+  ""partner_id"": [
+    10,
+    ""Funeral""
+  ],
+  ""picking_id"": [
+    20,
+    ""Testing""
+  ],
+  ""picking_state"": ""cancel""
+}, 
+{
+  ""id"": 2222,
+  ""product_id"": false,
+  ""product_qty"": 1.0,
+  ""picking_date"": ""2023-08-11 10:10:39"",
+  ""partner_id"": false,
+  ""picking_id"": false,
+  ""picking_state"": ""cancel""
+}]";
+            string expected = @"[
+  [
+    2222,
+    ""test 1""
+  ],
+  false
+]";
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var recs = r.Select(r1 => r1.product_id).ToArray();
+
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+        }
+        public partial class Product1
+        {
+            [JsonProperty("id")]
+            public long Id { get; set; }
+
+            [JsonProperty("product_id")]
+            public List<object> ProductId { get; set; }
+
+            [JsonProperty("product_qty")]
+            public long ProductQty { get; set; }
+
+            [JsonProperty("picking_date")]
+            public object PickingDate { get; set; }
+
+            [JsonProperty("partner_id")]
+            public List<object> PartnerId { get; set; }
+
+            [JsonProperty("picking_id")]
+            public List<object> PickingId { get; set; }
+
+            [JsonProperty("picking_state")]
+            public string PickingState { get; set; }
+        }
+        [Test]
+        public static void DesrializeComplexJSON_POCO()
+        {
+            string json = @"[{
+  ""id"": 1111,
+  ""product_id"": [
+    2222,
+    ""test 1""
+  ],
+  ""product_qty"": 1.0,
+  ""picking_date"": false,
+  ""partner_id"": [
+    10,
+    ""Funeral""
+  ],
+  ""picking_id"": [
+    20,
+    ""Testing""
+  ],
+  ""picking_state"": ""cancel""
+}, 
+{
+  ""id"": 2222,
+  ""product_id"": false,
+  ""product_qty"": 1.0,
+  ""picking_date"": ""2023-08-11 10:10:39"",
+  ""partner_id"": false,
+  ""picking_id"": false,
+  ""picking_state"": ""cancel""
+}]";
+            string expected1 = @"[
+  [
+    2222,
+    ""test 1""
+  ],
+  [
+    false
+  ]
+]";
+            string expected2 = @"[
+  false,
+  ""2023-08-11 10:10:39""
+]";
+            using (var r = ChoJSONReader<Product1>.LoadText(json))
+            {
+                var recs = r.ToArray();
+                var productIds = recs.SelectMany(r1 => r1.ProductId).ToArray();
+                var pickingDates = recs.Select(r1 => r1.PickingDate).ToArray();
+
+                var actual1 = JsonConvert.SerializeObject(productIds, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected1, actual1);
+
+                var actual2 = JsonConvert.SerializeObject(pickingDates, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected2, actual2);
+            }
+        }
+        public class DeviceStates
+        {
+            [JsonProperty("tenantId")]
+            public string TenantId { get; set; }
+            [JsonProperty("tenantName")]
+            public string TenantName { get; set; }
+            [JsonProperty("statisticsPerDay")]
+            public Dictionary<string, DayStatistic> StatisticsPerDay { get; set; }
+        }
+
+        public class DayStatistic
+        {
+            [JsonProperty("lora")]
+            public Lora Lora { get; set; }
+        }
+
+        public class Lora
+        {
+            [JsonProperty("counters")]
+            public Counters Counters { get; set; }
+        }
+
+        public class Counters
+        {
+            [JsonProperty("virtualMsgIn")]
+            public int VirtualMsgIn { get; set; }
+
+            [JsonProperty("numberOfSources")]
+            public int NumberOfSources { get; set; }
+
+            [JsonProperty("msgIn")]
+            public int MsgIn { get; set; }
+
+            [JsonProperty("bytesIn")]
+            public int BytesIn { get; set; }
+        }
+
+        [Test]
+        public static void DeserializeDictionaryProperty()
+        {
+            string json = @"{
+  ""tenantId"": ""62b8c3a9d7b7c57a8d78c5b16fb4"",
+  ""tenantName"": ""TEST IOT"",
+  ""statisticsPerDay"": {
+    ""2023-08-07"": {
+      ""lora"": {
+        ""counters"": {
+          ""virtualMsgIn"": 34,
+          ""numberOfSources"": 1,
+          ""msgIn"": 34,
+          ""bytesIn"": 1428
+        }
+      }
+    },
+    ""2023-08-08"": {
+      ""lora"": {
+        ""counters"": {
+          ""virtualMsgIn"": 22,
+          ""numberOfSources"": 1,
+          ""msgIn"": 22,
+          ""bytesIn"": 924
+        }
+      }
+    },
+    ""2023-08-05"": {
+      ""lora"": {
+        ""counters"": {
+          ""virtualMsgIn"": 13,
+          ""numberOfSources"": 1,
+          ""msgIn"": 13,
+          ""bytesIn"": 546
+        }
+      }
+    }
+  }
+}";
+            string expected = @"";
+            using (var r = ChoJSONReader<DeviceStates>.LoadText(json))
+            {
+                var recs = r.FirstOrDefault();
+
+                recs.Print();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(json, actual);
+            }
+
         }
 
         static void Main(string[] args)

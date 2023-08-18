@@ -66,7 +66,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             if (source == null)
                 return Enumerable.Empty<object>();
 
@@ -104,7 +104,7 @@ namespace ChoETL
 
         private void CalcFieldMaxCountIfApplicable(IEnumerable<string> recEnum)
         {
-            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
             {
                 foreach (string line in recEnum)
                 {
@@ -351,11 +351,11 @@ namespace ChoETL
                             Configuration.FileHeaderConfiguration.HasHeaderRecord = header.Length > 0;
                             if (!_configCheckDone)
                             {
-                                if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
+                                if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMappedInternal)
                                 {
                                 }
                                 else
-                                    Configuration.Validate(GetHeaders(header));
+                                    Configuration.ValidateInternal(GetHeaders(header));
                                 var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                                 //if (Configuration.MaxScanRows == 0)
                                 //RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
@@ -380,11 +380,11 @@ namespace ChoETL
                     {
                         if (!_configCheckDone)
                         {
-                            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
+                            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMappedInternal)
                             {
                             }
                             else
-                                Configuration.Validate(GetHeaders(pairElement.Item2));
+                                Configuration.ValidateInternal(GetHeaders(pairElement.Item2));
                             var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
                             //RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
@@ -418,11 +418,11 @@ namespace ChoETL
                         headerLineLoaded = true;
                         if (!_configCheckDone)
                         {
-                            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
+                            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMappedInternal)
                             {
                             }
                             else
-                                Configuration.Validate(GetHeaders(pairElement.Item2));
+                                Configuration.ValidateInternal(GetHeaders(pairElement.Item2));
                             var dict = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
                             //RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
@@ -469,10 +469,10 @@ namespace ChoETL
                                 throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                         }
 
-                        if (!Configuration.RecordTypeMapped)
+                        if (!Configuration.RecordTypeMappedInternal)
                         {
                             Configuration.MapRecordFields(recType);
-                            Configuration.Validate(null);
+                            Configuration.ValidateInternal(null);
                         }
                         //Configuration.SupportsMultiRecordTypes = true;
                         rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
@@ -483,7 +483,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                        rec = Configuration.IsDynamicObjectInternal ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
                         {
                             ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                             AlternativeKeys = Configuration.AlternativeKeys
@@ -500,7 +500,7 @@ namespace ChoETL
                     if (rec == null)
                         continue;
 
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                         if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
                         {
@@ -555,7 +555,7 @@ namespace ChoETL
         {
             try
             {
-                if (!headerLineFound || !Configuration.IsDynamicObject || Configuration.NestedColumnSeparator == null)
+                if (!headerLineFound || !Configuration.IsDynamicObjectInternal || Configuration.NestedColumnSeparator == null)
                     return ConvertToArrayMemebersIfApplicable(rec, headerLineFound);
 
                 IDictionary<string, object> dict = rec as IDictionary<string, object>;
@@ -574,14 +574,14 @@ namespace ChoETL
 
         private object ConvertToArrayMemebersIfApplicable(object rec, bool headerLineFound)
         {
-            if (!headerLineFound || !Configuration.IsDynamicObject)
+            if (!headerLineFound || !Configuration.IsDynamicObjectInternal)
                 return rec;
             if (!Configuration.AutoArrayDiscovery)
                 return rec;
 
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
-            return dict1.ConvertMembersToArrayIfAny(Configuration.GetArrayIndexSeparatorChar(), Configuration.ArrayEndIndexSeparator, /*.ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator.Value */
+            return dict1.ConvertMembersToArrayIfAny(Configuration.GetArrayIndexSeparatorCharInternal(), Configuration.ArrayEndIndexSeparator, /*.ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator.Value */
                 Configuration.AllowNestedArrayConversion);
         }
 
@@ -857,7 +857,7 @@ namespace ChoETL
                     throw new ChoParserException($"[LineNo: {lineNo}]: Incorrect number of field values found. Expected [{Configuration.CSVRecordFieldConfigurations.Count}] field values. Found [{fieldValues.Length}] field values.");
             }
 
-            if (Configuration.LiteParsing && Configuration.IsDynamicObject && rec is ChoDynamicObject)
+            if (Configuration.LiteParsing && Configuration.IsDynamicObjectInternal && rec is ChoDynamicObject)
             {
                 if (this.fieldNameValues == null)
                     this.fieldNameValues = InitFieldNameValuesDict();
@@ -885,7 +885,7 @@ namespace ChoETL
                 if (kvp.Key.StartsWith(Configuration.EmptyColumnHeaderPrefix))
                     continue;
 
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                 {
                     if (Configuration.IgnoredFields.Contains(kvp.Key))
                         continue;
@@ -895,22 +895,22 @@ namespace ChoETL
                 fieldConfig = kvp.Value;
 
                 //ChoCSVRecordReader can't find property by FieldName #118
-                if (Configuration.PIDict != null)
+                if (Configuration.PIDictInternal != null)
                 {
                     // if FieldName is set
                     if (!string.IsNullOrEmpty(fieldConfig.FieldName))
                     {
                         // match using FieldName
-                        Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
+                        Configuration.PIDictInternal.TryGetValue(fieldConfig.FieldName, out pi);
                     }
                     if (pi == null)
                     {
                         // otherwise match usign the property name
-                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                        Configuration.PIDictInternal.TryGetValue(kvp.Key, out pi);
                     }
                 }
 
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec, fieldConfig);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMemberInternal, rootRec, fieldConfig);
                 if (rec == null)
                     continue;
 
@@ -920,8 +920,8 @@ namespace ChoETL
                     {
                         if (fieldConfig.ValueSelector == null)
                         {
-                            if (fieldConfig.PropConverters.IsNullOrEmpty()
-                                || fieldConfig.PropConverters.OfType<IChoValueSelector>().Count() == 0)
+                            if (fieldConfig.PropConvertersInternal.IsNullOrEmpty()
+                                || fieldConfig.PropConvertersInternal.OfType<IChoValueSelector>().Count() == 0)
                             {
                                 if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
                                 {
@@ -956,7 +956,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                var fs = fieldConfig.PropConverters.OfType<IChoValueSelector>().First();
+                                var fs = fieldConfig.PropConvertersInternal.OfType<IChoValueSelector>().First();
                                 fieldValue = fs.ExtractValue(fieldConfig.Name, fieldConfig.FieldName, fieldNameValues, Configuration.Culture);
                             }
                         }
@@ -1039,7 +1039,7 @@ namespace ChoETL
                     //        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
                     //}
 
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                         //if (kvp.Value.FieldType == null)
                         //    kvp.Value.FieldType = typeof(string);
@@ -1059,20 +1059,20 @@ namespace ChoETL
 
                     if (fieldConfig.IgnoreFieldValueMode == null)
                     {
-                        if (fieldValue.IsObjectNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
+                        if (fieldValue.IsObjectNullOrEmpty() && fieldConfig.IsDefaultValueSpecifiedInternal)
                             fieldValue = fieldConfig.DefaultValue;
                     }
                     else
                     {
                         bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                        if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                        if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecifiedInternal)
                             fieldValue = fieldConfig.DefaultValue;
                         ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                         if (ignoreFieldValue)
                             continue;
                     }
 
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
@@ -1086,20 +1086,20 @@ namespace ChoETL
                         if (Configuration.SupportsMultiRecordTypes)
                         {
                             ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
-                            fieldConfig.PI = pi;
-                            fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
-                            fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+                            fieldConfig.PIInternal = pi;
+                            fieldConfig.PropConvertersInternal = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PIInternal);
+                            fieldConfig.PropConverterParamsInternal = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PIInternal);
 
                             //Load Custom Serializer
-                            fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PI);
-                            fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PI);
+                            fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PIInternal);
+                            fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PIInternal);
                         }
 
                         if (pi != null)
                         {
                             if (Configuration.LiteParsing)
                             {
-                                ChoType.SetPropertyValue(rec, fieldConfig.PI,
+                                ChoType.SetPropertyValue(rec, fieldConfig.PIInternal,
                                     fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) ? fieldValue : Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
                             }
                             else
@@ -1148,7 +1148,7 @@ namespace ChoETL
 
                     try
                     {
-                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                         {
                             var dict = rec as IDictionary<string, Object>;
 
@@ -1197,7 +1197,7 @@ namespace ChoETL
                                 {
                                     try
                                     {
-                                        if (Configuration.IsDynamicObject)
+                                        if (Configuration.IsDynamicObjectInternal)
                                         {
                                             var dict = rec as IDictionary<string, Object>;
 
@@ -1230,7 +1230,7 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType, Configuration.FieldValueTrimOption);
+            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForReadInternal(fieldType, Configuration.FieldValueTrimOption);
 
             switch (fieldValueTrimOption)
             {
@@ -1394,7 +1394,7 @@ namespace ChoETL
             }
             else
             {
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                 {
                     if (Configuration.MaxFieldPosition <= 0)
                     {
@@ -1458,7 +1458,7 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
                 else
                 {
-                    var arrayIndexSeparator = Configuration.GetArrayIndexSeparator(); //.ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator;
+                    var arrayIndexSeparator = Configuration.GetArrayIndexSeparatorInternal(); //.ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator;
                     _fieldNames = _fieldNames.GroupBy(i => i, Configuration.FileHeaderConfiguration.StringComparer)
                                         .Select(g =>
                                         {

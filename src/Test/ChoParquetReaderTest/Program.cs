@@ -304,7 +304,6 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
         static void ParseLargeParquetTest()
         {
             using (var r = new ChoParquetReader(@"..\..\..\..\..\..\data\XBTUSD-Copy.parquet")
-                .Configure(c => c.LiteParsing = true)
                 .NotifyAfter(100000)
                 .OnRowsLoaded((o, e) => $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print())
                 .ThrowAndStopOnMissingField(false)

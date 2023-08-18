@@ -33,7 +33,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             if (source == null)
                 return Enumerable.Empty<object>();
 
@@ -148,7 +148,7 @@ namespace ChoETL
 
                     if (!_configCheckDone)
                     {
-                        Configuration.Validate(pairElement); // GetHeaders(pair.Item2));
+                        Configuration.ValidateInternal(pairElement); // GetHeaders(pair.Item2));
                         _configCheckDone = true;
                     }
 

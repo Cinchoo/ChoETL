@@ -56,7 +56,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             if (source == null)
                 return Enumerable.Empty<object>();
 
@@ -194,7 +194,7 @@ namespace ChoETL
 
                         if (!_configCheckDone)
                         {
-                            Configuration.Validate(null);
+                            Configuration.ValidateInternal(null);
                             var dict = Configuration.KVPRecordFieldConfigurations.ToDictionary(i1 => i1.Name, i1 => i1.FieldType == null ? null : i1.FieldType);
                             RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
@@ -286,7 +286,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    Configuration.Validate(headers.ToArray());
+                                    Configuration.ValidateInternal(headers.ToArray());
                                     isHeaderFound = true;
                                     isRecordEndFound = false;
                                     IsHeaderLoaded = true;
@@ -297,7 +297,7 @@ namespace ChoETL
                             {
                                 if (!IsHeaderLoaded)
                                 {
-                                    Configuration.Validate(new string[] { });
+                                    Configuration.ValidateInternal(new string[] { });
                                     IsHeaderLoaded = true;
                                 }
 
@@ -342,7 +342,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer)) 
+                                    object rec = Configuration.IsDynamicObjectInternal ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer)) 
                                     {
                                         ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                                         AlternativeKeys = Configuration.AlternativeKeys
@@ -445,28 +445,28 @@ namespace ChoETL
             //Set default values
             foreach (KeyValuePair<string, ChoKVPRecordFieldConfiguration> kvp in Configuration.FCArray)
             {
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
-                if (Configuration.PIDict != null)
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMemberInternal, rootRec);
+                if (Configuration.PIDictInternal != null)
                 {
                     // if FieldName is set
                     if (!string.IsNullOrEmpty(kvp.Value.FieldName))
                     {
                         // match using FieldName
-                        Configuration.PIDict.TryGetValue(kvp.Value.FieldName, out pi);
+                        Configuration.PIDictInternal.TryGetValue(kvp.Value.FieldName, out pi);
                     }
                     else
                     {
                         // otherwise match usign the property name
-                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                        Configuration.PIDictInternal.TryGetValue(kvp.Key, out pi);
                     }
                 }
 
                 try
                 {
-                    if (kvp.Value.IsDefaultValueSpecified)
+                    if (kvp.Value.IsDefaultValueSpecifiedInternal)
                         fieldValue = kvp.Value.DefaultValue;
 
-                    if (Configuration.IsDynamicObject)
+                    if (Configuration.IsDynamicObjectInternal)
                     {
                         var dict = rec as IDictionary<string, Object>;
                         dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
@@ -606,7 +606,7 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType, Configuration.FieldValueTrimOption);
+            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForReadInternal(fieldType, Configuration.FieldValueTrimOption);
 
             switch (fieldValueTrimOption)
             {
@@ -704,7 +704,7 @@ namespace ChoETL
             ChoKVPRecordFieldConfiguration fieldConfig = Configuration.RecordFieldConfigurationsDict[key];
             PropertyInfo pi = null;
 
-            if (Configuration.IsDynamicObject)
+            if (Configuration.IsDynamicObjectInternal)
             {
                 if (Configuration.IgnoredFields.Contains(key))
                     return true;
@@ -718,15 +718,15 @@ namespace ChoETL
 
                 fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                 {
                     if (fieldConfig.FieldType == null)
                         fieldConfig.FieldType = typeof(string);
                 }
                 else
                 {
-                    if (Configuration.PIDict != null)
-                        Configuration.PIDict.TryGetValue(key, out pi);
+                    if (Configuration.PIDictInternal != null)
+                        Configuration.PIDictInternal.TryGetValue(key, out pi);
 
                     if (pi != null)
                         fieldConfig.FieldType = pi.PropertyType;
@@ -744,13 +744,13 @@ namespace ChoETL
                 //    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
                 bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecifiedInternal)
                     fieldValue = fieldConfig.DefaultValue;
                 ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                 if (ignoreFieldValue)
                     return true;
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                 {
                     var dict = rec as IDictionary<string, Object>;
 
@@ -794,7 +794,7 @@ namespace ChoETL
 
                 try
                 {
-                    if (Configuration.IsDynamicObject)
+                    if (Configuration.IsDynamicObjectInternal)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
@@ -841,7 +841,7 @@ namespace ChoETL
                             {
                                 try
                                 {
-                                    if (Configuration.IsDynamicObject)
+                                    if (Configuration.IsDynamicObjectInternal)
                                     {
                                         var dict = rec as IDictionary<string, Object>;
 

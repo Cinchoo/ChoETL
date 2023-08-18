@@ -92,7 +92,7 @@ namespace ChoETL
 
         public IEnumerable<object> AsEnumerable<T>(object source, Func<object, bool?> filterFunc = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             if (source == null)
                 yield break;
 
@@ -252,7 +252,7 @@ namespace ChoETL
 
                 if (!_configCheckDone)
                 {
-                    Configuration.Validate(pair);
+                    Configuration.ValidateInternal(pair);
                     _configCheckDone = true;
                 }
 
@@ -297,7 +297,7 @@ namespace ChoETL
             bool ignoreFieldValue = pair.Item2.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
             if (ignoreFieldValue)
                 return false;
-            else if (pair.Item2 == null && !Configuration.IsDynamicObject)
+            else if (pair.Item2 == null && !Configuration.IsDynamicObjectInternal)
             {
                 rec = RecordType.CreateInstanceAndDefaultToMembers(Configuration.RecordFieldConfigurationsDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value as ChoRecordFieldConfiguration));
                 return true;

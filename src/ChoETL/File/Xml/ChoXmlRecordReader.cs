@@ -85,7 +85,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             if (source == null)
                 yield break;
 
@@ -138,7 +138,7 @@ namespace ChoETL
             if (Configuration.AutoDiscoverColumns
                 && Configuration.XmlRecordFieldConfigurations.Count == 0)
             {
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject && !Configuration.UseXmlSerialization)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal && !Configuration.UseXmlSerialization)
                 {
                     long recCount = 0;
                     _configCheckDone = true;
@@ -159,7 +159,7 @@ namespace ChoETL
                             break;
                     }
 
-                    Configuration.Validate(null);
+                    Configuration.ValidateInternal(null);
                     var dict = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                     RaiseMembersDiscovered(dict);
                     Configuration.UpdateFieldTypesIfAny(dict);
@@ -221,7 +221,7 @@ namespace ChoETL
                     recType = _xmlTypeCache.Value.ContainsKey(name) && _xmlTypeCache.Value[name] != null ? _xmlTypeCache.Value[name] : RecordType;
                 }
                 return pair.Item2.ToObjectFromXml(recType, NS: Configuration.GetFirstDefaultNamespace(),
-                    nsMgr: Configuration.XmlNamespaceManager.Value, pd: fc == null ? null : fc.PD,
+                    nsMgr: Configuration.XmlNamespaceManager.Value, pd: fc == null ? null : fc.PDInternal,
                     useProxy: Configuration.ShouldUseProxy(fc), config: Configuration);
             }
         }
@@ -307,11 +307,11 @@ namespace ChoETL
 
                 if (!_configCheckDone)
                 {
-                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
+                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMappedInternal)
                     {
                     }
                     else
-                        Configuration.Validate(pair);
+                        Configuration.ValidateInternal(pair);
                     var dict = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                     //if (Configuration.MaxScanRows == 0)
                     RaiseMembersDiscovered(dict);
@@ -330,7 +330,7 @@ namespace ChoETL
                 if (rec == null)
                     continue;
 
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                 {
                     if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
                     {
@@ -389,7 +389,7 @@ namespace ChoETL
                 pair = null;
             }
 
-            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
             {
                 if (buffer.Count > 0)
                 {
@@ -482,7 +482,7 @@ namespace ChoETL
             bool ignoreFieldValue = pair.Item2.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
             if (ignoreFieldValue)
                 return false;
-            else if (pair.Item2 == null && !Configuration.IsDynamicObject)
+            else if (pair.Item2 == null && !Configuration.IsDynamicObjectInternal)
             {
                 rec = RecordType.CreateInstanceAndDefaultToMembers(Configuration.RecordFieldConfigurationsDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value as ChoRecordFieldConfiguration));
                 return true;
@@ -502,10 +502,10 @@ namespace ChoETL
                         throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                 }
 
-                if (!Configuration.RecordTypeMapped)
+                if (!Configuration.RecordTypeMappedInternal)
                 {
                     Configuration.MapRecordFields(recType);
-                    Configuration.Validate(null);
+                    Configuration.ValidateInternal(null);
                 }
 
                 rec = recType.IsDynamicType() ? new ChoDynamicObject()
@@ -514,8 +514,8 @@ namespace ChoETL
                 } : ChoActivator.CreateInstance(recType);
                 RecordType = recType;
             }
-            else if (!Configuration.UseXmlSerialization || Configuration.IsDynamicObject)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject()
+            else if (!Configuration.UseXmlSerialization || Configuration.IsDynamicObjectInternal)
+                rec = Configuration.IsDynamicObjectInternal ? new ChoDynamicObject()
                 {
                     ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                 } : ChoActivator.CreateInstance(RecordType);
@@ -542,14 +542,14 @@ namespace ChoETL
 
 
                 if (!Configuration.UseXmlSerialization
-                    && !typeof(ICollection).IsAssignableFrom(Configuration.RecordType)
-                    && !(Configuration.RecordType.IsGenericType && Configuration.RecordType.GetGenericTypeDefinition() == typeof(ICollection<>))
+                    && !typeof(ICollection).IsAssignableFrom(Configuration.RecordTypeInternal)
+                    && !(Configuration.RecordTypeInternal.IsGenericType && Configuration.RecordTypeInternal.GetGenericTypeDefinition() == typeof(ICollection<>))
                     )
                 {
                     if (!FillRecord(rec, pair))
                         return false;
 
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                         if (Configuration.ConvertToNestedObject && Configuration.NestedKeySeparator != null)
                         {
@@ -569,7 +569,7 @@ namespace ChoETL
                 else
                 {
                     //if (Configuration.IsDynamicObject)
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                         Parse(rec, pair.Item2);
                     else
                     {
@@ -706,7 +706,7 @@ namespace ChoETL
 
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                 {
                     if (Configuration.IgnoredFields.Contains(kvp.Key))
                         continue;
@@ -716,10 +716,10 @@ namespace ChoETL
                 isXmlAttribute = false;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
-                if (Configuration.PIDict != null)
-                    Configuration.PIDict.TryGetValue(key, out pi);
+                if (Configuration.PIDictInternal != null)
+                    Configuration.PIDictInternal.TryGetValue(key, out pi);
 
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMemberInternal, rootRec);
 
                 if (fieldConfig.XPath == "text()")
                 {
@@ -743,7 +743,7 @@ namespace ChoETL
                                 Configuration.RetainXmlAttributesAsNative,
                                 defaultNSPrefix: Configuration.DefaultNamespacePrefix,
                                 NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value,
-                                pd: fieldConfig == null ? null : fieldConfig.PD, useProxy: Configuration.ShouldUseProxy(fieldConfig),
+                                pd: fieldConfig == null ? null : fieldConfig.PDInternal, useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                 config: Configuration);
                             if (dobj == null || !dobj.HasText())
                                 continue;
@@ -836,7 +836,7 @@ namespace ChoETL
                                 }
                                 else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                 {
-                                    if (!fieldConfig.HasConverters())
+                                    if (!fieldConfig.HasConvertersInternal())
                                     {
                                         XAttribute fXElement = fXAttributes.FirstOrDefault();
                                         if (fXElement != null)
@@ -872,7 +872,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    if (!fieldConfig.HasConverters())
+                                    if (!fieldConfig.HasConvertersInternal())
                                     {
                                         XAttribute fXElement = fXAttributes.FirstOrDefault();
                                         if (fXElement != null)
@@ -935,7 +935,7 @@ namespace ChoETL
                                                             defaultNSPrefix: Configuration.DefaultNamespacePrefix,
                                                             NS: Configuration.GetFirstDefaultNamespace(),
                                                             nsMgr: Configuration.XmlNamespaceManager.Value,
-                                                            pd: fieldConfig == null ? null : fieldConfig.PD,
+                                                            pd: fieldConfig == null ? null : fieldConfig.PDInternal,
                                                             useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                                             config: Configuration));
 
@@ -984,7 +984,7 @@ namespace ChoETL
                                                         defaultNSPrefix: Configuration.DefaultNamespacePrefix,
                                                         NS: Configuration.GetFirstDefaultNamespace(),
                                                         nsMgr: Configuration.XmlNamespaceManager.Value,
-                                                        pd: fieldConfig == null ? null : fieldConfig.PD,
+                                                        pd: fieldConfig == null ? null : fieldConfig.PDInternal,
                                                         useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                                         config: Configuration);
 
@@ -1009,7 +1009,7 @@ namespace ChoETL
                                                             Configuration.RetainXmlAttributesAsNative,
                                                             defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(),
                                                             nsMgr: Configuration.XmlNamespaceManager.Value,
-                                                            pd: fieldConfig == null ? null : fieldConfig.PD,
+                                                            pd: fieldConfig == null ? null : fieldConfig.PDInternal,
                                                             useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                                             config: Configuration) as ChoDynamicObject));
                                                 }
@@ -1056,7 +1056,7 @@ namespace ChoETL
                                                             defaultNSPrefix: Configuration.DefaultNamespacePrefix,
                                                             NS: Configuration.GetFirstDefaultNamespace(),
                                                             nsMgr: Configuration.XmlNamespaceManager.Value,
-                                                            pd: fieldConfig == null ? null : fieldConfig.PD,
+                                                            pd: fieldConfig == null ? null : fieldConfig.PDInternal,
                                                             useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                                             config: Configuration)));
                                                     }
@@ -1082,7 +1082,7 @@ namespace ChoETL
                                                             Configuration.GetFirstDefaultNamespace(),
                                                             defaultNSPrefix: Configuration.DefaultNamespacePrefix,
                                                             nsMgr: Configuration.XmlNamespaceManager.Value,
-                                                            pd: fieldConfig == null ? null : fieldConfig.PD,
+                                                            pd: fieldConfig == null ? null : fieldConfig.PDInternal,
                                                             useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                                             config: Configuration));
 
@@ -1126,7 +1126,7 @@ namespace ChoETL
                                         }
                                         else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                         {
-                                            if (!fieldConfig.HasConverters())
+                                            if (!fieldConfig.HasConvertersInternal())
                                             {
                                                 XText fXElement = xTexts.FirstOrDefault();
                                                 if (fXElement != null)
@@ -1162,7 +1162,7 @@ namespace ChoETL
                                         }
                                         else
                                         {
-                                            if (!fieldConfig.HasConverters())
+                                            if (!fieldConfig.HasConvertersInternal())
                                             {
                                                 XText fXElement = xTexts.FirstOrDefault();
                                                 if (fXElement != null)
@@ -1202,7 +1202,7 @@ namespace ChoETL
 
                 //if (Configuration.IsDynamicObject)
 
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                 {
                     if (fieldValue != null && kvp.Value.FieldType == null && lineNo == 1)
                     {
@@ -1239,19 +1239,19 @@ namespace ChoETL
                 {
                     if (fieldConfig.IgnoreFieldValueMode == null)
                     {
-                        if (fieldValue.IsObjectNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
+                        if (fieldValue.IsObjectNullOrEmpty() && fieldConfig.IsDefaultValueSpecifiedInternal)
                             fieldValue = fieldConfig.DefaultValue;
                     }
                     else
                     {
                         bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                        if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                        if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecifiedInternal)
                             fieldValue = fieldConfig.DefaultValue;
                         ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                         if (ignoreFieldValue)
                             continue;
                     }
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
@@ -1316,13 +1316,13 @@ namespace ChoETL
                         if (Configuration.SupportsMultiRecordTypes)
                         {
                             ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
-                            fieldConfig.PI = pi;
-                            fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
-                            fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+                            fieldConfig.PIInternal = pi;
+                            fieldConfig.PropConvertersInternal = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PIInternal);
+                            fieldConfig.PropConverterParamsInternal = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PIInternal);
 
                             //Load Custom Serializer
-                            fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PI);
-                            fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PI);
+                            fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PIInternal);
+                            fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PIInternal);
                         }
 
                         if (pi != null)
@@ -1358,7 +1358,7 @@ namespace ChoETL
 
                     try
                     {
-                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                         {
                             var dict = rec as IDictionary<string, Object>;
 
@@ -1406,7 +1406,7 @@ namespace ChoETL
                                 {
                                     try
                                     {
-                                        if (Configuration.IsDynamicObject)
+                                        if (Configuration.IsDynamicObjectInternal)
                                         {
                                             var dict = rec as IDictionary<string, Object>;
 
@@ -1434,7 +1434,7 @@ namespace ChoETL
 
             //Find any object members and serialize them
             //if (!Configuration.IsDynamicObject) //rec is ExpandoObject)
-            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
             {
 
             }
@@ -1525,7 +1525,7 @@ namespace ChoETL
                             else if (itemType == typeof(XElement))
                             {
                                 fieldValue = Normalize(((XElement)itemValue).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig, NS: Configuration.GetFirstDefaultNamespace()), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig == null ? null : fieldConfig.PD,
+                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig == null ? null : fieldConfig.PDInternal,
                                     useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                     config: Configuration));
                                 ChoType.SetPropertyValue(target, pd.Name, fieldValue);
@@ -1538,7 +1538,7 @@ namespace ChoETL
                             else if (typeof(IList<XElement>).IsAssignableFrom(itemType))
                             {
                                 fieldValue = ((IList)itemValue).Cast(t => ((XElement)itemValue).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig, NS: Configuration.GetFirstDefaultNamespace()), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig == null ? null : fieldConfig.PD,
+                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig == null ? null : fieldConfig.PDInternal,
                                     useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                     config: Configuration));
                                 ChoType.SetPropertyValue(target, pd.Name, fieldValue);
@@ -1626,7 +1626,7 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType, Configuration.FieldValueTrimOption);
+            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForReadInternal(fieldType, Configuration.FieldValueTrimOption);
 
             if (config.FieldValueTrimOption == null)
             {

@@ -75,6 +75,7 @@ namespace ChoETL
 
             return array;
         }
+
         public static IEnumerable<CompareResult<ChoDynamicObject>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
             string csvKeyColumns = null, string csvCompareColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null,
             IDictionary<Type, IComparer> typeComparerers = null)
@@ -88,18 +89,18 @@ namespace ChoETL
             return Compare(master, detail, equalityComparer, comparerObj, changeComparer);
         }
 
-        public static IEnumerable<CompareResult<ChoDynamicObject>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
-            string[] keyColumns = null, string[] compareColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null,
-            IDictionary<Type, IComparer> typeComparerers = null)
-        {
-            var equalityComparer = new ChoDynamicObjectEqualityComparer(keyColumns);
-            var comparerObj = comparer == null ? new ChoDynamicObjectComparer(keyColumns) : new ChoDynamicObjectComparer(comparer);
-            if (typeComparerers != null)
-                comparerObj.TypeComparerers = new System.Collections.Concurrent.ConcurrentDictionary<Type, IComparer>(typeComparerers);
-            var changeComparer = compareColumns.IsNullOrEmpty() ? new ChoDynamicObjectEqualityComparer((string)null) : new ChoDynamicObjectEqualityComparer(compareColumns);
+        //public static IEnumerable<CompareResult<ChoDynamicObject>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
+        //    string[] keyColumns = null, string[] compareColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null,
+        //    IDictionary<Type, IComparer> typeComparerers = null)
+        //{
+        //    var equalityComparer = new ChoDynamicObjectEqualityComparer(keyColumns);
+        //    var comparerObj = comparer == null ? new ChoDynamicObjectComparer(keyColumns) : new ChoDynamicObjectComparer(comparer);
+        //    if (typeComparerers != null)
+        //        comparerObj.TypeComparerers = new System.Collections.Concurrent.ConcurrentDictionary<Type, IComparer>(typeComparerers);
+        //    var changeComparer = compareColumns.IsNullOrEmpty() ? new ChoDynamicObjectEqualityComparer((string)null) : new ChoDynamicObjectEqualityComparer(compareColumns);
 
-            return Compare(master, detail, equalityComparer, comparerObj, changeComparer);
-        }
+        //    return Compare(master, detail, equalityComparer, comparerObj, changeComparer);
+        //}
 
         public static IEnumerable<CompareResult<T>> Compare<T>(this IEnumerable<T> master, IEnumerable<T> detail,
             IEqualityComparer<T> equalityComparer = null,
