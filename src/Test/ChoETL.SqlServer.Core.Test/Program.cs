@@ -43,7 +43,7 @@ namespace ChoETL.SqlServer.Core.Test
                 {
                     $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print();
                 })
-                .Configure(c => c.LiteParsing = true)
+                //.Configure(c => c.LiteParsing = true)
                 //.Configure(c => c.BufferSize = 1024 * 1024)
                 //.Configure(c => c.TurnOffMemoryMappedFile = true)
                 )

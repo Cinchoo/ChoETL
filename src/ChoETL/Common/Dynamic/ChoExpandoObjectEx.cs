@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Dynamic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -375,7 +376,7 @@ namespace ChoETL
         }
 
         public static dynamic ConvertToFlattenObject(this object @this, char? nestedKeySeparator = null, char? arrayIndexSeparator = null,
-            char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
+            char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null)
         {
             //if (@this == null || !@this.GetType().IsDynamicType())
             //    return @this;
@@ -384,7 +385,8 @@ namespace ChoETL
             if (dict == null)
                 return @this;
             else
-                return new ChoDynamicObject(dict.Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix).ToDictionary());
+                return new ChoDynamicObject(dict.Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix)
+                    .ToDictionary(valueNamePrefix: valueNamePrefix));
         }
 
         private static object GetDynamicMember(object obj, string memberName)

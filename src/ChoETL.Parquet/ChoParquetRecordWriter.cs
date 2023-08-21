@@ -683,9 +683,13 @@ namespace ChoETL
                 }
 
                 if (Configuration.UseNestedKeyFormat)
-                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                {
+                    var kvps = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
-                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToArray();
+
+                    fieldNames = kvps.ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Keys.ToArray();
+                }
                 else
                     fieldNames = record.Keys.ToArray();
             }
@@ -724,7 +728,7 @@ namespace ChoETL
                     }
                     fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
-                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Keys.ToArray();
                 }
                 else
                     fieldNames = dict.Keys.ToArray();
@@ -818,7 +822,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObjectInternal && Configuration.UseNestedKeyFormat)
                         dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                             Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
-                        Configuration.IgnoreRootDictionaryFieldPrefix).ToArray().ToDictionary();
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToArray().ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                 }
 
                 if (Configuration.ThrowAndStopOnMissingField)

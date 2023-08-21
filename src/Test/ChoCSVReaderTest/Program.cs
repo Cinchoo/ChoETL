@@ -8480,8 +8480,8 @@ PREPAID US, , US24, WOLONG US LRD, , , , JEMA MOTORS AND AUTOMATION,10827 ELGAR 
     ""Customer Part Number"": null,
     ""Shipping Notes"": ""shipping marks header shipping marks line 1"",
     ""T_Tags"": ""t tags header t tags line 1"",
-    ""Send Freight bill to"": ""\""WOLONG ELECTRIC INDUSTRIAL MOTORS c / o Interlog Services"",
-    ""Deletion flag"": ""North America 25 Research Drive Ann Arbor""
+    ""Send Freight bill to"": ""WOLONG ELECTRIC INDUSTRIAL MOTORS c / o Interlog Services, North America 25 Research Drive Ann Arbor, MI 48103 LOC. 31 ACCT BCJM401754"",
+    ""Deletion flag"": null
   },
   {
     ""Freight Terms"": ""PREPAID US"",
@@ -8504,8 +8504,8 @@ PREPAID US, , US24, WOLONG US LRD, , , , JEMA MOTORS AND AUTOMATION,10827 ELGAR 
     ""Customer Part Number"": null,
     ""Shipping Notes"": ""shipping marks header shipping marks line 2"",
     ""T_Tags"": ""t tags header t tags line 2"",
-    ""Send Freight bill to"": ""\""WOLONG ELECTRIC INDUSTRIAL MOTORS c/o Interlog Services"",
-    ""Deletion flag"": ""North America 25 Research Drive Ann Arbor""
+    ""Send Freight bill to"": ""WOLONG ELECTRIC INDUSTRIAL MOTORS c/o Interlog Services, North America 25 Research Drive Ann Arbor, MI 48103 LOC. 31 ACCT BCJM401754"",
+    ""Deletion flag"": null
   }
 ]";
             using (var r = ChoCSVReader.LoadText(csv)

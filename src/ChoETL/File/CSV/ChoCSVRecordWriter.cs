@@ -462,7 +462,8 @@ namespace ChoETL
                 }
 
                 if (Configuration.UseNestedKeyFormat)
-                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
+                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)
+                        .ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Keys.ToArray();
                 else
                     fieldNames = record.Keys.ToArray();
             }
@@ -502,7 +503,8 @@ namespace ChoETL
                             ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                         }
                         fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
-                            ignoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix, Configuration.IgnoreRootDictionaryFieldPrefix).ToArray().ToDictionary().Keys.ToArray();
+                            ignoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix, Configuration.IgnoreRootDictionaryFieldPrefix).ToArray()
+                            .ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Keys.ToArray();
                     }
                     else
                         fieldNames = dict.Keys.ToArray();
@@ -590,7 +592,8 @@ namespace ChoETL
                             ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                         }
 
-                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
+                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray()
+                            .ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                     }
                 }
 

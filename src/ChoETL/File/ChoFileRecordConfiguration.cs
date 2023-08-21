@@ -41,7 +41,7 @@ namespace ChoETL
             set;
         }
 
-        public bool LiteParsing
+        internal bool LiteParsing
         {
             get;
             set;

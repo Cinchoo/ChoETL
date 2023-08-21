@@ -558,12 +558,18 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             {
                 using (var w = new ChoParquetWriter(filePath)
                     .UseNestedKeyFormat()
+                    .Configure(c => c.ArrayValueNamePrefix = String.Empty)
                     )
                 {
                     var recs = r.ToArray();
                     //var dict = recs.Select(r1 => r1.FlattenToDictionary()).ToArray(); //.Select(rec1 => rec1.ToDictionary().Flatten().ToDictionary());
                     w.Write(recs);
                 }
+
+                var jsonOut = ReadParquetFileAsJSON(filePath);
+                jsonOut.Print();
+                var csv = ReadParquetFileAsCSV(filePath);
+                csv.Print();
 
                 //var x = ChoParquetWriter.SerializeAll(r.Select(rec1 => rec1.ToDictionary().Flatten().ToDictionary()));
                 //File.WriteAllBytes(filePath, x);
@@ -1072,6 +1078,16 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             {
                 var recs = recCount == null ? r.ToArray() : r.Take(recCount.Value).ToArray();
                 return ChoCSVWriter.ToTextAll(recs, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            }
+        }
+        static string ReadParquetFileAsCSV<T>(string parquetOutputFilePath, int? recCount = null)
+            where T : class
+        {
+            parquetOutputFilePath.Print();
+            using (var r = new ChoParquetReader(parquetOutputFilePath))
+            {
+                var recs = recCount == null ? r.ToArray() : r.Take(recCount.Value).ToArray();
+                return ChoCSVWriter<T>.ToTextAll(recs, new ChoCSVRecordConfiguration().WithFirstLineHeader());
             }
         }
 
@@ -2081,6 +2097,31 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             var actual = ReadParquetFileAsCSV(filePath);
             Assert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public static void Issue139()
+        {
+            string json = @"[
+	{
+		""Health"": {
+			""Id"": 99,
+			""Status"": false
+		},
+		""Safety"": {
+			""Id"": 3,
+			""Fire"": 1
+		},
+		""Climate"": [
+			{
+				""Id"": 0,
+				""State"": 2
+			}
+		]
+	}
+]";
+        }
+
+
         static void Main(string[] args)
         {
             Issue285();

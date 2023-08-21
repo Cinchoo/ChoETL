@@ -794,7 +794,11 @@ namespace ChoETL
 
         private string[] GetFieldValues(string line)
         {
-            if ((Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value) || Configuration.CSVRecordFieldConfigurations.Any(f => f.QuoteField != null && f.QuoteField.Value))
+            if (Configuration.QuoteAllFields == null)
+            {
+                return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar, mayContainEOLInData: Configuration.MayContainEOLInData);
+            }
+            else if ((Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value) || Configuration.CSVRecordFieldConfigurations.Any(f => f.QuoteField != null && f.QuoteField.Value))
                 return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar, mayContainEOLInData: Configuration.MayContainEOLInData);
             else
             {
@@ -1100,7 +1104,7 @@ namespace ChoETL
                             if (Configuration.LiteParsing)
                             {
                                 ChoType.SetPropertyValue(rec, fieldConfig.PIInternal,
-                                    fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) ? fieldValue : Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
+                                    fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) ? fieldValue : Convert.ChangeType(fieldValue, fieldConfig.FieldType.GetUnderlyingType(), Configuration.Culture));
                             }
                             else
                                 rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);

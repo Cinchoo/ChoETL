@@ -75,7 +75,7 @@ namespace ChoETL.SQLite.NETStandard.Test
                     {
                         $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print();
                     })
-                    .Configure(c => c.LiteParsing = true)
+                    //.Configure(c => c.LiteParsing = true)
                     )
                 {
                     //r.Take(1).Print();

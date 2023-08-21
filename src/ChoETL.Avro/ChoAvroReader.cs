@@ -264,7 +264,7 @@ namespace ChoETL
                 if (s is IDictionary<string, object>)
                     return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
-                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary() as object;
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix) as object;
                 else
                     return s;
             }).AsDataReader();

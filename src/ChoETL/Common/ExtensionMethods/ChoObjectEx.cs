@@ -288,7 +288,7 @@ namespace ChoETL
             return (T)ConvertToObject(source, typeof(T));
         }
 
-        public static object ConvertToObject(this object source, Type type)
+        public static object ConvertToObject(this object source, Type type, string valueNamePrefix = null)
         {
             if (source == null) return source;
 
@@ -309,7 +309,7 @@ namespace ChoETL
             {
                 if (source is IDictionary)
                 {
-                    var dict = ((IDictionary)source).ToDictionary();
+                    var dict = ((IDictionary)source).ToDictionary(valueNamePrefix: valueNamePrefix);
                     return dict.ToObject(type);
                 }
                 else
