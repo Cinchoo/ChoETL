@@ -140,7 +140,7 @@ namespace ChoAvroReaderTest
                 .Configure(c => c.KnownTypes = new List<Type> { typeof(Location), typeof(string), typeof(int) })
                 .Configure(c => c.UseAvroSerializer = true)
                 //.Configure(c => c.AvroSerializerSettings = sett1)
-                .Configure(c => c.NestedColumnSeparator = '_')
+                .Configure(c => c.NestedKeySeparator = '_')
                 )
             {
                 //var dt = r.AsDataTable();

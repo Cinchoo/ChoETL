@@ -11,11 +11,11 @@ namespace ChoETL
     {
         private static readonly object _objCachePadLock = new object();
         private static readonly Dictionary<Type, object> _objCache = new Dictionary<Type, object>();
-		public static Func<Type, object[], object> Factory
-		{
-			get;
-			set;
-		}
+        public static Func<Type, object[], object> Factory
+        {
+            get;
+            set;
+        }
 
         static ChoActivator()
         {
@@ -46,7 +46,7 @@ namespace ChoETL
         public static T CreateInstanceNCache<T>()
         {
             return (T)CreateInstanceNCache(typeof(T));
-        } 
+        }
 
         public static object CreateInstanceNCache(Type objType, params object[] args)
         {
@@ -66,14 +66,14 @@ namespace ChoETL
         }
 
         public static T CreateInstance<T>()
-		{
-			return (T)CreateInstance(typeof(T));
-		}
+        {
+            return (T)CreateInstance(typeof(T));
+        }
 
-		public static object CreateInstance(Type objType, params object[] args)
-		{
-			try
-			{
+        public static object CreateInstance(Type objType, params object[] args)
+        {
+            try
+            {
                 object obj = null;
                 Func<Type, object[], object> factory = Factory;
                 if (factory != null)
@@ -115,14 +115,14 @@ namespace ChoETL
                 }
 
                 return obj;
-			}
-			catch (TargetInvocationException ex)
-			{
-				throw ex.InnerException;
-			}
-		}
+            }
+            catch (TargetInvocationException ex)
+            {
+                throw ex.InnerException;
+            }
+        }
 
-		public static T CreateInstanceAndInit<T>()
+        public static T CreateInstanceAndInit<T>()
         {
             return (T)CreateInstanceAndInit(typeof(T));
         }
@@ -131,10 +131,31 @@ namespace ChoETL
         {
             try
             {
-				object obj = Factory != null ? Factory(objType, args) : null;
+                object obj = Factory != null ? Factory(objType, args) : null;
                 if (obj == null)
                 {
-                    obj = Activator.CreateInstance(objType, args);
+                    if (Type.GetTypeCode(objType) == TypeCode.String)
+                        return string.Empty;
+
+                    // get the default constructor and instantiate
+                    Type[] types = new Type[0];
+                    ConstructorInfo info = objType.GetConstructor(types);
+
+                    if (info == null) //must not have found the constructor
+                    {
+                        if (objType.BaseType.UnderlyingSystemType.FullName.Contains("Enum"))
+                            obj = Activator.CreateInstance(objType);
+                        else
+                            obj = info.Invoke(null);
+                    }
+
+                    if (obj == null)
+                    {
+                        if (args == null || args.Length == 0)
+                            obj = Activator.CreateInstance(objType);
+                        else
+                            obj = Activator.CreateInstance(objType, args);
+                    }
                     obj.Initialize();
                 }
                 return obj;
@@ -235,7 +256,7 @@ namespace ChoETL
 
             if (rgParams.IsNullOrWhiteSpace())
                 return null;
-                //throw new ApplicationException("No random generator defined for {0} field.".FormatString(fieldName));
+            //throw new ApplicationException("No random generator defined for {0} field.".FormatString(fieldName));
 
             string rgType = rgParams.SplitNTrim().FirstOrDefault();
             if (rgType.IsNullOrWhiteSpace())
@@ -247,7 +268,7 @@ namespace ChoETL
 
             string rgObjectParams = String.Join(",", rgParams.SplitNTrim().Skip(1).ToArray());
             return Activator.CreateInstance(rgt, (from z in rgObjectParams.SplitNTrim()
-                                                      select z.ToObject()).ToArray()) as ChoRandomGenerator;
+                                                  select z.ToObject()).ToArray()) as ChoRandomGenerator;
         }
     }
 }

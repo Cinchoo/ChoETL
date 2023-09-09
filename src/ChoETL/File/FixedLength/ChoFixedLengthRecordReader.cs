@@ -294,7 +294,7 @@ namespace ChoETL
                             Configuration.ValidateInternal(null);
                         }
 
-                        rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                        rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer), Configuration.NestedKeySeparator)
                         {
                             ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                             AlternativeKeys = Configuration.AlternativeKeys
@@ -302,7 +302,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        rec = Configuration.IsDynamicObjectInternal ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                        rec = Configuration.IsDynamicObjectInternal ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer), Configuration.NestedKeySeparator)
                         {
                             ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                             AlternativeKeys = Configuration.AlternativeKeys
@@ -373,13 +373,13 @@ namespace ChoETL
 
         private object ConvertToNestedObjectIfApplicable(object rec, bool headerLineFound)
         {
-            if (!headerLineFound || !Configuration.IsDynamicObjectInternal || Configuration.NestedColumnSeparator == null)
+            if (!headerLineFound || !Configuration.IsDynamicObjectInternal || Configuration.NestedKeySeparator == null)
                 return rec;
 
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
 
-            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value, Configuration.ArrayIndexSeparator,
+            return dict1.ConvertToNestedObject(Configuration.NestedKeySeparator == null ? '/' : Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator,
                  Configuration.AllowNestedArrayConversion);
         }
 

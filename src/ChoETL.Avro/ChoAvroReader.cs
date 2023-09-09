@@ -262,7 +262,7 @@ namespace ChoETL
             return this.Select(s =>
             {
                 if (s is IDictionary<string, object>)
-                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
+                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix) as object;
                 else

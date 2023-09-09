@@ -588,12 +588,12 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> NestedColumnSeparator(char value)
+        public ChoCSVReader<T> NestedKeySeparator(char? value)
         {
             if (value == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid nested column separator passed.");
 
-            Configuration.NestedColumnSeparator = value;
+            Configuration.NestedKeySeparator = value;
             return this;
         }
 

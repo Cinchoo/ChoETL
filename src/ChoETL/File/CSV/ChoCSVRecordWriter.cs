@@ -462,7 +462,7 @@ namespace ChoETL
                 }
 
                 if (Configuration.UseNestedKeyFormat)
-                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)
+                    fieldNames = record.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)
                         .ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Keys.ToArray();
                 else
                     fieldNames = record.Keys.ToArray();
@@ -502,7 +502,7 @@ namespace ChoETL
                         {
                             ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                         }
-                        fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                        fieldNames = dict.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                             ignoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix, Configuration.IgnoreRootDictionaryFieldPrefix).ToArray()
                             .ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Keys.ToArray();
                     }
@@ -592,7 +592,7 @@ namespace ChoETL
                             ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                         }
 
-                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray()
+                        dict = dict.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray()
                             .ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                     }
                 }

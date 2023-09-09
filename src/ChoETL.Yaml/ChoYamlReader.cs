@@ -387,11 +387,11 @@ namespace ChoETL
             {
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedKeySeparator, 
                         Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                 else
-                    dict = s.ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                    dict = s.ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Flatten(Configuration.NestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedKeySeparator, 
                         Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
 

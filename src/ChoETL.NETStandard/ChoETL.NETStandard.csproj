@@ -17,7 +17,7 @@
 		<PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
 		<PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<Version>1.2.1.62</Version>
+		<Version>1.2.1.63</Version>
 		<AssemblyName>ChoETL.Core</AssemblyName>
 		<RootNamespace>ChoETL</RootNamespace>
 		<SignAssembly>true</SignAssembly>

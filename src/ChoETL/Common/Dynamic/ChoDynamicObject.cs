@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 
@@ -156,8 +157,12 @@ namespace ChoETL
     [Serializable]
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object>, ISerializable //, IList<object>, IList //, IXmlSerializable
     {
+        internal string GetKeySeparator()
+        {
+            return _keySeparator;
+        }
         public const string DefaultName = "dynamic";
-        private string _keySeparator = ".";
+        private string _keySeparator = "";
         private string _attributePrefix = "@";
 
         //internal static readonly string ValueToken = "#text";
@@ -310,22 +315,22 @@ namespace ChoETL
             _intrinsicTypes.Add("dynamic", typeof(ChoDynamicObject));
         }
 
-        public ChoDynamicObject() : this(false)
+        public ChoDynamicObject() : this(false, null)
         {
             DynamicObjectName = DefaultName;
         }
 
-        public ChoDynamicObject(string name) : this(false)
+        public ChoDynamicObject(string name, char? keySeparator = null) : this(false, keySeparator)
         {
             DynamicObjectName = name.IsNullOrWhiteSpace() ? DefaultName : name.Trim();
         }
 
-        public ChoDynamicObject(bool watchChange = false) : this(null, watchChange)
+        public ChoDynamicObject(bool watchChange = false, char? keySeparator = null) : this(null, watchChange, keySeparator)
         {
             _watchChange = watchChange;
         }
 
-        public ChoDynamicObject(IDictionary<string, object> kvpDict) : this(null, false)
+        public ChoDynamicObject(IDictionary<string, object> kvpDict, char? keySeparator = null) : this(null, false, keySeparator)
         {
             _kvpDict = kvpDict;
             if (_kvpDict != null)
@@ -345,7 +350,8 @@ namespace ChoETL
             }
         }
 
-        public ChoDynamicObject(IList<object> list, string valueNamePrefix = null, int? valueNameStartIndex = null) : this(null, false)
+        public ChoDynamicObject(IList<object> list, string valueNamePrefix = null, int? valueNameStartIndex = null, char? keySeparator = null) 
+            : this(null, false, keySeparator)
         {
             if (valueNamePrefix.IsNullOrWhiteSpace())
                 valueNamePrefix = ChoETLSettings.ValueNamePrefix;
@@ -361,7 +367,7 @@ namespace ChoETL
                 ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
-        public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
+        public ChoDynamicObject(ExpandoObject kvpDict, char? keySeparator = null) : this(null, false, keySeparator)
         {
             _kvpDict = (IDictionary<string, object>)kvpDict;
             if (_kvpDict != null)
@@ -376,18 +382,14 @@ namespace ChoETL
             }
         }
 
-        public ChoDynamicObject(dynamic kvpDict) : this(null, false)
+        public ChoDynamicObject(dynamic kvpDict, char? keySeparator = null) : this(null, false, keySeparator)
         {
             _kvpDict = (IDictionary<string, object>)kvpDict;
         }
 
         public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false, char? keySeparator = null)
         {
-            if (keySeparator == null)
-                keySeparator = ChoETLSettings.KeySeparator;
-
-            if (keySeparator != ChoCharEx.NUL)
-                _keySeparator = keySeparator.ToString();
+            SetKeySeparator(keySeparator);
 
             if (DynamicObjectName.IsNullOrWhiteSpace())
                 DynamicObjectName = DefaultName;
@@ -422,6 +424,15 @@ namespace ChoETL
                     }, null, (long)TimeSpan.FromSeconds(pollIntervalInSec).TotalMilliseconds, Timeout.Infinite);
                 }
             });
+        }
+
+        private void SetKeySeparator(char? keySeparator)
+        {
+            if (keySeparator == null)
+                keySeparator = ChoETLSettings.KeySeparator;
+
+            if (keySeparator != ChoCharEx.NUL)
+                _keySeparator = keySeparator.ToString();
         }
 
         protected ChoDynamicObject(SerializationInfo info, StreamingContext context)
@@ -769,7 +780,7 @@ namespace ChoETL
                 return false;
 
             IDictionary<string, object> kvpDict = _kvpDict;
-            if (key.Contains(_keySeparator))
+            if (NameContains(key, _keySeparator))
             {
                 if (ContainsNestedProperty(key))
                     return true;
@@ -819,7 +830,7 @@ namespace ChoETL
                     return true;
                 }
 
-                if (name.Contains(_keySeparator) && ContainsNestedProperty(name))
+                if (NameContains(name, _keySeparator) && ContainsNestedProperty(name))
                 {
                     result = AfterKVPLoaded(name, GetNestedPropertyValue(name));
                     return true;
@@ -872,6 +883,14 @@ namespace ChoETL
             else
                 return true;
         }
+        private bool NameContains(string name, string separator)
+        {
+            if (separator.IsNullOrEmpty())
+                return false;
+
+            return name.Contains(separator);
+        }
+
         private bool _SetPropertyValue(string name, object value)
         {
             if (IsReadOnly)
@@ -886,7 +905,7 @@ namespace ChoETL
                 //    if (!newName.IsNullOrWhiteSpace())
                 //        name = newName;
                 //}
-                if (name.Contains(_keySeparator))
+                if (NameContains(name, _keySeparator))
                 {
                     SetNestedPropertyValue(name, value);
                     return true;
@@ -1312,7 +1331,7 @@ namespace ChoETL
 
         public bool Remove(string key)
         {
-            if (key.Contains(_keySeparator) && ContainsNestedProperty(key))
+            if (NameContains(key, _keySeparator) && ContainsNestedProperty(key))
             {
                 return RemoveNestedPropertyValue(key);
             }

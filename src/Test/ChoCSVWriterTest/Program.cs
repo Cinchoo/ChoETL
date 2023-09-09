@@ -83,8 +83,8 @@ namespace ChoCSVWriterTest
             address.State = state;
 
             using (var w = new ChoCSVWriter(FileNameIntArrayTestTestCSV)
-                .Setup(s => s.RecordFieldWriteError += (o, e) => actualList.Add(e.Exception.ToString()))
-                .Configure(c => { c.NestedColumnSeparator = '/'; c.WithFirstLineHeader(); })
+                .Setup(s => s.RecordFieldWriteError += (object o, ChoRecordFieldWriteErrorEventArgs e) => actualList.Add(e.Exception.ToString()))
+                .Configure((Action<ChoCSVRecordConfiguration>)(c => { c.NestedKeySeparator = '/'; c.WithFirstLineHeader(); }))
                 )
             {
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
@@ -1785,7 +1785,7 @@ Xytrex Co.,Industrial Cleaning Supply Company,ABC15797531
                 //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
                 //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
                 .Index(o => o.Courses, 0, -1)
-                .NestedColumnSeparator('.')
+                .NestedKeySeparator('.')
                 .WithMaxScanRows(2)
                 )
             {

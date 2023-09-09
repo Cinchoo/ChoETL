@@ -235,7 +235,7 @@ namespace ChoETL
             {
                 Init(recordType);
             }
-            NestedColumnSeparator = ChoETLSettings.NestedKeySeparator;
+            NestedKeySeparator = ChoETLSettings.NestedKeySeparator;
             UseAvroSerializer = true;
             SyncNumberOfObjects = 24;
 

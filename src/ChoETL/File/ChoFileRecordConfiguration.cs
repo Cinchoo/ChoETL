@@ -180,14 +180,14 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
-        public char? NestedColumnSeparator
-        {
-            //get;
-            //set;
-            get { return NestedKeySeparator; }
-            set { NestedKeySeparator = value; }
-        }
+        //[DataMember]
+        //public char? NestedKeySeparator
+        //{
+        //    //get;
+        //    //set;
+        //    get { return NestedKeySeparator; }
+        //    set { NestedKeySeparator = value; }
+        //}
         [DataMember]
         public char? NestedKeySeparator
         {
@@ -486,14 +486,14 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Invalid '{0}' quote character specified.".FormatString(QuoteChar));
             if (EOLDelimiter.Contains(QuoteChar))
                 throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(QuoteChar, EOLDelimiter));
-            if (NestedColumnSeparator != null)
+            if (NestedKeySeparator != null)
             {
-                if (NestedColumnSeparator.Value == ChoCharEx.NUL)
-                    throw new ChoRecordConfigurationException("Invalid '{0}' nested column separator specified.".FormatString(NestedColumnSeparator));
-                if (NestedColumnSeparator.Value == QuoteChar)
-                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be quote character [{1}]".FormatString(NestedColumnSeparator, QuoteChar));
-                if (EOLDelimiter.Contains(NestedColumnSeparator.Value))
-                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(NestedColumnSeparator, EOLDelimiter));
+                if (NestedKeySeparator.Value == ChoCharEx.NUL)
+                    throw new ChoRecordConfigurationException("Invalid '{0}' nested column separator specified.".FormatString(NestedKeySeparator));
+                if (NestedKeySeparator.Value == QuoteChar)
+                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be quote character [{1}]".FormatString(NestedKeySeparator, QuoteChar));
+                if (EOLDelimiter.Contains(NestedKeySeparator.Value))
+                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(NestedKeySeparator, EOLDelimiter));
             }
             if (ArrayIndexSeparator != null)
             {
@@ -614,7 +614,7 @@ namespace ChoETL
             fconfig.ColumnCountStrict = ColumnCountStrict;
             fconfig.ColumnOrderStrict = ColumnOrderStrict;
             fconfig.EscapeQuoteAndDelimiter = EscapeQuoteAndDelimiter;
-            fconfig.NestedColumnSeparator = NestedColumnSeparator;
+            fconfig.NestedKeySeparator = NestedKeySeparator;
             fconfig.QuoteChar = QuoteChar;
             fconfig.BackslashQuote = BackslashQuote;
             fconfig.DoubleQuoteChar = DoubleQuoteChar;

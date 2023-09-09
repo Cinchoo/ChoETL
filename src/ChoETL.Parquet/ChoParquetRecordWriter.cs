@@ -428,13 +428,18 @@ namespace ChoETL
 
         private object Flatten(object rec)
         {
-            var dict = Configuration.UseNestedKeyFormat ?
-                            rec?.FlattenToDictionary(Configuration.NestedKeySeparator, 
-                            Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
-                            Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix)
-                            : rec;
+            if (Configuration.IsDynamicObjectInternal)
+            {
+                var dict = Configuration.UseNestedKeyFormat ?
+                                rec?.FlattenToDictionary(Configuration.NestedKeySeparator,
+                                Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                                Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix)
+                                : rec;
 
-            return dict;
+                return dict;
+            }
+            else
+                return rec;
         }
 
         int rowGroupIndex = 0;
@@ -684,7 +689,7 @@ namespace ChoETL
 
                 if (Configuration.UseNestedKeyFormat)
                 {
-                    var kvps = record.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                    var kvps = record.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToArray();
 
@@ -726,7 +731,7 @@ namespace ChoETL
                     {
                         ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                     }
-                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                    fieldNames = dict.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Keys.ToArray();
                 }
@@ -820,7 +825,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObjectInternal)
                         dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                     if (Configuration.IsDynamicObjectInternal && Configuration.UseNestedKeyFormat)
-                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
+                        dict = dict.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                             Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToArray().ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                 }

@@ -142,7 +142,7 @@ namespace ChoETL
                 return @this;
 
             IDictionary<string, object> expandoDic = (IDictionary<string, object>)@this;
-            IDictionary<string, object> root = new ChoDynamicObject();
+            IDictionary<string, object> root = new ChoDynamicObject(keySeparator: separator);
 
             foreach (var kvp in expandoDic)
             {
@@ -255,7 +255,11 @@ namespace ChoETL
                 return @this;
 
             IDictionary<string, object> expandoDic = (IDictionary<string, object>)@this;
-            IDictionary<string, object> root = new ChoDynamicObject();
+            string keySeparator = null;
+            if (@this is ChoDynamicObject dobj)
+                keySeparator = dobj.GetKeySeparator();
+
+            IDictionary<string, object> root = new ChoDynamicObject(keySeparator: keySeparator.FirstOrDefault());
 
             if (!expandoDic.Keys.All(k => IsKeyArrayValue(k, valueNamePrefix)))
             {
@@ -329,7 +333,11 @@ namespace ChoETL
                 return @this;
 
             IDictionary<string, object> expandoDic = (IDictionary<string, object>)@this;
-            IDictionary<string, object> root = new ChoDynamicObject();
+            string keySeparator = null;
+            if (@this is ChoDynamicObject dobj)
+                keySeparator = dobj.GetKeySeparator();
+
+            IDictionary<string, object> root = new ChoDynamicObject(keySeparator: keySeparator.FirstOrDefault());
 
             object value = null;
             foreach (var kvp in expandoDic)

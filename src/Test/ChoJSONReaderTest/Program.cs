@@ -2869,7 +2869,7 @@ val1,val2,val3";
             {
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
-                    .NestedColumnSeparator('/')
+                    .NestedKeySeparator('/')
                     )
                     w.Write(r);
             }
@@ -6944,7 +6944,7 @@ aaa,1,True,bbb,2,False,ccc,ddd,eee,1,2,3,True,False,True";
             {
                 using (var w = new ChoCSVWriter(csv)
                 .WithFirstLineHeader()
-                .NestedColumnSeparator('.')
+                .NestedKeySeparator('.')
                 .ArrayIndexSeparator('_')
                 )
                 {
@@ -6985,7 +6985,7 @@ aaa,1,True,bbb,2,False,ccc,ddd,eee,1,2,3,True,False,True";
             StringBuilder json1 = new StringBuilder();
             using (var r = ChoCSVReader.LoadText(csv.ToString())
                 .WithFirstLineHeader()
-                .NestedColumnSeparator('.')
+                .NestedKeySeparator('.')
                 .ArrayIndexSeparator('_')
                 .WithMaxScanRows(2)
                 )
@@ -8807,7 +8807,7 @@ Elevator2,123";
 ]";
             using (var r = new ChoJSONReader("sample53.json")
                 .WithJSONPath("$..d.results")
-                .Configure(c => c.NestedColumnSeparator = '/')
+                .Configure(c => c.NestedKeySeparator = '/')
                 )
             {
                 var dt = r.AsDataTable();
@@ -9324,7 +9324,7 @@ Elevator2,123";
             //ChoETLSettings.NestedKeySeparator = '.';
             using (var r = new ChoJSONReader<CardLegalities>("issue148a.json")
                 .WithFieldForType<Legalities>(f => f.Standard, fieldName: "standard")
-                .Configure(c => c.NestedColumnSeparator = '.')
+                .Configure(c => c.NestedKeySeparator = '.')
                 )
             {
                 var dt = r.AsDataTable();
@@ -11195,7 +11195,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                 )
                     w.Write(r);
             }
@@ -11287,7 +11287,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .WithMaxScanRows(1)
                     )
                     w.Write(r);
@@ -11344,7 +11344,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .WithMaxScanRows(1)
                     .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
                     )
@@ -13017,7 +13017,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                          //.Configure(c => c.FlattenByJsonPath = "$..Contact")
                          //.Configure(c => c.IgnoreArrayIndex = false)
                          .Configure(c => c.NestedKeySeparator = '~')
-                         .Configure(c => c.NestedColumnSeparator = '.')
+                         .Configure(c => c.NestedKeySeparator = '.')
                          //.WithField("Phone", jsonPath: "$.['Contact.Phone.Value']", isArray: false)
                          )
             {
@@ -13189,7 +13189,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                          .Configure(c => c.FlattenByJsonPath = "$..Children[*]")
                          //.Configure(c => c.IgnoreArrayIndex = false)
                          .Configure(c => c.NestedKeySeparator = '~')
-                         .Configure(c => c.NestedColumnSeparator = '.')
+                         .Configure(c => c.NestedKeySeparator = '.')
                          //.WithField("Phone", jsonPath: "$.['Contact.Phone.Value']", isArray: false)
                          )
             {
@@ -13282,7 +13282,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                    .Configure(c => c.UseNestedKeyFormat = true)
                    .Configure(c => c.FlattenByNodeName = "TimeRanges")
                    .Configure(c => c.NestedKeySeparator = '.')
-                   .Configure(c => c.NestedColumnSeparator = '.')
+                   .Configure(c => c.NestedKeySeparator = '.')
                    .WithMaxScanNodes(12)
                   )
             {
@@ -13956,7 +13956,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                              .QuoteAllFields()
                              .WithMaxScanRows(3)
                              .ThrowAndStopOnMissingField(false)
-                             .NestedColumnSeparator('/')
+                             .NestedKeySeparator('/')
                              .ErrorMode(ChoErrorMode.IgnoreAndContinue))
                 {
                     w.Write(r);
@@ -13973,7 +13973,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
             StringBuilder jsonOut = new StringBuilder();
             // how to restore the csv to original json ?
             using (var r = ChoCSVReader.LoadText(csv.ToString())
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 .WithFirstLineHeader()
                 .WithMaxScanRows(3) // convert string to number
                 .QuoteAllFields())
@@ -14078,7 +14078,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                              .QuoteAllFields()
                              .WithMaxScanRows(3)
                              .ThrowAndStopOnMissingField(false)
-                             .NestedColumnSeparator('/')
+                             .NestedKeySeparator('/')
                              .ErrorMode(ChoErrorMode.IgnoreAndContinue))
                 {
                     w.Write(r);
@@ -14095,7 +14095,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
             StringBuilder jsonOut = new StringBuilder();
             // how to restore the csv to original json ?
             using (var r = ChoCSVReader.LoadText(csv.ToString())
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 .WithFirstLineHeader()
                 .WithMaxScanRows(3) // convert string to number
                 .QuoteAllFields())
@@ -14201,7 +14201,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                              .QuoteAllFields()
                              .WithMaxScanRows(3)
                              .ThrowAndStopOnMissingField(false)
-                             .NestedColumnSeparator('/')
+                             .NestedKeySeparator('/')
                              .ErrorMode(ChoErrorMode.IgnoreAndContinue))
                 {
                     w.Write(r);
@@ -14218,7 +14218,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
             StringBuilder jsonOut = new StringBuilder();
             // how to restore the csv to original json ?
             using (var r = ChoCSVReader.LoadText(csv.ToString())
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 .WithFirstLineHeader()
                 .WithMaxScanRows(3) // convert string to number
                 .QuoteAllFields())
@@ -14319,7 +14319,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
             using (var r = ChoJSONReader.LoadText(json))
             {
                 using (var w = new ChoCSVWriter(csv)
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .Configure(c => c.ArrayIndexSeparator = '_')
                     .WithFirstLineHeader())
                 {
@@ -14330,7 +14330,7 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
             csv.Print();
 
             using (var r = ChoCSVReader.LoadText(csv.ToString())
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .Configure(c => c.ArrayIndexSeparator = '_')
                 .WithFirstLineHeader())
             {

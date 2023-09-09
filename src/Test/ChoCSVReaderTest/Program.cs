@@ -884,7 +884,7 @@ namespace ChoCSVReaderTest
             )
             {
                 using (var csv = new ChoCSVReader(FileNameNestedCSV).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     )
                 {
                     var recs = csv.ToArray();
@@ -3674,7 +3674,7 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
             using (var p = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
                 .ThrowAndStopOnMissingField(false)
-                .Configure(c => c.NestedColumnSeparator = '_'))
+                .Configure(c => c.NestedKeySeparator = '_'))
             {
                 using (var w = new ChoCSVWriter<FooBar>(csvOut)
                      .WithFirstLineHeader()
@@ -4660,7 +4660,7 @@ Mark, Hartigan";
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .Configure(c => c.ArrayValueNamePrefix = String.Empty)
                     )
                     w.Write(r);
@@ -4711,7 +4711,7 @@ Mark, Hartigan";
             using (var w = new ChoXmlWriter(xml))
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     )
                     w.Write(r);
             }
@@ -4729,7 +4729,7 @@ Mark, Hartigan";
 2,name1,3,namelist20, citylist20,namelist21, citylist21";
 
             using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                .Configure(c => c.NestedColumnSeparator = '/')
+                .Configure(c => c.NestedKeySeparator = '/')
                 )
             {
                 var rec = r.FirstOrDefault();
@@ -6398,7 +6398,7 @@ S, T% x 100
 ]";
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
-                .Configure(c => c.NestedColumnSeparator = '/'))
+                .Configure(c => c.NestedKeySeparator = '/'))
             {
                 //foreach (var x in csv) Console.WriteLine(x.DumpAsJson());
                 var actual = JsonConvert.SerializeObject(r, Formatting.Indented);
@@ -6513,7 +6513,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithDelimiter(";")
                 .WithFirstLineHeader()
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 //.AutoArrayDiscovery()
                 .ArrayIndexSeparator('_')
                 )
@@ -6563,7 +6563,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithDelimiter(";")
                 .WithFirstLineHeader()
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 .AutoArrayDiscovery()
                 .ArrayIndexSeparator('_')
                 )
@@ -7084,7 +7084,7 @@ Debug,RollingFile,Serilog.Formatting.Json.JsonFormatter, Serilog,C:\Logs\logConf
             using (var w = new ChoJSONWriter(json))
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .WithMaxScanRows(1)
                     )
                     w.Write(r);
@@ -9609,7 +9609,7 @@ x""Line 4 Field 1""	""""	""Line 4 Field 3""";
 
             using (var p = new ChoCSVReader(FileNamePlayersCSV).WithFirstLineHeader()
                 .MayHaveQuotedFields()
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 //.Configure(c => c.AllowNestedConversion = true)
                 )
             {

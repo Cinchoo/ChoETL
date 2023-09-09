@@ -107,6 +107,170 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             var actual = ReadParquetFileAsJSON(filePath);
             Assert.AreEqual(expected, actual);
         }
+        public enum SalesGroupEnum { None, First, Second };
+
+        public class SalesItem
+        {
+
+            public Guid? salesItemId { get; set; }
+
+            public Guid? tenantId { get; set; }
+
+            public Guid? parentSalesItemId { get; set; }
+
+            public Guid? salesId { get; set; }
+
+            public Guid? productId { get; set; }
+
+            public Guid? groupId { get; set; }
+
+            public Guid? bundleId { get; set; }
+
+            public string description { get; set; }
+
+            public decimal? linePrice { get; set; }
+
+            public int? quantity { get; set; }
+
+            public decimal? detailAmount { get; set; }
+
+            public decimal? taxRate { get; set; }
+
+            public decimal? taxAmount { get; set; }
+
+            public decimal? unitServiceFee { get; set; }
+
+            public decimal? serviceFeeDetailAmount { get; set; }
+
+            public decimal? serviceTaxRate { get; set; }
+
+            public bool? isRevenue { get; set; } = true;
+
+            public SalesGroupEnum groupEnum { get; set; }
+
+            public DateTime? modifiedDate { get; set; }
+
+            public bool? isDeleted { get; set; }
+
+            public decimal? serviceFeeTaxAmount { get; set; }
+
+            public List<SalesPOCO> derivativeSalesList { get; set; }
+
+            //public List<SalesPOCO>? salesItemList { get; set; } = new();
+
+            //public SalesList? salesList { get; set; }
+        }
+
+        public class SalesPOCO
+        {
+            public int salesId { get; set; }
+            public string salesName { get; set; }
+
+        }
+
+        [Test]
+        public static void Issue295()
+        {
+            string json = @"[
+	{
+		""salesItemId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+		""tenantId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+		""parentSalesItemId"": null,
+		""salesId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+		""productId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+		""groupId"": null,
+		""bundleId"": null,
+		""description"": ""Test"",
+		""linePrice"": 110.0,
+		""quantity"": 1,
+		""detailAmount"": 15.0,
+		""taxRate"": 0.95,
+		""taxAmount"": 6.53,
+		""unitServiceFee"": 12.0,
+		""serviceFeeDetailAmount"": 15.0,
+		""serviceTaxRate"": 1.25,
+		""isRevenue"": false,
+		""groupEnum"": ""None"",
+		""modifiedDate"": ""2020-01-01T00:00:00.100000"",
+		""isDeleted"": false,
+		""serviceFeeTaxAmount"": 13.0,
+		""derivativeSalesList"": [
+            {
+                ""salesId"": 1,
+                ""salesName"": ""Tom""
+            },
+            {
+                ""salesId"": 2,
+                ""salesName"": ""Mark""
+            },
+        ],
+		""salesItemList"": [],
+		""salesList"": null
+	}
+]";
+
+            string expected = @"[
+  {
+    ""salesItemId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+    ""tenantId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+    ""parentSalesItemId"": null,
+    ""salesId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+    ""productId"": ""9720357f-3782-4f87-8bbe-f7f167ae3a11"",
+    ""groupId"": null,
+    ""bundleId"": null,
+    ""description"": ""Test"",
+    ""linePrice"": ""110"",
+    ""quantity"": 1,
+    ""detailAmount"": ""15"",
+    ""taxRate"": ""0.95"",
+    ""taxAmount"": ""6.53"",
+    ""unitServiceFee"": ""12"",
+    ""serviceFeeDetailAmount"": ""15"",
+    ""serviceTaxRate"": ""1.25"",
+    ""isRevenue"": false,
+    ""groupEnum"": ""0"",
+    ""modifiedDate"": ""2020-01-01T05:00:00.1+00:00"",
+    ""isDeleted"": false,
+    ""serviceFeeTaxAmount"": ""13"",
+    ""derivativeSalesList"": [
+      {
+        ""salesId"": 1,
+        ""salesName"": ""Tom""
+      },
+      {
+        ""salesId"": 2,
+        ""salesName"": ""Mark""
+      }
+    ]
+  }
+]";
+
+            string filePath = "Issue295.parquet";
+            ConvertJson2Parquet<SalesItem>(json, filePath);
+
+            var actual = ReadParquetFileAsJSON(filePath);
+            Assert.AreEqual(expected, actual);
+        }
+
+        private static void ConvertJson2Parquet<T>(string json, string parquetFilePath)
+        {
+            using (var r = ChoJSONReader<T>.LoadText(json))
+            {
+                var recs = r.ToArray();
+
+                recs.Print();
+
+                using (var w = new ChoParquetWriter(parquetFilePath)
+                    .Configure(c => c.TreatDateTimeAsDateTimeOffset = true)
+                    .Configure(c => c.ArrayValueNamePrefix = String.Empty)
+                    )
+                {
+                    foreach (var rec in recs)
+                        w.Write(rec);
+                }
+            }
+        }
+
         [Test]
         public static void Test1_1()
         {
@@ -1592,7 +1756,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 using (var w = new ChoParquetWriter(filePath,
                     new ChoParquetRecordConfiguration { CompressionMethod = Parquet.CompressionMethod.Snappy })
                     .WithField("Stype")
-                    .WithField("Decorators"/*, customSerializer: o => o.ToString()*/)
+                    .WithField("Decorators", customSerializer: o => JsonConvert.SerializeObject(o))
                     .WithField("InstanceID")
                     .WithField("company")
                     .UseNestedKeyFormat(false)
@@ -1697,7 +1861,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 using (var w = new ChoParquetWriter(filePath,
                     new ChoParquetRecordConfiguration { CompressionMethod = Parquet.CompressionMethod.Snappy })
                     .WithField("Stype")
-                    .WithField("Decorators"/*, customSerializer: o => o.ToString()*/)
+                    .WithField("Decorators", customSerializer: o => JsonConvert.SerializeObject(o))
                     .WithField("InstanceID")
                     .WithField("company")
                     .UseNestedKeyFormat(false)
