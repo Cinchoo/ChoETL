@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.1.29</Version>
+    <Version>1.0.1.30</Version>
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Description>Parquet extension to Cinchoo ETL framework</Description>
@@ -19,11 +18,12 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ChoETL.Parquet.snk</AssemblyOriginatorKeyFile>
     <PackageIcon>cinchoo.png</PackageIcon>
+    <TargetFrameworks>net6.0;net5.0;</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Parquet.net" Version="3.7.4" />
+    <PackageReference Include="Parquet.net" Version="4.16.4" />
   </ItemGroup>
 
   <ItemGroup>

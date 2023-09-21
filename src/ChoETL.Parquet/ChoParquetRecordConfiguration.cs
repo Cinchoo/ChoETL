@@ -9,6 +9,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -36,7 +37,7 @@ namespace ChoETL
             get;
         }
         public CompressionMethod CompressionMethod { get; set; }
-        public int CompressionLevel { get; set; }
+        public CompressionLevel CompressionLevel { get; set; }
         public IReadOnlyDictionary<string, string> CustomMetadata { get; set; }
         public long RowGroupSize { get; set; } = 5000;
         public Func<Type, Type> MapParquetType { get; set; }
@@ -59,13 +60,13 @@ namespace ChoETL
             set;
         }
 
-        public Parquet.Data.Schema Schema
+        public Parquet.Schema.ParquetSchema Schema
         {
             get;
             set;
         }
 
-        public Func<Parquet.Data.Field[], Parquet.Data.Schema> SchemaGenerator
+        public Func<Parquet.Schema.Field[], Parquet.Schema.ParquetSchema> SchemaGenerator
         {
             get;
             set;
@@ -122,6 +123,7 @@ namespace ChoETL
         public bool IgnoreHeader { get; set; }
         public bool AutoFlush { get; set; } = true;
         public bool TreatDateTimeAsDateTimeOffset { get; set; }
+        public bool TreatDateTimeAsString { get; set; }
         public TimeSpan? DateTimeOffset { get; set; }
         public Func<object, string> CustomSerializer { get; set; }
         public Func<string, Type, object> CustomDeserializer { get; set; }
@@ -224,6 +226,8 @@ namespace ChoETL
             get => PDDict;
             set => PDDict = value;
         }
+        public bool LeaveStreamOpen { get; set; } = true;
+        public bool TreatDateTimeOffsetAsString { get; set; } = true;
 
         public ChoParquetRecordFieldConfiguration this[string name]
         {

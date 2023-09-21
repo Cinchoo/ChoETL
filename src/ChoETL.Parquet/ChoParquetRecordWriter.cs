@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using Apache.Arrow;
+using Newtonsoft.Json;
 using Parquet;
 using Parquet.Data;
+using Parquet.Schema;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Array = System.Array;
 
 namespace ChoETL
 {
@@ -146,7 +149,7 @@ namespace ChoETL
                     foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
                     {
                         var column = new DataColumn(sf[kvp.Key], Cast(GetFieldValues(kvp.Key, kvp.Value.FieldType), GetParquetType(kvp.Value.FieldType, true)));
-                        groupWriter.WriteColumn(column);
+                        ChoAsyncHelper.RunSync(() => groupWriter.WriteColumnAsync(column));
                     }
                 }
             }
@@ -188,17 +191,18 @@ namespace ChoETL
         private ParquetWriter CreateParquetWriter(StreamWriter sw)
         {
             sf = GetSchemaFields();
-            Schema schema = null;
+            ParquetSchema schema = null;
 
             if (Configuration.SchemaGenerator != null)
                 Configuration.Schema = schema = Configuration.SchemaGenerator(sf.Values.ToArray());
 
             if (Configuration.Schema == null)
-                Configuration.Schema = schema = new Schema(sf.Values.ToArray());
+                Configuration.Schema = schema = new ParquetSchema(sf.Values.ToArray());
             else
                 schema = Configuration.Schema;
 
-            var parquetWriter = new ParquetWriter(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append);
+            //var parquetWriter = new ParquetWriter(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append);
+            var parquetWriter = ChoAsyncHelper.RunSync<ParquetWriter>(() => ParquetWriter.CreateAsync(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append));
             parquetWriter.CompressionMethod = Configuration.CompressionMethod;
             parquetWriter.CompressionLevel = Configuration.CompressionLevel;
             if (Configuration.CustomMetadata != null)
@@ -233,8 +237,10 @@ namespace ChoETL
             {
                 if (Configuration.TreatDateTimeAsDateTimeOffset)
                     return typeof(DateTimeOffset);
-                else
+                else if (Configuration.TreatDateTimeAsString)
                     return typeof(string);
+                else
+                    return typeof(DateTime);
             }
             else if (underlytingType == typeof(TimeSpan))
                 return typeof(string);
@@ -249,11 +255,16 @@ namespace ChoETL
             else if (type == typeof(byte[]))
                 return underlytingType;
             else if (type == typeof(DateTimeOffset))
-                return underlytingType;
+            {
+                if (Configuration.TreatDateTimeOffsetAsString)
+                    return typeof(string);
+                else
+                    return typeof(DateTimeOffset);
+            }
             else if (underlytingType.IsSimpleSpecial())
                 return underlytingType;
             else
-               return typeof(string);
+                return typeof(string);
         }
 
         private Array GetFieldValues(string key, Type ft1)
@@ -291,7 +302,7 @@ namespace ChoETL
                                     DateTimeOffset dto = ToDateTimeOffset(dt);
                                     fv.Add(dto);
                                 }
-                                else
+                                else if (Configuration.TreatDateTimeAsString)
                                 {
                                     if (Configuration.TypeConverterFormatSpec == null
                                         || Configuration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace())
@@ -299,20 +310,31 @@ namespace ChoETL
                                     else
                                         fv.Add(((DateTime)rec[key]).ToString(Configuration.TypeConverterFormatSpec.DateTimeFormat));
                                 }
+                                else
+                                    fv.Add((DateTime)rec[key]); // ChoUtility.ToNString((object)rec[key]).ToString());
                             }
                             else
                                 fv.Add((object)rec[key]); // ChoUtility.ToNString((object)rec[key]).ToString());
-
-                            ////fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
-                            //DateTime dt;
-                            //if (rec[key] is DateTime)
-                            //    dt = rec[key];
-                            //else
-                            //{
-                            //    DateTime.TryParse(ChoUtility.ToNString((object)rec[key]), out dt);
-                            //}
-                            //DateTimeOffset dto = ToDateTimeOffset(dt);
-                            //fv.Add(dto);
+                        }
+                        else if (ft == typeof(DateTimeOffset))
+                        {
+                            if (rec[key] == null)
+                                fv.Add(null);
+                            else if (rec[key] is DateTimeOffset)
+                            {
+                                if (Configuration.TreatDateTimeOffsetAsString)
+                                {
+                                    if (Configuration.TypeConverterFormatSpec == null
+                                        || Configuration.TypeConverterFormatSpec.DateTimeOffsetFormat.IsNullOrWhiteSpace())
+                                        fv.Add(ChoUtility.ToNString((DateTimeOffset)rec[key]));
+                                    else
+                                        fv.Add(((DateTimeOffset)rec[key]).ToString(Configuration.TypeConverterFormatSpec.DateTimeOffsetFormat));
+                                }
+                                else
+                                    fv.Add((DateTimeOffset)rec[key]);
+                            }
+                            else
+                                fv.Add((object)rec[key]);
                         }
                         else if (ft == typeof(TimeSpan))
                         {

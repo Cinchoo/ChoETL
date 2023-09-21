@@ -25,13 +25,18 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
 
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoParquetReader(@"test1.parquet")
-                .ParquetOptions(o => o.TreatByteArrayAsString = true))
+                .ParquetOptions(o => o.TreatByteArrayAsString = true)
+                )
             {
+                var recs = r.ToArray();
+                recs.Print();
+
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
                     .UseNestedKeyFormat(false)
+                    .TypeConverterFormatSpec(fs => fs.DateTimeFormat = "M/d/yyyy hh:mm:ss tt zzz")
                     )
-                    w.Write(r);
+                    w.Write(recs);
             }
 
             var actual = csv.ToString();
@@ -61,7 +66,12 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
                 .ParquetOptions(o => o.TreatByteArrayAsString = true))
             {
                 var dt = r.AsDataTable();
-                var actual = JsonConvert.SerializeObject(dt, Formatting.Indented);
+                var actual = JsonConvert.SerializeObject(dt, new JsonSerializerSettings() 
+                { 
+                    DateFormatString = "yyyy-MM-ddTHH:mm:sszzz", 
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                    Formatting = Formatting.Indented 
+                });
                 Assert.AreEqual(expected, actual);
             }
 
@@ -232,7 +242,11 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
                 var rec = r.Take(1);
                     
                 Console.WriteLine(rec.Dump());
-                var actual = JsonConvert.SerializeObject(rec, Formatting.Indented);
+                var actual = JsonConvert.SerializeObject(rec, new JsonSerializerSettings()
+                {
+                    DateFormatString = "yyyy-MM-ddTHH:mm:sszzz",
+                    Formatting = Formatting.Indented,
+                });
             
                 Assert.AreEqual(expected, actual);
             }
@@ -275,6 +289,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
             //Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
             using (var w = new ChoParquetWriter<Trade>(filePath)
                 .TypeConverterFormatSpec(ts => ts.DateTimeFormat = "MM^dd^yyyy")
+                .TreatDateTimeAsString(true)
                 )
             {
                 w.Write(new Trade
@@ -332,7 +347,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
   ""ClassificationSociety"": ""Lloyd's Register (Contemplated) 2021-09-01"",
   ""ClassificationSocietyCode"": ""LR"",
   ""CoreShipInd"": ""1"",
-  ""DateOfBuild"": 1682899200000000,
+  ""DateOfBuild"": ""\/Date(1682899200000)\/"",
   ""Deadweight"": ""40000"",
   ""FlagCode"": ""LIB"",
   ""FlagName"": ""Liberia"",
@@ -400,7 +415,11 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
                 var rec = r.First();
                 rec.Print();
 
-                var actual = JsonConvert.SerializeObject(rec, Formatting.Indented);
+                var actual = JsonConvert.SerializeObject(rec, new JsonSerializerSettings()
+                {
+                    DateFormatHandling = DateFormatHandling.MicrosoftDateFormat,
+                    Formatting = Formatting.Indented,
+                });
                 Assert.AreEqual(expected, actual);
             }
         }

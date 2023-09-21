@@ -229,8 +229,8 @@ namespace ChoETL
             get => PropConverterParams;
             set => PropConverterParams = value;
         }
-        public object PropCustomSerializer;
-        public object PropCustomSerializerParams;
+        public object PropCustomSerializer { get; set; }
+        public object PropCustomSerializerParams { get; set; }
 
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {

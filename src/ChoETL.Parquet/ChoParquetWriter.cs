@@ -541,6 +541,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoParquetWriter<T> TreatDateTimeAsString(bool flag = true, string format = null)
+        {
+            Configuration.TreatDateTimeAsString = flag;
+            if (format != null)
+                Configuration.TypeConverterFormatSpec.DateTimeFormat = format;
+            return this;
+        }
+
         public ChoParquetWriter<T> Configure(Action<ChoParquetRecordConfiguration> action)
         {
             if (action != null)

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Parquet;
 using Parquet.Data;
+using Parquet.Schema;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -92,8 +93,12 @@ namespace ChoETL
                 List<DataColumn[]> rowGroup = new List<DataColumn[]>();
                 using (ParquetRowGroupReader groupReader = sr.OpenRowGroupReader(i))
                 {
-                    var dc = dataFields.Select(groupReader.ReadColumn).ToArray();
-                    rowGroup.Add(dc);
+                    List<DataColumn> columns = new List<DataColumn>();
+                    //var dc = dataFields.Select(groupReader.ReadColumnAsync).ToArray();
+                    foreach (var df in dataFields)
+                        columns.Add(ChoAsyncHelper.RunSync<DataColumn>(() => groupReader.ReadColumnAsync(df)));
+
+                    rowGroup.Add(columns.ToArray());
                 }
                 if (!RaiseAfterRowGroupLoaded(i, rowGroup))
                     yield return rowGroup;
@@ -115,7 +120,7 @@ namespace ChoETL
                     {
                         try
                         {
-                            return groupReader.ReadColumn(f);
+                            return ChoAsyncHelper.RunSync<DataColumn>(() => groupReader.ReadColumnAsync(f));
                         }
                         catch (Exception ex)
                         {

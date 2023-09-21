@@ -87,7 +87,9 @@ namespace ChoETL
                 var valueType = value.GetType();
                 if (valueType == targetType
                     || (targetType != typeof(object) && targetType.IsAssignableFrom(valueType)))
-                    return value;
+                {
+                    //return value;
+                }
             }
 
             Type origType = targetType;

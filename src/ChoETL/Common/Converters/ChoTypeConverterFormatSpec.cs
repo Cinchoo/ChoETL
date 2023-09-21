@@ -42,6 +42,7 @@ namespace ChoETL
 
         public bool TreatCurrencyAsDecimal { get; set; }
         public string DateTimeFormat { get; set; }
+        public string DateTimeOffsetFormat { get; set; }
         public DateTimeStyles DateTimeStyles { get; set; }
         public ChoBooleanFormatSpec BooleanFormat { get; set; }
         public ChoEnumFormatSpec EnumFormat { get; set; }

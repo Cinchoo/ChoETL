@@ -517,13 +517,13 @@ namespace ChoETL
                 converters.Add(new ExpandoObjectConverter());
                 converters.Add(ChoDynamicObjectConverter.Instance);
 
-                foreach (var kvp in NodeConvertersForType)
-                {
-                    if (kvp.Value == null) continue;
-                    converters.Add(ChoActivator.CreateInstance(typeof(ChoJSONNodeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as JsonConverter);
+                //foreach (var kvp in NodeConvertersForType)
+                //{
+                //    if (kvp.Value == null) continue;
+                //    converters.Add(ChoActivator.CreateInstance(typeof(ChoJSONNodeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as JsonConverter);
 
-                    ChoTypeConverter.Global.Add(kvp.Key, ChoActivator.CreateInstance(typeof(ChoJSONTypeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as IChoValueConverter);
-                }
+                //    ChoTypeConverter.Global.Add(kvp.Key, ChoActivator.CreateInstance(typeof(ChoJSONTypeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as IChoValueConverter);
+                //}
 
                 return converters;
             });

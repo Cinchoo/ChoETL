@@ -4644,7 +4644,8 @@ this is a test line   but still value for this record";
             //.WithCustomNodeSelector(o => o["id"].CastTo<int>() > 0 ? o : null)
             )
             {
-                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                var recs = r.ToArray();
+                var actual = JsonConvert.SerializeObject(recs, Newtonsoft.Json.Formatting.Indented);
                 Assert.AreEqual(expected, actual);
             }
         }
@@ -4714,7 +4715,7 @@ this is a test line   but still value for this record";
             using (var r = ChoJSONReader<CTest>.LoadText(json)
                 .RegisterNodeConverterForType<CTest>(o =>
                 {
-                    var value = ((dynamic)o).value as JToken;
+                    var value = o as JToken;
                     return value.ToObject<CTest>();
                 })
             //.WithCustomNodeSelector(o => o["id"].CastTo<int>() > 0 ? o : null)
@@ -9538,11 +9539,22 @@ a3cc4aaf-d4a3-4838-8205-7f2de6a8bad0|372||UploadComplete|||ExportSCMergedCompany
     ""Z"": -299.99999999999994
   }
 ]";
+                //.RegisterNodeConverterForType<List<Class2>>(o =>
+                // {
+                //     var value = o as JToken[];
+                //     var list = new List<Class2>();
+                //     foreach (var item in value.OfType<JArray>())
+                //     {
+                //         list.AddRange(item.ToObject<Class2[]>());
+                //     }
+
+                //     return list;
+                // })
+
             using (var r = ChoJSONReader<D3Point>.LoadText(json)
                 .RegisterNodeConverterForType<D3Point>(o =>
                 {
-                    dynamic input = o as dynamic;
-                    dynamic jo = input.value as JObject;
+                    dynamic jo = o as JObject;
 
                     D3Point rec = new D3Point((double)jo.X, (double)jo.Y, (double)jo.Z);
 

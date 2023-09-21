@@ -203,7 +203,7 @@ namespace ChoETL
 
         private ParquetReader Create(StreamReader sr)
         {
-            var r = new ParquetReader(sr.BaseStream, Configuration.ParquetOptions);
+            var r = ChoAsyncHelper.RunSync<ParquetReader>(() => ParquetReader.CreateAsync(sr.BaseStream, Configuration.ParquetOptions, leaveStreamOpen: Configuration.LeaveStreamOpen));
             if (Configuration != null)
             {
                 //if (Configuration.Culture != null)
@@ -743,6 +743,21 @@ namespace ChoETL
         public ChoParquetReader<T> ThrowAndStopOnMissingField(bool flag = true)
         {
             Configuration.ThrowAndStopOnMissingField = flag;
+            return this;
+        }
+
+        public ChoParquetReader<T> TreatDateTimeAsDateTimeOffset(bool flag = true, TimeSpan? offset = null)
+        {
+            Configuration.TreatDateTimeAsDateTimeOffset = flag;
+            Configuration.DateTimeOffset = offset;
+            return this;
+        }
+
+        public ChoParquetReader<T> TreatDateTimeAsString(bool flag = true, string format = null)
+        {
+            Configuration.TreatDateTimeAsString = flag;
+            if (format != null)
+                Configuration.TypeConverterFormatSpec.DateTimeFormat = format;
             return this;
         }
 

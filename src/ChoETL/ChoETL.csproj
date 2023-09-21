@@ -113,6 +113,7 @@
     <Compile Include="Common\Attributes\ChoFieldMapAttribute.cs" />
     <Compile Include="Common\Attributes\ChoAssemblyBetaVersionAttribute.cs" />
     <Compile Include="Common\Attributes\MetadataTypeAttribute.cs" />
+    <Compile Include="Common\ChoAsyncHelper.cs" />
     <Compile Include="Common\ChoFieldTypeAssessor.cs" />
     <Compile Include="Common\ChoObjectPool.cs" />
     <Compile Include="Common\ChoResetLazy.cs" />

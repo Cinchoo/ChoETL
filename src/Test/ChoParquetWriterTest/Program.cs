@@ -97,14 +97,18 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             {
                 var recs = r.ToArray();
                 using (var w = new ChoParquetWriter(filePath)
-                    .Configure(c => c.TreatDateTimeAsDateTimeOffset = false)
+                    //.Configure(c => c.TreatDateTimeAsDateTimeOffset = false)
                     )
                 {
                     w.Write(recs);
                 }
             }
 
-            var actual = ReadParquetFileAsJSON(filePath);
+            var actual = ReadParquetFileAsJSON(filePath, null, new JsonSerializerSettings
+            { 
+                Formatting = Formatting.Indented,
+                DateFormatString = "M/dd/yyyy",
+            });
             Assert.AreEqual(expected, actual);
         }
         public enum SalesGroupEnum { None, First, Second };
@@ -148,7 +152,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
             public SalesGroupEnum groupEnum { get; set; }
 
-            public DateTime? modifiedDate { get; set; }
+            public string modifiedDate { get; set; }
 
             public bool? isDeleted { get; set; }
 
@@ -229,7 +233,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
     ""serviceTaxRate"": ""1.25"",
     ""isRevenue"": false,
     ""groupEnum"": ""0"",
-    ""modifiedDate"": ""2020-01-01T05:00:00.1+00:00"",
+    ""modifiedDate"": ""2020-01-01T00:00:00.100000"",
     ""isDeleted"": false,
     ""serviceFeeTaxAmount"": ""13"",
     ""derivativeSalesList"": [
@@ -246,22 +250,47 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 ]";
 
             string filePath = "Issue295.parquet";
-            ConvertJson2Parquet<SalesItem>(json, filePath);
+            //ConvertJson2Parquet<SalesItem>(json, filePath);
+            using (var r = ChoJSONReader<SalesItem>.LoadText(json)
+                .JsonSerializationSettings(js => js.DateParseHandling = DateParseHandling.None)
+                )
+            {
+                var recs = r.ToArray();
+                recs.Print();
 
-            var actual = ReadParquetFileAsJSON(filePath);
+                using (var w = new ChoParquetWriter(filePath)
+                    .Configure(c => c.TreatDateTimeAsString = true)
+                    .TypeConverterFormatSpec(ts => ts.DateTimeOffsetFormat = "yyyy-MM-ddThh:mm:ss.fzzz")
+                    .Configure(c => c.ArrayValueNamePrefix = String.Empty)
+                    )
+                {
+                    foreach (var rec in recs)
+                        w.Write(rec);
+                }
+            }
+
+            var actual = ReadParquetFileAsJSON(filePath, jsonSerializerSettings: new JsonSerializerSettings()
+            {
+                DateFormatString = "yyyy-MM-ddThh:mm:ss.fzzz",
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                Formatting = Formatting.Indented
+            });
             Assert.AreEqual(expected, actual);
         }
 
         private static void ConvertJson2Parquet<T>(string json, string parquetFilePath)
         {
-            using (var r = ChoJSONReader<T>.LoadText(json))
+            using (var r = ChoJSONReader<T>.LoadText(json)
+                .JsonSerializationSettings(js => js.DateParseHandling = DateParseHandling.DateTimeOffset)
+                )
             {
                 var recs = r.ToArray();
 
                 recs.Print();
 
                 using (var w = new ChoParquetWriter(parquetFilePath)
-                    .Configure(c => c.TreatDateTimeAsDateTimeOffset = true)
+                    .Configure(c => c.TreatDateTimeAsString = true)
+                    .TypeConverterFormatSpec(ts => ts.DateTimeOffsetFormat = "yyyy-MM-ddThh:mm:ss.fzzz")
                     .Configure(c => c.ArrayValueNamePrefix = String.Empty)
                     )
                 {
@@ -280,14 +309,14 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
   {
     ""Cust_ID"": ""TCF4338"",
     ""CustName"": ""INDEXABLE CUTTING TOOL"",
-    ""CustOrder"": ""2016-04-11T04:00:00+00:00"",
+    ""CustOrder"": ""2016-04-11T12:00:00+00:00"",
     ""Salary"": 100000.0,
     ""Guid"": ""56531508-89c0-4ecf-afaf-cdf5aec56b19""
   },
   {
     ""Cust_ID"": ""CGO9650"",
     ""CustName"": ""Comercial Tecnipak Ltda"",
-    ""CustOrder"": ""2016-07-11T04:00:00+00:00"",
+    ""CustOrder"": ""2016-07-11T12:00:00+00:00"",
     ""Salary"": 80000.0,
     ""Guid"": ""56531508-89c0-4ecf-afaf-cdf5aec56b19""
   }
@@ -307,14 +336,19 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             {
                 var recs = r.ToArray();
                 using (var w = new ChoParquetWriter(filePath)
-                    .Configure(c => c.TreatDateTimeAsDateTimeOffset = true)
+                    //.Configure(c => c.TreatDateTimeAsDateTimeOffset = true)
                     )
                 {
                     w.Write(recs);
                 }
             }
 
-            var actual = ReadParquetFileAsJSON(filePath);
+            var actual = ReadParquetFileAsJSON(filePath, jsonSerializerSettings: new JsonSerializerSettings()
+            {
+                DateFormatString = "yyyy-MM-ddThh:mm:sszzz",
+                DateTimeZoneHandling= DateTimeZoneHandling.Utc,
+                Formatting = Formatting.Indented
+            });
             Assert.AreEqual(expected, actual);
         }
         [Test]
@@ -455,6 +489,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 )
             {
                 using (var w = new ChoParquetWriter(filePath)
+                    .Configure(c => c.TreatDateTimeOffsetAsString = true)
                     .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                     )
                 {
@@ -613,13 +648,13 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
             string expected = @"[
   {
-    ""Value"": ""2009-12-07T00:00:00.0000000""
+    ""Value"": ""2009-12-07T00:00:00Z""
   },
   {
-    ""Value"": ""2010-01-01T09:00:00.0000000Z""
+    ""Value"": ""2010-01-01T09:00:00Z""
   },
   {
-    ""Value"": ""2010-02-10T10:00:00.0000000Z""
+    ""Value"": ""2010-02-10T10:00:00Z""
   }
 ]";
 
@@ -1226,13 +1261,17 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 w.Print();
             }
         }
-        static string ReadParquetFileAsJSON(string parquetOutputFilePath, int? recCount = null)
+        static string ReadParquetFileAsJSON(string parquetOutputFilePath, int? recCount = null, JsonSerializerSettings jsonSerializerSettings = null)
         {
+            jsonSerializerSettings = jsonSerializerSettings ?? new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+            };
             parquetOutputFilePath.Print();
             using (var r = new ChoParquetReader(parquetOutputFilePath))
             {
                 var recs = recCount == null ? r.ToArray() : r.Take(recCount.Value).ToArray();
-                return JsonConvert.SerializeObject(recs, Formatting.Indented);
+                return JsonConvert.SerializeObject(recs, jsonSerializerSettings);
             }
         }
         static string ReadParquetFileAsCSV(string parquetOutputFilePath, int? recCount = null)
@@ -1297,8 +1336,8 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             string expected = @"[
   {
     ""Id"": null,
-    ""Price"": ""1.3"",
-    ""Quantity"": ""2.45"",
+    ""Price"": 1.3,
+    ""Quantity"": 2.45,
     ""Name"": null,
     ""CreateDate"": null
   }
@@ -1316,8 +1355,19 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
             PrintParquetFile(filePath);
 
-            var actual = ReadParquetFileAsJSON(filePath);
+            TradeWithDateConverter[] recs = null;
+            using (var r = new ChoParquetReader<TradeWithDateConverter>(filePath)
+               )
+            {
+                recs = r.ToArray();
+                recs.Print();
+            }
+
+            var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
             Assert.AreEqual(expected, actual);
+
+            //var actual = ReadParquetFileAsJSON(filePath);
+            //Assert.AreEqual(expected, actual);
         }
 
         public class TradeWith_NO_DateConverter
@@ -1354,12 +1404,12 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
   {
     ""Id"": null,
     ""Price"": null,
-    ""Quantity"": ""2"",
+    ""Quantity"": 2.0,
     ""Name"": null,
     ""CreateDate"": null
   },
   {
-    ""Id"": ""100"",
+    ""Id"": 100,
     ""Price"": null,
     ""Quantity"": null,
     ""Name"": null,
@@ -1367,10 +1417,10 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
   },
   {
     ""Id"": null,
-    ""Price"": ""2.3"",
-    ""Quantity"": ""2.45"",
+    ""Price"": 2.3,
+    ""Quantity"": 2.45,
     ""Name"": ""Name"",
-    ""CreateDate"": ""2023-06-10T12:10:30.0000000""
+    ""CreateDate"": ""2023-06-10T12:10:30Z""
   }
 ]";
             //ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM/dd/yy HH:mm:ss";
@@ -1384,13 +1434,15 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             }
             PrintParquetFile(filePath);
 
+            TradeWithDateConverter[] recs = null;
             using (var r = new ChoParquetReader<TradeWithDateConverter>(filePath)
                )
             {
-                r.Print();
+                recs = r.ToArray();
+                recs.Print();
             }
 
-            var actual = ReadParquetFileAsJSON(filePath);
+            var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
             Assert.AreEqual(expected, actual);
         }
         [Test]
@@ -1412,6 +1464,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             //ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM/dd/yy HH:mm:ss";
             using (var w = new ChoParquetWriter(filePath)
                .Configure(c => c.TypeConverterFormatSpec = new ChoTypeConverterFormatSpec { DateTimeFormat = "MM/dd/yyyy HH" })
+               .TreatDateTimeAsString()
                   )
             {
                 //foreach (var rec in tradeList)
@@ -1468,11 +1521,11 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
     ""Price"": 2.3,
     ""Quantity"": 2.45,
     ""Name"": ""Name"",
-    ""CreateDate"": ""2023-06-10T08:10:30-04:00""
+    ""CreateDate"": ""2023-06-10T12:10:30Z""
   }
 ]";
             using (var w = new ChoParquetWriter<TradeWithDateConverter>(filePath)
-                .TreatDateTimeAsDateTimeOffset()
+                //.TreatDateTimeAsDateTimeOffset()
                   )
             {
                 w.Write(tradeList);
@@ -1516,14 +1569,14 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
     ""Price"": null,
     ""Quantity"": ""2"",
     ""Name"": null,
-    ""CreateDate"": ""0001-01-01T00:00:00+00:00""
+    ""CreateDate"": ""0001-01-01T12:00:00+00:00""
   },
   {
     ""Id"": ""100"",
     ""Price"": null,
     ""Quantity"": null,
     ""Name"": null,
-    ""CreateDate"": ""0001-01-01T00:00:00+00:00""
+    ""CreateDate"": ""0001-01-01T12:00:00+00:00""
   },
   {
     ""Id"": null,
@@ -1536,7 +1589,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             //ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM/dd/yy HH:mm:ss";
             //ChoTypeDescriptor.RegisterTypeConverterForType(typeof(DateTimeOffset), new ChoDateTimeOffsetConverter());
             using (var w = new ChoParquetWriter<TradeWith_NO_DateConverter>(filePath)
-                .TreatDateTimeAsDateTimeOffset()
+                //.TreatDateTimeAsDateTimeOffset()
                   )
             {
                 //foreach (var rec in tradeList)
@@ -1551,7 +1604,12 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 r.Print();
             }
 
-            var actual = ReadParquetFileAsJSON(filePath);
+            var actual = ReadParquetFileAsJSON(filePath, jsonSerializerSettings: new JsonSerializerSettings()
+            {
+                DateFormatString = "yyyy-MM-ddThh:mm:sszzz",
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                Formatting = Formatting.Indented
+            });
             Assert.AreEqual(expected, actual);
         }
 
@@ -1584,6 +1642,13 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                         return null;
                     else
                         return ((DateTimeOffset)value).LocalDateTime;
+                }
+                else if (value is DateTime)
+                {
+                    if ((DateTime)value == DateTime.MinValue)
+                        return null;
+                    else
+                        return ((DateTime)value);
                 }
                 return value;
             }
@@ -1964,6 +2029,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 using (var parser = new ChoParquetWriter(filePath)
                     .Configure(c => c.CompressionMethod = Parquet.CompressionMethod.Gzip)
                     .Configure(c => c.RowGroupSize = 1000)
+                   .TreatDateTimeAsString()
                     .NotifyAfter(1000)
                     .OnRowsWritten((o, e) => $"Rows: {e.RowsWritten} <--- {DateTime.Now}".Print())
                     .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
@@ -2044,6 +2110,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 using (var parser = new ChoParquetWriter(filePath)
                     .Configure(c => c.CompressionMethod = Parquet.CompressionMethod.Gzip)
                     .Configure(c => c.RowGroupSize = 1000)
+                   .TreatDateTimeAsString()
                     .NotifyAfter(1000)
                     .OnRowsWritten((o, e) => $"Rows: {e.RowsWritten} <--- {DateTime.Now}".Print())
                     )
@@ -2182,6 +2249,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 using (var parser = new ChoParquetWriter(filePath)
                     .Configure(c => c.CompressionMethod = Parquet.CompressionMethod.Gzip)
                     .Configure(c => c.RowGroupSize = 1000)
+                   .TreatDateTimeAsString()
                     .NotifyAfter(1000)
                     .OnRowsWritten((o, e) => $"Rows: {e.RowsWritten} <--- {DateTime.Now}".Print())
                     )
@@ -2247,7 +2315,9 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
             string expected = @"Id,Price,Quantity,CreateDateTime,IsActive,Total
 ,,2.45,,,";
-            using (var w = new ChoParquetWriter<Trade>(filePath))
+            using (var w = new ChoParquetWriter<Trade>(filePath)
+                   .TreatDateTimeAsString()
+                )
             {
                 w.Write(new Trade
                 {

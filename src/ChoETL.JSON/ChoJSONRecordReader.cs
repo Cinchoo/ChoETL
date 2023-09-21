@@ -1152,6 +1152,17 @@ namespace ChoETL
                 if (FillIfKeyValueObject(ref rec, pair.Item2))
                     return true;
             }
+                                
+            Func<object, object> nodeConverterForType = null;
+            if (Configuration.HasNodeConverterForType(RecordType, out nodeConverterForType)
+                        || Configuration.HasNodeConverterForType(RecordType.GetUnderlyingType(), out nodeConverterForType))
+            {
+                if (nodeConverterForType != null)
+                {
+                    rec = nodeConverterForType(pair.Item2);
+                    return true;
+                }
+            }
 
             object rootRec = rec;
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
@@ -1277,7 +1288,7 @@ namespace ChoETL
                     }
 
                     object v1 = !jTokens.IsNullOrEmpty() ? (object)jTokens : jToken == null ? node : jToken;
-                    Func<object, object> nodeConverterForType = null;
+                    nodeConverterForType = null;
                     if (fieldConfig.CustomSerializer != null)
                         fieldValue = fieldConfig.CustomSerializer(v1);
                     else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref v1))
