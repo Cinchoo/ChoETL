@@ -398,7 +398,7 @@ namespace ChoETL
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
-                        pt = pd.PropertyType.GetUnderlyingType();
+                        pt = pd.PropertyType;
                         if (false) //!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                             DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, null, recordFieldConfigurations);
                         else if (pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().Any())
