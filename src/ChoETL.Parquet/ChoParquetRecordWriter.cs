@@ -229,11 +229,11 @@ namespace ChoETL
                 type = mapParquetType(type);
             }
 
-            var underlytingType = type.GetUnderlyingType();
-            if (underlytingType == null)
+            var underlyingType = type.GetUnderlyingType();
+            if (underlyingType == null)
                 return typeof(string);
 
-            if (underlytingType == typeof(DateTime))
+            if (underlyingType == typeof(DateTime))
             {
                 if (Configuration.TreatDateTimeAsDateTimeOffset)
                     return typeof(DateTimeOffset);
@@ -242,18 +242,18 @@ namespace ChoETL
                 else
                     return typeof(DateTime);
             }
-            else if (underlytingType == typeof(TimeSpan))
+            else if (underlyingType == typeof(TimeSpan))
                 return typeof(string);
-            else if (underlytingType == typeof(ChoCurrency))
+            else if (underlyingType == typeof(ChoCurrency))
                 return typeof(decimal);
-            else if (underlytingType == typeof(Guid))
+            else if (underlyingType == typeof(Guid))
                 return typeof(string);
-            else if (underlytingType.IsEnum)
+            else if (underlyingType.IsEnum)
                 return typeof(string);
             else if (asRaw && type.IsNullableType())
                 return typeof(string);
             else if (type == typeof(byte[]))
-                return underlytingType;
+                return underlyingType;
             else if (type == typeof(DateTimeOffset))
             {
                 if (Configuration.TreatDateTimeOffsetAsString)
@@ -261,8 +261,8 @@ namespace ChoETL
                 else
                     return typeof(DateTimeOffset);
             }
-            else if (underlytingType.IsSimpleSpecial())
-                return underlytingType;
+            else if (underlyingType.IsSimpleSpecial())
+                return underlyingType;
             else
                 return typeof(string);
         }
@@ -410,7 +410,7 @@ namespace ChoETL
 
         private DataField GetDataField(string name, Type fieldType)
         {
-            return new DataField(name.Replace(".", "_"), fieldType == null ? typeof(string) : fieldType);
+            return new DataField(name/*.Replace(".", "_")*/, fieldType == null ? typeof(string) : fieldType);
         }
 
         private IEnumerable<object> GetRecords(IEnumerator<object> recEnum)

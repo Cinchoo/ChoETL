@@ -242,7 +242,8 @@ namespace ChoETL
                 rr.InterceptRowGroup = true;
 
             var e = rr.AsEnumerable(_parquetReader).GetEnumerator();
-            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() =>
+            {
                 ++_recordNumber;
                 return e.MoveNext();
             }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
@@ -266,7 +267,7 @@ namespace ChoETL
             {
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
                         Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                 else
@@ -575,7 +576,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -614,7 +615,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithField<TField>(Expression<Func<T, TField>> field,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -648,7 +649,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -662,7 +663,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -675,7 +676,7 @@ namespace ChoETL
         private ChoParquetReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
