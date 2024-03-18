@@ -546,8 +546,8 @@ namespace ChoETL
             PropertyInfo pi = null;
             object rootRec = rec;
 #if DEBUG
-            String.Join(",", Configuration.RecordFieldConfigurationsDict
-                .Where(kvp => !Configuration.IgnoredFields.Contains(kvp.Value.FieldName)).OrderBy(kvp => kvp.Value.FieldPosition).OrderBy(kvp => kvp.Value.Priority).Select(f => f.Value.FieldName)).Print();
+            //String.Join(",", Configuration.RecordFieldConfigurationsDict
+            //    .Where(kvp => !Configuration.IgnoredFields.Contains(kvp.Value.FieldName)).OrderBy(kvp => kvp.Value.FieldPosition).OrderBy(kvp => kvp.Value.Priority).Select(f => f.Value.FieldName)).Print();
 #endif
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.FieldPosition).OrderBy(kvp => kvp.Value.Priority))
             {

@@ -108,6 +108,7 @@
     <Compile Include="Common\Attributes\ChoIsNullableAttribute.cs" />
     <Compile Include="Common\Attributes\ChoFieldPositionAttribute.cs" />
     <Compile Include="Common\Attributes\ChoKnownTypeAttribute.cs" />
+    <Compile Include="Common\Attributes\ChoQuoteFieldAttribute.cs" />
     <Compile Include="Common\Attributes\ChoSourceTypeAttribute.cs" />
     <Compile Include="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />
     <Compile Include="Common\Attributes\ChoFieldMapAttribute.cs" />

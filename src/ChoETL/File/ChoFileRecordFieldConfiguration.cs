@@ -161,6 +161,10 @@ namespace ChoETL
                 if (sa != null)
                     SourceType = sa.Type;
 
+                ChoQuoteFieldAttribute qfAttr = otherAttrs.OfType<ChoQuoteFieldAttribute>().FirstOrDefault();
+                if (qfAttr != null)
+                    QuoteField = qfAttr.QuoteField;
+
                 StringLengthAttribute slAttr = otherAttrs.OfType<StringLengthAttribute>().FirstOrDefault();
                 if (slAttr != null && slAttr.MaximumLength > 0)
                     Size = slAttr.MaximumLength;
