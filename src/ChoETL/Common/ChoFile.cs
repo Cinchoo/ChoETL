@@ -9,6 +9,45 @@ namespace ChoETL
 {
     public static class ChoFile
     {
+        public static string IncrementFileName(string filePath, ref int counter)
+        {
+            return Path.GetDirectoryName(filePath)
+                 + Path.DirectorySeparatorChar
+                 + Path.GetFileNameWithoutExtension(filePath)
+                 + counter++.ToString()
+                 + Path.GetExtension(filePath);
+        }
+        public static string GetFileName(string filePath, long counter)
+        {
+            return Path.GetDirectoryName(filePath)
+                 + Path.DirectorySeparatorChar
+                 + Path.GetFileNameWithoutExtension(filePath)
+                 + counter.ToString()
+                 + Path.GetExtension(filePath);
+        }
+
+        public static void ConcatFiles(string[] inputFilePaths, string outputFilePath)
+        {
+            using (var outputStream = File.Create(outputFilePath))
+            {
+                foreach (var inputFilePath in inputFilePaths)
+                {
+                    using (var inputStream = File.OpenRead(inputFilePath))
+                    {
+                        // Buffer size can be passed as the second argument.
+                        inputStream.CopyTo(outputStream);
+                    }
+                }
+            }
+        }
+        public static void DeleteFiles(string[] inputFilePaths)
+        {
+            foreach (var inputFilePath in inputFilePaths)
+            {
+                File.Delete(inputFilePath);
+            }
+        }
+
         public static Encoding GetEncodingFromFile(string fileName)
         {
             // Read the BOM

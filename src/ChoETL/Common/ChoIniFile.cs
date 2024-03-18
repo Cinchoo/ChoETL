@@ -61,28 +61,30 @@ namespace ChoETL
         {
             get { return _iniFilePath; }
         }
-
+        private bool _ignoreDuplicates;
+        public bool IgnoreDuplicates => _ignoreDuplicates;
         private static string IniFileKey(string iniFilePath, string sectionName = null)
         {
             return String.Format("{0}_{1}", iniFilePath, sectionName);
         }
 
-        private ChoIniFile(string iniFilePath, string sectionName = null)
+        private ChoIniFile(string iniFilePath, string sectionName = null, bool ignoreDuplicates = true)
         {
             ChoGuard.ArgumentNotNullOrEmpty(iniFilePath, "IniFilePath");
 
             _iniFilePath = GetFullPath(iniFilePath);
-            if (!_iniFilePath.EndsWith(".ini", StringComparison.InvariantCultureIgnoreCase))
-                _iniFilePath = _iniFilePath + ".ini";
+            //if (!_iniFilePath.EndsWith(".ini", StringComparison.InvariantCultureIgnoreCase))
+            //    _iniFilePath = _iniFilePath + ".ini";
 
             _padLock = GetIniFileLockObject(_iniFilePath);
             _sectionName = sectionName;
+            _ignoreDuplicates = ignoreDuplicates;
 
             LoadIniFile();
             Key = IniFileKey(_iniFilePath, sectionName);
         }
 
-        public static ChoIniFile New(string iniFilePath, string sectionName = null)
+        public static ChoIniFile New(string iniFilePath, string sectionName = null, bool ignoreDuplicates = true)
         {
             ChoGuard.ArgumentNotNullOrEmpty(iniFilePath, "IniFilePath");
 
@@ -95,7 +97,7 @@ namespace ChoETL
                 if (_iniFiles.ContainsKey(key))
                     return _iniFiles[key];
 
-                ChoIniFile iniFile = new ChoIniFile(iniFilePath, sectionName);
+                ChoIniFile iniFile = new ChoIniFile(iniFilePath, sectionName, ignoreDuplicates);
                 _iniFiles.Add(key, iniFile);
                 return _iniFiles[key];
             }
@@ -136,6 +138,9 @@ namespace ChoETL
             string value;
             foreach (string line in GetSection().Split(Environment.NewLine))
             {
+                if (line.StartsWith("#") || line.StartsWith(";"))
+                    continue;
+
                 foreach (KeyValuePair<string, string> kvp in line.ToKeyValuePairs())
                 {
                     if (!kvp.Key.IsNullOrWhiteSpace())
@@ -147,10 +152,13 @@ namespace ChoETL
                             _keyValues.Add(key, CleanValue(value));
                         else
                         {
-                            if (!SectionName.IsNullOrWhiteSpace())
-                                throw new ApplicationException("Duplicate '{0}' ini key found in '{1}' section.".FormatString(key, SectionName));
-                            else
-                                throw new ApplicationException("Duplicate '{0}' ini key found in root section.".FormatString(key, SectionName));
+                            if (!_ignoreDuplicates)
+                            {
+                                if (!SectionName.IsNullOrWhiteSpace())
+                                    throw new ApplicationException("Duplicate '{0}' ini key found in '{1}' section.".FormatString(key, SectionName));
+                                else
+                                    throw new ApplicationException("Duplicate '{0}' ini key found in root section.".FormatString(key, SectionName));
+                            }
                         }
                     }
                     break;

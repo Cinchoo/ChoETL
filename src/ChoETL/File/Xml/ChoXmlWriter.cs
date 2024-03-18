@@ -1020,6 +1020,11 @@ namespace ChoETL
         string GetOverrideNodeName(long index, object record);
     }
 
+    public interface IChoParallelWriter
+    {
+        void Write(object value);
+    }
+
     public class ChoRecordFieldSerializeEventArgs
     {
         public string PropertyName

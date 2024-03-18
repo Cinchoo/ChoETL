@@ -10,7 +10,7 @@ using System.Windows.Data;
 
 namespace ChoETL
 {
-    public class ChoTypeConverter
+    public sealed class ChoTypeConverter
     {
         public static readonly ChoTypeConverter Global = new ChoTypeConverter();
 

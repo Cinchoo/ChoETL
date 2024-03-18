@@ -123,6 +123,7 @@
     <Compile Include="Common\Converters\ChoCDATAToStringConverter.cs" />
     <Compile Include="Common\Converters\ChoArrayToObjectConverter.cs" />
     <Compile Include="Common\Converters\ChoCharConverter.cs" />
+    <Compile Include="Common\Converters\ChoCSVConverter.cs" />
     <Compile Include="Common\Dynamic\ChoAutoConverter.cs" />
     <Compile Include="Common\Exceptions\ChoSqlBulkCopyException.cs" />
     <Compile Include="Common\ExtensionMethods\ChoEnumerableEx.cs" />

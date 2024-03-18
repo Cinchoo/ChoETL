@@ -28,6 +28,7 @@ using System.Security.Cryptography;
 using NUnit.Framework.Constraints;
 using System.Windows.Navigation;
 using System.Configuration;
+using System.Collections;
 #if !NETSTANDARD2_0
 using System.Windows.Data;
 #endif
@@ -1689,6 +1690,14 @@ new ChoDynamicObject{ {"Column1","2011.01.07"},{"Column2", new DateTime(2011,1,7
         [Test]
         public static void InterfaceTest()
         {
+            //CSV
+
+            string csv = @"Id,Name,City
+4,Tom,Edison
+1,Mark,New York
+2,Gom,Clark
+3,Smith,Newark";
+
             List<IEmployee> expected = new List<IEmployee> {
                 new Employee{ Id=4, Name="Tom", City="Edison"},
                 new Manager{ Id=1, Name="Mark"},
@@ -9220,6 +9229,161 @@ GLot,id,Slot,Scribe,Diameter,MPD,SResistivity,SThickness,TTV,LTV,Warp,Bow,S_U_A,
                 var actual = JsonConvert.SerializeObject(r, Formatting.Indented);
                 Assert.AreEqual(expected, actual);
             }
+        }
+
+        public abstract class IFUF_Event
+        { }
+
+        [ChoRecordTypeCode("Dialogue")]
+        public class FUF_Event_Dialogue : IFUF_Event
+        {
+            [ChoFieldPosition(2)]
+            public int ID { get; set; }
+            [ChoFieldPosition(3)]
+            public float Delay { get; set; }
+            [ChoFieldPosition(4)]
+            public bool IsAsync { get; set; }
+            [ChoFieldPosition(5)]
+            public string Content { get; set; }
+            [ChoFieldPosition(6)]
+            public string Label { get; set; }
+        }
+
+        [ChoRecordTypeCode("Avatar")]
+        public class FUF_Event_Avatar : IFUF_Event
+        {
+            [ChoFieldPosition(2)]
+            public int ID { get; set; }
+            [ChoFieldPosition(3)]
+            public float Delay { get; set; }
+            [ChoFieldPosition(4)]
+            public bool IsAsync { get; set; }
+            [ChoFieldPosition(5)]
+            [ChoTypeConverter(typeof(CSVConverter))]
+            public Animation Animation { get; set; }
+            [ChoFieldPosition(6)]
+            public string Movement { get; set; }
+        }
+
+        public class Animation
+        {
+            [ChoFieldPosition(1)]
+            public int ID { get; set; }
+            [ChoFieldPosition(2)]
+            public string Name { get; set; }
+            [ChoFieldPosition(3)]
+            public string Position { get; set; }
+            [ChoFieldPosition(4)]
+            public bool IsAsync { get; set; }
+            [ChoFieldPosition(5)]
+            public bool IsAsync1 { get; set; }
+        }
+
+        public class CSVConverter : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                var genericCSVReader = typeof(ChoCSVReader<>).MakeGenericType(targetType);
+                dynamic readerInstance = ChoActivator.CreateInstance(genericCSVReader, new object[] { new StringBuilder(value as string), null });
+                var disposable = readerInstance as IDisposable;
+                using (disposable)
+                {
+                    readerInstance.ThrowAndStopOnMissingField(false);
+
+                    var recs = readerInstance.ToArray();
+                    return (recs as IList)?.OfType<object>().FirstOrDefault();
+                }
+                return value;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Test]
+        public static void ParseCSVWithDifferentPOCOTypes()
+        {
+            string csv = @"Type,ID,Delay,IsAsync,Property_4,Property_5,Property_6
+Avatar,0,0,FALSE,""0,Jack,Stand,False,True"",""100ms=>256,128""
+Avatar,1,0,FALSE,""0,Mary,Stand,False,True"",""20/s=>-256,128""
+Dialogue,2,0,FALSE,1001,Jack
+Dialogue,3,0,FALSE,1002,Mary,""9001,1005;9002,1006""
+Dialogue,4,0,FALSE,1003,Jack
+Dialogue,5,0,FALSE,1004,Jack,""256,128;257,129""";
+
+            string expected = @"[
+  {
+    ""ID"": 0,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Animation"": {
+      ""ID"": 0,
+      ""Name"": ""Jack"",
+      ""Position"": ""Stand"",
+      ""IsAsync"": false,
+      ""IsAsync1"": true
+    },
+    ""Movement"": ""100ms=>256,128""
+  },
+  {
+    ""ID"": 1,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Animation"": {
+      ""ID"": 0,
+      ""Name"": ""Mary"",
+      ""Position"": ""Stand"",
+      ""IsAsync"": false,
+      ""IsAsync1"": true
+    },
+    ""Movement"": ""20/s=>-256,128""
+  },
+  {
+    ""ID"": 2,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1001"",
+    ""Label"": ""Jack""
+  },
+  {
+    ""ID"": 3,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1002"",
+    ""Label"": ""Mary""
+  },
+  {
+    ""ID"": 4,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1003"",
+    ""Label"": ""Jack""
+  },
+  {
+    ""ID"": 5,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1004"",
+    ""Label"": ""Jack""
+  }
+]";
+
+            var recs = new List<IFUF_Event>();
+            using (var p = ChoCSVReader<IFUF_Event>.LoadText(csv)
+                .WithFirstLineHeader(true)
+                .WithRecordSelector(1, typeof(FUF_Event_Dialogue), typeof(FUF_Event_Avatar))
+                )
+            {
+                foreach (var rec in p)
+                    recs.Add(rec);
+            }
+            recs.Print();
+
+            var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+            Assert.AreEqual(expected, actual);
+
         }
 
         static void Main(string[] args)

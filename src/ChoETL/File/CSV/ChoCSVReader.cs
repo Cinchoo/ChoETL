@@ -186,6 +186,19 @@ namespace ChoETL
                 return default(T);
         }
 
+        public T[] ToArray()
+        {
+            List<T> recs = new List<T>();
+
+            T rec = null;
+            while ((rec = Read()) != null)
+            {
+                recs.Add(rec);
+            }
+
+            return recs.ToArray();
+        }
+
         public void Dispose()
         {
             Dispose(false);
