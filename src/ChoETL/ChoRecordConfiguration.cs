@@ -66,18 +66,25 @@ namespace ChoETL
             get { return _fieldTypeAssessor == null ? ChoFieldTypeAssessor.Instance : _fieldTypeAssessor; }
             set { _fieldTypeAssessor = value; }
         }
-        public Type RecordType
+        protected Type RecordType
         {
             get;
             set;
         }
 
         private Type _recordMapType;
-        public Type RecordMapType
+        protected Type RecordMapType
         {
             get { return _recordMapType == null ? RecordType : _recordMapType; }
             set { _recordMapType = value; }
         }
+
+        internal Type RecordTypeInternal
+        {
+            get => RecordType;
+            set => RecordType = value;
+        }
+        internal Type RecordMapTypeInternal => RecordMapType;
 
         [DataMember]
         public ChoErrorMode? ErrorMode
@@ -109,23 +116,43 @@ namespace ChoETL
             get;
             set;
         }
-        public Type SourceType
+        protected Type SourceType
         {
             get;
             set;
+        }
+        internal Type SourceTypeInternal
+        {
+            get => SourceType;
+            set => SourceType = value;
         }
         [DataMember]
         public long NotifyAfter { get; set; }
 
         private bool _isDynamicObject = true;
-        public virtual bool IsDynamicObject
+        protected virtual bool IsDynamicObject
         {
             get { return _isDynamicObject; }
             set { _isDynamicObject = value; }
         }
+        internal bool IsDynamicObjectInternal
+        {
+            get => IsDynamicObject;
+            set => IsDynamicObject = value;
+        }
+        protected Dictionary<string, PropertyInfo> PIDict = null;
+        protected Dictionary<string, PropertyDescriptor> PDDict = null;
+        internal Dictionary<string, PropertyInfo> PIDictInternal
+        {
+            get => PIDict;
+            set => PIDict = value;
+        }
+        internal Dictionary<string, PropertyDescriptor> PDDictInternal
+        {
+            get => PDDict;
+            set => PDDict = value;
+        }
 
-        public Dictionary<string, PropertyInfo> PIDict = null;
-        public Dictionary<string, PropertyDescriptor> PDDict = null;
         internal bool HasConfigValidators = false;
         internal Dictionary<string, ValidationAttribute[]> ValDict = null;
         internal string[] PropertyNames;
@@ -161,10 +188,14 @@ namespace ChoETL
             get;
             set;
         }
-        public virtual void ResetStates()
+        protected virtual void ResetStates()
         {
             Context = new ChoDynamicObject();
             StateInitializer?.Invoke(this);
+        }
+        internal void ResetStatesInternal()
+        {
+            ResetStates();
         }
 
         protected virtual void Init(Type recordType)
@@ -203,18 +234,22 @@ namespace ChoETL
             }
         }
 
+        internal void ValidateInternal(object state)
+        {
+            Validate(state);
+        }
         //public abstract void MapRecordFields<T>();
         //public abstract void MapRecordFields(params Type[] recordTypes);
-        public virtual void Validate(object state)
+        protected virtual void Validate(object state)
         {
             if (!IsDynamicObject)
             {
                 //PIDict = ChoType.GetProperties(RecordType).ToDictionary(p => p.Name);
-                PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
-                if (PIDict != null)
+                PDDictInternal = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
+                if (PIDictInternal != null)
                 {
-                    foreach (var fn in PIDict.Keys)
-                        PDDict.Add(fn, ChoTypeDescriptor.GetProperty(RecordType, fn));
+                    foreach (var fn in PIDictInternal.Keys)
+                        PDDictInternal.Add(fn, ChoTypeDescriptor.GetProperty(RecordType, fn));
                 }
             }
         }
@@ -228,7 +263,7 @@ namespace ChoETL
         {
             if (!IsDynamicObject)
             {
-                if (fc.PD != null && fc.PI != null)
+                if (fc.PDInternal != null && fc.PIInternal != null)
                     return;
                     
                 var recordType = reflectedType; // fc.ReflectedType == null ? RecordType : fc.ReflectedType;
@@ -239,34 +274,34 @@ namespace ChoETL
                 name = fc.Name;
 
                 fc.ReflectedType = reflectedType;
-                fc.PD = ChoTypeDescriptor.GetProperty(recordType, name);
-                fc.PI = ChoType.GetProperty(recordType, name);
+                fc.PDInternal = ChoTypeDescriptor.GetProperty(recordType, name);
+                fc.PIInternal = ChoType.GetProperty(recordType, name);
 
-                if (fc.PD == null || fc.PI == null)
+                if (fc.PDInternal == null || fc.PIInternal == null)
                     return;
 
                 //Load default value
-                defaultValue = ChoType.GetRawDefaultValue(fc.PD);
+                defaultValue = ChoType.GetRawDefaultValue(fc.PDInternal);
                 if (defaultValue != null)
                 {
                     fc.DefaultValue = defaultValue;
-                    fc.IsDefaultValueSpecified = true;
+                    fc.IsDefaultValueSpecifiedInternal = true;
                 }
                 //Load fallback value
-                fallbackValue = ChoType.GetRawFallbackValue(fc.PD);
+                fallbackValue = ChoType.GetRawFallbackValue(fc.PDInternal);
                 if (fallbackValue != null)
                 {
                     fc.FallbackValue = fallbackValue;
-                    fc.IsFallbackValueSpecified = true;
+                    fc.IsFallbackValueSpecifiedInternal = true;
                 }
 
                 //Load Converters
-                fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
-                fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
+                fc.PropConvertersInternal = ChoTypeDescriptor.GetTypeConverters(fc.PIInternal);
+                fc.PropConverterParamsInternal = ChoTypeDescriptor.GetTypeConverterParams(fc.PIInternal);
 
                 //Load Custom Serializer
-                fc.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fc.PI);
-                fc.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fc.PI);
+                fc.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fc.PIInternal);
+                fc.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fc.PIInternal);
 
                 if (fc.SourceType == null)
                     fc.SourceType = fc.GetSourceTypeFromConvertersIfAny();
@@ -286,42 +321,42 @@ namespace ChoETL
                     //else
                     name = fc.Name;
 
-                    fc.PD = PDDict.ContainsKey(name) ? PDDict[name] :
-                        (PDDict.Any(p => p.Value.Name == name) ? PDDict.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
-                    fc.PI = PIDict.ContainsKey(name) ? PIDict[name] :
-           (PIDict.Any(p => p.Value.Name == name) ? PIDict.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
+                    fc.PDInternal = PDDictInternal.ContainsKey(name) ? PDDictInternal[name] :
+                        (PDDictInternal.Any(p => p.Value.Name == name) ? PDDictInternal.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
+                    fc.PIInternal = PIDictInternal.ContainsKey(name) ? PIDictInternal[name] :
+           (PIDictInternal.Any(p => p.Value.Name == name) ? PIDictInternal.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
 
-                    if (fc.PD == null || fc.PI == null)
+                    if (fc.PDInternal == null || fc.PIInternal == null)
                         continue;
 
                     //Load default value
-                    defaultValue = ChoType.GetRawDefaultValue(fc.PD);
+                    defaultValue = ChoType.GetRawDefaultValue(fc.PDInternal);
                     if (defaultValue != null)
                     {
                         fc.DefaultValue = defaultValue;
-                        fc.IsDefaultValueSpecified = true;
+                        fc.IsDefaultValueSpecifiedInternal = true;
                     }
                     //Load fallback value
-                    fallbackValue = ChoType.GetRawFallbackValue(fc.PD);
+                    fallbackValue = ChoType.GetRawFallbackValue(fc.PDInternal);
                     if (fallbackValue != null)
                     {
                         fc.FallbackValue = fallbackValue;
-                        fc.IsFallbackValueSpecified = true;
+                        fc.IsFallbackValueSpecifiedInternal = true;
                     }
 
                     //Load Converters
-                    fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
-                    fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
+                    fc.PropConvertersInternal = ChoTypeDescriptor.GetTypeConverters(fc.PIInternal);
+                    fc.PropConverterParamsInternal = ChoTypeDescriptor.GetTypeConverterParams(fc.PIInternal);
 
                     //Load Custom Serializer
-                    fc.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fc.PI);
-                    fc.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fc.PI);
+                    fc.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fc.PIInternal);
+                    fc.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fc.PIInternal);
 
                     if (fc.SourceType == null)
                         fc.SourceType = fc.GetSourceTypeFromConvertersIfAny();
                 }
 
-                PropertyNames = PDDict.Keys.ToArray();
+                PropertyNames = PDDictInternal.Keys.ToArray();
             }
 
             //Validators
@@ -341,9 +376,9 @@ namespace ChoETL
                         else
                             name = fc.Name;
 
-                        if (!PDDict.ContainsKey(name))
+                        if (!PDDictInternal.ContainsKey(name))
                             continue;
-                        fc.Validators = ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(fc.PD).ToArray();
+                        fc.Validators = ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(fc.PDInternal).ToArray();
                     }
                 }
             }
@@ -371,8 +406,7 @@ namespace ChoETL
 
         public Func<Type, object, object> ConverterForType { get; set; }
         public Func<Type, object, object> ConverterParamsForType { get; set; }
-
-        public object[] GetConvertersForType(Type fieldType, object value = null)
+        protected object[] GetConvertersForTypePrivate(Type fieldType, object value = null)
         {
             if (fieldType == null) return null;
 
@@ -396,8 +430,12 @@ namespace ChoETL
                 }
             }
         }
+        internal object[] GetConvertersForType(Type fieldType, object value = null)
+        {
+            return GetConvertersForTypePrivate(fieldType, value);
+        }
 
-        public object[] GetConverterParamsForType(Type fieldType, object value = null)
+        protected object[] GetConverterParamsForTypePrivate(Type fieldType, object value = null)
         {
             if (fieldType == null) return null;
 
@@ -420,6 +458,10 @@ namespace ChoETL
                     return ChoTypeDescriptor.GetTypeConverterParamsForType(fieldType);
                 }
             }
+        }
+        internal object[] GetConverterParamsForType(Type fieldType, object value = null)
+        {
+            return GetConverterParamsForTypePrivate(fieldType, value);
         }
 
         public void ClearTypeConvertersForType<T>()

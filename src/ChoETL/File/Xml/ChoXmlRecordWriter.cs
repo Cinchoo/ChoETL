@@ -178,7 +178,7 @@ namespace ChoETL
         bool _firstElement = true;
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
@@ -204,7 +204,7 @@ namespace ChoETL
                     if (RecordType.IsDynamicType())
                         recEnum = GetRecords(recEnum).Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
                     else
-                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
+                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
                 }
 
                 object notNullRecord = GetFirstNotNullRecord(recEnum);
@@ -266,24 +266,24 @@ namespace ChoETL
                             if (notNullRecord != null)
                             {
                                 string[] fieldNames = null;
-                                if (Configuration.RecordType == typeof(object))
+                                if (Configuration.RecordTypeInternal == typeof(object))
                                 {
                                     Type recordType = ElementType == null ? record.GetType() : ElementType;
-                                    RecordType = Configuration.RecordType = recordType.GetUnderlyingType(); //.ResolveType();
-                                    Configuration.IsDynamicObject = recordType.IsDynamicType();
+                                    RecordType = Configuration.RecordTypeInternal = recordType.GetUnderlyingType(); //.ResolveType();
+                                    Configuration.IsDynamicObjectInternal = recordType.IsDynamicType();
                                 }
 
-                                if (typeof(IDictionary).IsAssignableFrom(Configuration.RecordType)
-                                    || typeof(IList).IsAssignableFrom(Configuration.RecordType))
+                                if (typeof(IDictionary).IsAssignableFrom(Configuration.RecordTypeInternal)
+                                    || typeof(IList).IsAssignableFrom(Configuration.RecordTypeInternal))
                                     Configuration.UseXmlSerialization = true;
 
-                                if (!Configuration.IsDynamicObject)
+                                if (!Configuration.IsDynamicObjectInternal)
                                 {
                                     if (Configuration.XmlRecordFieldConfigurations.Count == 0)
-                                        Configuration.MapRecordFields(Configuration.RecordType);
+                                        Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                                 }
 
-                                if (Configuration.IsDynamicObject)
+                                if (Configuration.IsDynamicObjectInternal)
                                 {
                                     var dict = notNullRecord.ToDynamicObject() as IDictionary<string, Object>;
                                     if (dict != null)
@@ -291,14 +291,14 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
+                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(Configuration.RecordTypeInternal).Select(pd => pd.Name).ToArray();
                                     if (fieldNames.Length == 0)
                                     {
-                                        fieldNames = ChoType.GetProperties(Configuration.RecordType).Select(p => p.Name).ToArray();
+                                        fieldNames = ChoType.GetProperties(Configuration.RecordTypeInternal).Select(p => p.Name).ToArray();
                                     }
                                 }
 
-                                Configuration.Validate(fieldNames);
+                                Configuration.ValidateInternal(fieldNames);
 
                                 _configCheckDone = true;
 
@@ -341,7 +341,7 @@ namespace ChoETL
                         if (record != null)
                         {
                             Type rt = record.GetType().ResolveType();
-                            if (Configuration.IsDynamicObject)
+                            if (Configuration.IsDynamicObjectInternal)
                             {
                                 if (ElementType != null)
                                 {
@@ -352,7 +352,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                if (!Configuration.RecordType.IsAssignableFrom(rt) && !Configuration.UseXmlSerialization)
+                                if (!Configuration.RecordTypeInternal.IsAssignableFrom(rt) && !Configuration.UseXmlSerialization)
                                     throw new ChoWriterException("Invalid record found.");
                             }
                         }
@@ -680,8 +680,8 @@ namespace ChoETL
 
         private bool ToText(long index, object rec, ChoXmlRecordConfiguration config, out string recText)
         {
-            if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType) && rec != null)
-                rec = ChoActivator.CreateInstance(config.RecordType, rec);
+            if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordTypeInternal) && rec != null)
+                rec = ChoActivator.CreateInstance(config.RecordTypeInternal, rec);
 
             recText = null;
             if (rec == null)
@@ -689,7 +689,7 @@ namespace ChoETL
                 if (config.NullValueHandling == ChoNullValueHandling.Ignore)
                     return false;
                 else if (config.NullValueHandling == ChoNullValueHandling.Default)
-                    rec = ChoActivator.CreateInstance(config.RecordType);
+                    rec = ChoActivator.CreateInstance(config.RecordTypeInternal);
                 else if (config.NullValueHandling == ChoNullValueHandling.Empty)
                 {
                     recText = Indent(@"<{0}/>".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix)), _indent + 1);
@@ -731,21 +731,21 @@ namespace ChoETL
                 fieldConfig = kvp.Value;
                 fieldValue = null;
                 fieldText = String.Empty;
-                if (config.PIDict != null)
-                    config.PIDict.TryGetValue(kvp.Key, out pi);
+                if (config.PIDictInternal != null)
+                    config.PIDictInternal.TryGetValue(kvp.Key, out pi);
 
                 if (fieldConfig.IsArray == null)
                     useXmlArray = Configuration.UseXmlArray;
                 else
                     useXmlArray = fieldConfig.IsArray.Value;
 
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMemberInternal, rootRec);
 
                 if (config.ThrowAndStopOnMissingField)
                 {
                     if (fieldConfig.ValueSelector == null)
                     {
-                        if (config.IsDynamicObject)
+                        if (config.IsDynamicObjectInternal)
                         {
                             var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                             if (!dict.ContainsKey(kvp.Key))
@@ -761,7 +761,7 @@ namespace ChoETL
 
                 try
                 {
-                    if (config.IsDynamicObject)
+                    if (config.IsDynamicObjectInternal)
                     {
                         IDictionary<string, Object> dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                         if (dict.ContainsKey(kvp.Key))
@@ -809,7 +809,7 @@ namespace ChoETL
                     }
 
                     bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                    if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecifiedInternal)
                         fieldValue = fieldConfig.DefaultValue;
                     ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                     if (ignoreFieldValue)
@@ -860,7 +860,7 @@ namespace ChoETL
 
                     try
                     {
-                        if (config.IsDynamicObject)
+                        if (config.IsDynamicObjectInternal)
                         {
                             var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
@@ -937,7 +937,7 @@ namespace ChoETL
                 }
 
                 if (fieldValue == null)
-                    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : fieldValue;
+                    fieldValue = fieldConfig.IsDefaultValueSpecifiedInternal ? fieldConfig.DefaultValue : fieldValue;
 
                 if (fieldValue == null && fieldConfig.NullValue != null)
                     fieldValue = fieldConfig.NullValue;
@@ -979,7 +979,7 @@ namespace ChoETL
             XNamespace ns = Configuration.NS;
             XElement ele = null; // NewXElement(nsMgr, nodeName); //, Configuration.DefaultNamespacePrefix, ns);
             string innerXml1 = null;
-            if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
+            if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordTypeInternal))
             {
                 ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS, elems.First().Value, emitType: Configuration.EmitDataType);
             }
@@ -1069,7 +1069,7 @@ namespace ChoETL
                         }
                         else if (config.NullValueHandling == ChoNullValueHandling.Default)
                         {
-                            rec = ChoActivator.CreateInstance(config.RecordType);
+                            rec = ChoActivator.CreateInstance(config.RecordTypeInternal);
                             innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
                                 useXmlArray: useXmlArray,
                                 useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
@@ -1751,7 +1751,7 @@ namespace ChoETL
 
         private void CheckColumnsStrict(object rec)
         {
-            if (Configuration.IsDynamicObject)
+            if (Configuration.IsDynamicObjectInternal)
             {
                 var eoDict = rec == null ? new Dictionary<string, object>() : rec.ToDynamicObject() as IDictionary<string, Object>;
 

@@ -28,6 +28,7 @@ using System.Security.Cryptography;
 using NUnit.Framework.Constraints;
 using System.Windows.Navigation;
 using System.Configuration;
+using System.Collections;
 #if !NETSTANDARD2_0
 using System.Windows.Data;
 #endif
@@ -884,7 +885,7 @@ namespace ChoCSVReaderTest
             )
             {
                 using (var csv = new ChoCSVReader(FileNameNestedCSV).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     )
                 {
                     var recs = csv.ToArray();
@@ -1689,6 +1690,14 @@ new ChoDynamicObject{ {"Column1","2011.01.07"},{"Column2", new DateTime(2011,1,7
         [Test]
         public static void InterfaceTest()
         {
+            //CSV
+
+            string csv = @"Id,Name,City
+4,Tom,Edison
+1,Mark,New York
+2,Gom,Clark
+3,Smith,Newark";
+
             List<IEmployee> expected = new List<IEmployee> {
                 new Employee{ Id=4, Name="Tom", City="Edison"},
                 new Manager{ Id=1, Name="Mark"},
@@ -3674,7 +3683,7 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
             using (var p = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
                 .ThrowAndStopOnMissingField(false)
-                .Configure(c => c.NestedColumnSeparator = '_'))
+                .Configure(c => c.NestedKeySeparator = '_'))
             {
                 using (var w = new ChoCSVWriter<FooBar>(csvOut)
                      .WithFirstLineHeader()
@@ -4660,7 +4669,7 @@ Mark, Hartigan";
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .Configure(c => c.ArrayValueNamePrefix = String.Empty)
                     )
                     w.Write(r);
@@ -4711,7 +4720,7 @@ Mark, Hartigan";
             using (var w = new ChoXmlWriter(xml))
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     )
                     w.Write(r);
             }
@@ -4729,7 +4738,7 @@ Mark, Hartigan";
 2,name1,3,namelist20, citylist20,namelist21, citylist21";
 
             using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                .Configure(c => c.NestedColumnSeparator = '/')
+                .Configure(c => c.NestedKeySeparator = '/')
                 )
             {
                 var rec = r.FirstOrDefault();
@@ -6398,7 +6407,7 @@ S, T% x 100
 ]";
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
-                .Configure(c => c.NestedColumnSeparator = '/'))
+                .Configure(c => c.NestedKeySeparator = '/'))
             {
                 //foreach (var x in csv) Console.WriteLine(x.DumpAsJson());
                 var actual = JsonConvert.SerializeObject(r, Formatting.Indented);
@@ -6513,7 +6522,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithDelimiter(";")
                 .WithFirstLineHeader()
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 //.AutoArrayDiscovery()
                 .ArrayIndexSeparator('_')
                 )
@@ -6563,7 +6572,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithDelimiter(";")
                 .WithFirstLineHeader()
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 .AutoArrayDiscovery()
                 .ArrayIndexSeparator('_')
                 )
@@ -7084,7 +7093,7 @@ Debug,RollingFile,Serilog.Formatting.Json.JsonFormatter, Serilog,C:\Logs\logConf
             using (var w = new ChoJSONWriter(json))
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .WithMaxScanRows(1)
                     )
                     w.Write(r);
@@ -8480,8 +8489,8 @@ PREPAID US, , US24, WOLONG US LRD, , , , JEMA MOTORS AND AUTOMATION,10827 ELGAR 
     ""Customer Part Number"": null,
     ""Shipping Notes"": ""shipping marks header shipping marks line 1"",
     ""T_Tags"": ""t tags header t tags line 1"",
-    ""Send Freight bill to"": ""\""WOLONG ELECTRIC INDUSTRIAL MOTORS c / o Interlog Services"",
-    ""Deletion flag"": ""North America 25 Research Drive Ann Arbor""
+    ""Send Freight bill to"": ""WOLONG ELECTRIC INDUSTRIAL MOTORS c / o Interlog Services, North America 25 Research Drive Ann Arbor, MI 48103 LOC. 31 ACCT BCJM401754"",
+    ""Deletion flag"": null
   },
   {
     ""Freight Terms"": ""PREPAID US"",
@@ -8504,8 +8513,8 @@ PREPAID US, , US24, WOLONG US LRD, , , , JEMA MOTORS AND AUTOMATION,10827 ELGAR 
     ""Customer Part Number"": null,
     ""Shipping Notes"": ""shipping marks header shipping marks line 2"",
     ""T_Tags"": ""t tags header t tags line 2"",
-    ""Send Freight bill to"": ""\""WOLONG ELECTRIC INDUSTRIAL MOTORS c/o Interlog Services"",
-    ""Deletion flag"": ""North America 25 Research Drive Ann Arbor""
+    ""Send Freight bill to"": ""WOLONG ELECTRIC INDUSTRIAL MOTORS c/o Interlog Services, North America 25 Research Drive Ann Arbor, MI 48103 LOC. 31 ACCT BCJM401754"",
+    ""Deletion flag"": null
   }
 ]";
             using (var r = ChoCSVReader.LoadText(csv)
@@ -9222,6 +9231,161 @@ GLot,id,Slot,Scribe,Diameter,MPD,SResistivity,SThickness,TTV,LTV,Warp,Bow,S_U_A,
             }
         }
 
+        public abstract class IFUF_Event
+        { }
+
+        [ChoRecordTypeCode("Dialogue")]
+        public class FUF_Event_Dialogue : IFUF_Event
+        {
+            [ChoFieldPosition(2)]
+            public int ID { get; set; }
+            [ChoFieldPosition(3)]
+            public float Delay { get; set; }
+            [ChoFieldPosition(4)]
+            public bool IsAsync { get; set; }
+            [ChoFieldPosition(5)]
+            public string Content { get; set; }
+            [ChoFieldPosition(6)]
+            public string Label { get; set; }
+        }
+
+        [ChoRecordTypeCode("Avatar")]
+        public class FUF_Event_Avatar : IFUF_Event
+        {
+            [ChoFieldPosition(2)]
+            public int ID { get; set; }
+            [ChoFieldPosition(3)]
+            public float Delay { get; set; }
+            [ChoFieldPosition(4)]
+            public bool IsAsync { get; set; }
+            [ChoFieldPosition(5)]
+            [ChoTypeConverter(typeof(CSVConverter))]
+            public Animation Animation { get; set; }
+            [ChoFieldPosition(6)]
+            public string Movement { get; set; }
+        }
+
+        public class Animation
+        {
+            [ChoFieldPosition(1)]
+            public int ID { get; set; }
+            [ChoFieldPosition(2)]
+            public string Name { get; set; }
+            [ChoFieldPosition(3)]
+            public string Position { get; set; }
+            [ChoFieldPosition(4)]
+            public bool IsAsync { get; set; }
+            [ChoFieldPosition(5)]
+            public bool IsAsync1 { get; set; }
+        }
+
+        public class CSVConverter : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                var genericCSVReader = typeof(ChoCSVReader<>).MakeGenericType(targetType);
+                dynamic readerInstance = ChoActivator.CreateInstance(genericCSVReader, new object[] { new StringBuilder(value as string), null });
+                var disposable = readerInstance as IDisposable;
+                using (disposable)
+                {
+                    readerInstance.ThrowAndStopOnMissingField(false);
+
+                    var recs = readerInstance.ToArray();
+                    return (recs as IList)?.OfType<object>().FirstOrDefault();
+                }
+                return value;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Test]
+        public static void ParseCSVWithDifferentPOCOTypes()
+        {
+            string csv = @"Type,ID,Delay,IsAsync,Property_4,Property_5,Property_6
+Avatar,0,0,FALSE,""0,Jack,Stand,False,True"",""100ms=>256,128""
+Avatar,1,0,FALSE,""0,Mary,Stand,False,True"",""20/s=>-256,128""
+Dialogue,2,0,FALSE,1001,Jack
+Dialogue,3,0,FALSE,1002,Mary,""9001,1005;9002,1006""
+Dialogue,4,0,FALSE,1003,Jack
+Dialogue,5,0,FALSE,1004,Jack,""256,128;257,129""";
+
+            string expected = @"[
+  {
+    ""ID"": 0,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Animation"": {
+      ""ID"": 0,
+      ""Name"": ""Jack"",
+      ""Position"": ""Stand"",
+      ""IsAsync"": false,
+      ""IsAsync1"": true
+    },
+    ""Movement"": ""100ms=>256,128""
+  },
+  {
+    ""ID"": 1,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Animation"": {
+      ""ID"": 0,
+      ""Name"": ""Mary"",
+      ""Position"": ""Stand"",
+      ""IsAsync"": false,
+      ""IsAsync1"": true
+    },
+    ""Movement"": ""20/s=>-256,128""
+  },
+  {
+    ""ID"": 2,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1001"",
+    ""Label"": ""Jack""
+  },
+  {
+    ""ID"": 3,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1002"",
+    ""Label"": ""Mary""
+  },
+  {
+    ""ID"": 4,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1003"",
+    ""Label"": ""Jack""
+  },
+  {
+    ""ID"": 5,
+    ""Delay"": 0.0,
+    ""IsAsync"": false,
+    ""Content"": ""1004"",
+    ""Label"": ""Jack""
+  }
+]";
+
+            var recs = new List<IFUF_Event>();
+            using (var p = ChoCSVReader<IFUF_Event>.LoadText(csv)
+                .WithFirstLineHeader(true)
+                .WithRecordSelector(1, typeof(FUF_Event_Dialogue), typeof(FUF_Event_Avatar))
+                )
+            {
+                foreach (var rec in p)
+                    recs.Add(rec);
+            }
+            recs.Print();
+
+            var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+            Assert.AreEqual(expected, actual);
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
@@ -9609,7 +9773,7 @@ x""Line 4 Field 1""	""""	""Line 4 Field 3""";
 
             using (var p = new ChoCSVReader(FileNamePlayersCSV).WithFirstLineHeader()
                 .MayHaveQuotedFields()
-                .NestedColumnSeparator('/')
+                .NestedKeySeparator('/')
                 //.Configure(c => c.AllowNestedConversion = true)
                 )
             {

@@ -127,7 +127,7 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoFixedLengthRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
+                Configuration.RecordTypeInternal = recordType;
 
             _writer = new ChoFixedLengthRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
@@ -352,7 +352,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             Configuration.IgnoreField(field);
             return this;
@@ -366,7 +366,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -403,7 +403,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -453,7 +453,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
@@ -489,14 +489,14 @@ namespace ChoETL
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : fullyQualifiedMemberName;
                 }
                 else
                 {
                     pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = pd;
+                    nfc.DeclaringMemberInternal = fullyQualifiedMemberName;
                 }
                 if (pd != null)
                 {

@@ -60,7 +60,7 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -98,7 +98,7 @@ namespace ChoETL
                 _textReader = new Lazy<TextReader>(() =>
                 {
                     if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
                     else
                         return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
@@ -148,7 +148,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -191,7 +191,7 @@ namespace ChoETL
                 _textReader = new Lazy<TextReader>(() =>
                 {
                     if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
                     else
                         return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
@@ -273,8 +273,8 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoYamlRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
-            Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
+                Configuration.RecordTypeInternal = recordType;
+            Configuration.IsDynamicObjectInternal = Configuration.RecordTypeInternal.IsDynamicType();
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
             {
@@ -387,13 +387,13 @@ namespace ChoETL
             {
                 IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedKeySeparator, 
                         Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
-                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                 else
-                    dict = s.ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Flatten(Configuration.NestedColumnSeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedColumnSeparator, 
+                    dict = s.ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Flatten(Configuration.NestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedKeySeparator, 
                         Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
-                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary();
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
 
                 selector?.Invoke(dict);
 
@@ -603,7 +603,7 @@ namespace ChoETL
             {
                 Configuration.ClearFields();
                 _clearFields = true;
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             return this;
         }
@@ -613,7 +613,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             Configuration.IgnoreField(field);
             return this;
@@ -665,8 +665,8 @@ namespace ChoETL
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
                     var nfc = new ChoYamlRecordFieldConfiguration(fnTrim, (string)null);
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : null;
                     if (pd != null)
                     {
                         if (nfc.FieldType == null)
@@ -687,7 +687,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -782,7 +782,7 @@ namespace ChoETL
         {
             Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
             ClearFieldsIf();
-            Configuration.MapRecordFields(Configuration.RecordType);
+            Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             return this;
         }
 

@@ -18,6 +18,7 @@ using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using System.Xml;
 using System.Xml.Schema;
 using Newtonsoft.Json;
+using System.Data.Common;
 
 namespace ChoCSVWriterTest
 {
@@ -82,8 +83,8 @@ namespace ChoCSVWriterTest
             address.State = state;
 
             using (var w = new ChoCSVWriter(FileNameIntArrayTestTestCSV)
-                .Setup(s => s.RecordFieldWriteError += (o, e) => actualList.Add(e.Exception.ToString()))
-                .Configure(c => { c.NestedColumnSeparator = '/'; c.WithFirstLineHeader(); })
+                .Setup(s => s.RecordFieldWriteError += (object o, ChoRecordFieldWriteErrorEventArgs e) => actualList.Add(e.Exception.ToString()))
+                .Configure((Action<ChoCSVRecordConfiguration>)(c => { c.NestedKeySeparator = '/'; c.WithFirstLineHeader(); }))
                 )
             {
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
@@ -1784,7 +1785,7 @@ Xytrex Co.,Industrial Cleaning Supply Company,ABC15797531
                 //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
                 //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
                 .Index(o => o.Courses, 0, -1)
-                .NestedColumnSeparator('.')
+                .NestedKeySeparator('.')
                 .WithMaxScanRows(2)
                 )
             {
@@ -2730,6 +2731,61 @@ ca6f8387-bcf0-45ce-85d8-d609dd5a96bd,,,0,10,1";
             var actual = csvOut.ToString();
             Assert.AreEqual(expected, actual);
         }
+        public class User
+        {
+            [Key]
+            public int ID { get; set; }
+            public string Name { get; set; }
+        }
+
+//        [Test]
+//        public static void UpsertToDbFrom2CSVs()
+//        {
+//            string csv1 = @"ID,name
+//1,Danny
+//2,Fred
+//3,Sam";
+
+//            string csv2 = @"ID,name
+//1,Danny
+//3,Pamela
+//4,Fernando";
+//            string expected = @"ID,name,Status
+//1,Danny,Unchanged
+//2,Fred,Deleted
+//3,Pamela,Changed
+//4,Fernando,New";
+
+//            //ChoTypeComparerCache.Instance.ScanAndLoad();
+
+//            var r1 = ChoCSVReader<User>.LoadText(csv1).WithFirstLineHeader();
+//            var r2 = ChoCSVReader<User>.LoadText(csv2).WithFirstLineHeader();
+
+//            StringBuilder csvOut = new StringBuilder();
+//            using (var w = new ChoCSVWriter(csvOut).WithFirstLineHeader())
+//            {
+//                foreach (var t in r1.Compare(r2, "ID", "name"))
+//                {
+//                    dynamic v1 = t.MasterRecord as dynamic;
+//                    dynamic v2 = t.DetailRecord as dynamic;
+//                    if (t.Status == CompareStatus.Unchanged || t.Status == CompareStatus.Deleted)
+//                    {
+//                        v1.Status = t.Status.ToString();
+//                        w.Write(v1);
+//                    }
+//                    else
+//                    {
+//                        v2.Status = t.Status.ToString();
+//                        w.Write(v2);
+//                    }
+//                }
+//            }
+
+//            Console.WriteLine(csvOut.ToString());
+
+//            var actual = csvOut.ToString();
+//            Assert.AreEqual(expected, actual);
+//        }
         [Test]
         public static void CSVDiffWithStatus()
         {

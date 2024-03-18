@@ -211,8 +211,8 @@ namespace ChoETL
                     ErrorMode = config.ErrorMode; // config.ErrorMode;
                 if (IgnoreFieldValueMode == null)
                     IgnoreFieldValueMode = config.IgnoreFieldValueMode;
-                if (QuoteField == null)
-                    QuoteField = config.QuoteAllFields;
+                //if (QuoteField == null)
+                //    QuoteField = config.QuoteAllFields;
             }
             catch (Exception ex)
             {

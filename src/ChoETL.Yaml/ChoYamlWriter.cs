@@ -130,7 +130,7 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoYamlRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
+                Configuration.RecordTypeInternal = recordType;
 
             _writer = new ChoYamlRecordWriter(recordType, Configuration);
             _writer.Writer = this;
@@ -384,7 +384,7 @@ namespace ChoETL
             {
                 Configuration.ClearFields();
                 _clearFields = true;
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             return this;
         }
@@ -394,7 +394,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             Configuration.IgnoreField(field);
             return this;
@@ -445,8 +445,8 @@ namespace ChoETL
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
                     var nfc = new ChoYamlRecordFieldConfiguration(fnTrim, (string)null);
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : null;
                     if (pd != null)
                     {
                         if (nfc.FieldType == null)
@@ -467,7 +467,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -553,7 +553,7 @@ namespace ChoETL
         {
             Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
             ClearFieldsIf();
-            Configuration.MapRecordFields(Configuration.RecordType);
+            Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             return this;
         }
 
@@ -641,7 +641,7 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     yield return expando;
                 else
                 {
@@ -692,7 +692,7 @@ namespace ChoETL
                     expandoDic.Add(fc.Name, row[fc.Name] == DBNull.Value ? null : row[fc.Name]);
                 }
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     Write(expando);
                 else
                 {

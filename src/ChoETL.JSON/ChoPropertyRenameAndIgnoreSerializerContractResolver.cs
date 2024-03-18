@@ -123,17 +123,42 @@ namespace ChoETL
 
             ChoFileRecordFieldConfiguration fc = null;
             var rfc = _configuration.RecordFieldConfigurations.ToArray();
-            if (_configuration.ContainsRecordConfigForType(property.DeclaringType))
+            if (_configuration is IChoJSONRecordConfiguration config)
             {
-                var dict = _configuration.GetRecordConfigDictionaryForType(property.DeclaringType);
-                if (dict != null && dict.ContainsKey(property.UnderlyingName))
+                if (config.ContainsRecordConfigForType(property.DeclaringType))
+                {
+                    var dict = config.GetRecordConfigDictionaryForType(property.DeclaringType);
+                    if (dict != null && dict.ContainsKey(property.UnderlyingName))
+                    {
+                        var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
+                        fc = dict[property.UnderlyingName] as ChoFileRecordFieldConfiguration;
+                        if (CanIncludeConverter(pd))
+                        {
+                            property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture,
+                                property.PropertyType, _configuration.ObjectValidationMode, member)
+                            {
+                                Configuration = _configuration as ChoFileRecordConfiguration,
+                                Reader = Reader,
+                                CallbackRecordFieldRead = CallbackRecordFieldRead,
+                                Writer = Writer,
+                                CallbackRecordFieldWrite = CallbackRecordFieldWrite
+                            };
+                        }
+                        if (fc is IChoJSONRecordFieldConfiguration JSONRecordFieldConfiguration)
+                        {
+                            ExtractJsonPathIfAny(property, pd, JSONRecordFieldConfiguration.JSONPath);
+                        }
+                    }
+                }
+                else if (rfc.OfType<IChoJSONRecordFieldConfiguration>().Any(f => f.DeclaringMember == propertyFullName) 
+                    && rfc.OfType<IChoJSONRecordFieldConfiguration>().First(f => f.DeclaringMember == propertyFullName)
+                    .CastTo<IChoJSONRecordFieldConfiguration>()?.PD?.ComponentType == property.DeclaringType)
                 {
                     var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
-                    fc = dict[property.UnderlyingName] as ChoFileRecordFieldConfiguration;
+                    fc = rfc.OfType<IChoJSONRecordFieldConfiguration>().First(f => f.DeclaringMember == propertyFullName) as ChoFileRecordFieldConfiguration;
                     if (CanIncludeConverter(pd))
                     {
-                        property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture,
-                            property.PropertyType, _configuration.ObjectValidationMode, member)
+                        property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
                         {
                             Configuration = _configuration as ChoFileRecordConfiguration,
                             Reader = Reader,
@@ -141,104 +166,16 @@ namespace ChoETL
                             Writer = Writer,
                             CallbackRecordFieldWrite = CallbackRecordFieldWrite
                         };
-                    }
-                    if (fc is IChoJSONRecordFieldConfiguration JSONRecordFieldConfiguration)
-                    {
-                        ExtractJsonPathIfAny(property, pd, JSONRecordFieldConfiguration.JSONPath);
+                        ExtractJsonPathIfAny(property, pd);
                     }
                 }
-            }
-            else if (rfc.Any(f => f.DeclaringMember == propertyFullName) && rfc.First(f => f.DeclaringMember == propertyFullName).PD?.ComponentType == property.DeclaringType)
-            {
-                var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
-                fc = rfc.First(f => f.DeclaringMember == propertyFullName) as ChoFileRecordFieldConfiguration;
-                if (CanIncludeConverter(pd))
+                else if (rfc.Any(f => f.Name == propertyName) && rfc.First(f => f.Name == propertyName).CastTo<IChoJSONRecordFieldConfiguration>()?.PD?.ComponentType == property.DeclaringType)
                 {
-                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
-                    {
-                        Configuration = _configuration as ChoFileRecordConfiguration,
-                        Reader = Reader,
-                        CallbackRecordFieldRead = CallbackRecordFieldRead,
-                        Writer = Writer,
-                        CallbackRecordFieldWrite = CallbackRecordFieldWrite
-                    };
-                    ExtractJsonPathIfAny(property, pd);
-                }
-            }
-            else if (rfc.Any(f => f.Name == propertyName) && rfc.First(f => f.Name == propertyName).PD?.ComponentType == property.DeclaringType)
-            {
-                var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
-                fc = rfc.First(f => f.Name == propertyName) as ChoFileRecordFieldConfiguration;
-                if (CanIncludeConverter(pd))
-                {
-                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
-                    {
-                        Configuration = _configuration as ChoFileRecordConfiguration,
-                        Reader = Reader,
-                        CallbackRecordFieldRead = CallbackRecordFieldRead,
-                        Writer = Writer,
-                        CallbackRecordFieldWrite = CallbackRecordFieldWrite
-                    };
-                    ExtractJsonPathIfAny(property, pd);
-                }
-            }
-            else
-            {
-                var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
-                property.PropertyName = pd.DisplayName;
-                if (pd != null)
-                {
-                    if (pd.Attributes.OfType<DefaultValueAttribute>().Any())
-                        property.DefaultValue = pd.Attributes.OfType<DefaultValueAttribute>().First().Value;
-                    if (pd.Attributes.OfType<ChoFileRecordFieldAttribute>().Any())
-                    {
-                        var jp = pd.Attributes.OfType<ChoFileRecordFieldAttribute>().First();
-
-                        property.Order = jp.Order;
-                        if (!jp.FieldName.IsNullOrWhiteSpace())
-                            property.PropertyName = jp.FieldName;
-                    }
-                    else if (pd.Attributes.OfType<DisplayAttribute>().Any())
-                    {
-                        var jp = pd.Attributes.OfType<DisplayAttribute>().First();
-
-                        property.Order = jp.Order;
-                        if (!jp.ShortName.IsNullOrWhiteSpace())
-                            property.PropertyName = jp.ShortName.Trim();
-                        else if (!jp.Name.IsNullOrWhiteSpace())
-                            property.PropertyName = jp.Name.Trim();
-                    }
-                    else if (pd.Attributes.OfType<ColumnAttribute>().Any())
-                    {
-                        var jp = pd.Attributes.OfType<ColumnAttribute>().First();
-
-                        property.Order = jp.Order;
-                        if (!jp.Name.IsNullOrWhiteSpace())
-                            property.PropertyName = jp.Name.Trim();
-                    }
-
-                    if (pd.Attributes.OfType<JsonPropertyAttribute>().Any())
-                    {
-                        var jp = pd.Attributes.OfType<JsonPropertyAttribute>().First();
-                        property.PropertyName = jp.PropertyName;
-                        property.Order = jp.Order;
-                        property.Required = jp.Required;
-                        property.ReferenceLoopHandling = jp.ItemReferenceLoopHandling;
-                        property.IsReference = jp.IsReference;
-                        property.TypeNameHandling = jp.TypeNameHandling;
-                        property.ObjectCreationHandling = jp.ObjectCreationHandling;
-                        property.ReferenceLoopHandling = jp.ReferenceLoopHandling;
-                        property.DefaultValueHandling = jp.DefaultValueHandling;
-                        property.NullValueHandling = jp.NullValueHandling;
-                        property.ItemTypeNameHandling = jp.ItemTypeNameHandling;
-                        property.ItemIsReference = jp.ItemIsReference;
-                    }
-
-                    ExtractJsonPathIfAny(property, pd);
-
+                    var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
+                    fc = rfc.First(f => f.Name == propertyName) as ChoFileRecordFieldConfiguration;
                     if (CanIncludeConverter(pd))
                     {
-                        property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(null, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
+                        property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
                         {
                             Configuration = _configuration as ChoFileRecordConfiguration,
                             Reader = Reader,
@@ -246,10 +183,77 @@ namespace ChoETL
                             Writer = Writer,
                             CallbackRecordFieldWrite = CallbackRecordFieldWrite
                         };
+                        ExtractJsonPathIfAny(property, pd);
+                    }
+                }
+                else
+                {
+                    var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
+                    property.PropertyName = pd.DisplayName;
+                    if (pd != null)
+                    {
+                        if (pd.Attributes.OfType<DefaultValueAttribute>().Any())
+                            property.DefaultValue = pd.Attributes.OfType<DefaultValueAttribute>().First().Value;
+                        if (pd.Attributes.OfType<ChoFileRecordFieldAttribute>().Any())
+                        {
+                            var jp = pd.Attributes.OfType<ChoFileRecordFieldAttribute>().First();
+
+                            property.Order = jp.Order;
+                            if (!jp.FieldName.IsNullOrWhiteSpace())
+                                property.PropertyName = jp.FieldName;
+                        }
+                        else if (pd.Attributes.OfType<DisplayAttribute>().Any())
+                        {
+                            var jp = pd.Attributes.OfType<DisplayAttribute>().First();
+
+                            property.Order = jp.Order;
+                            if (!jp.ShortName.IsNullOrWhiteSpace())
+                                property.PropertyName = jp.ShortName.Trim();
+                            else if (!jp.Name.IsNullOrWhiteSpace())
+                                property.PropertyName = jp.Name.Trim();
+                        }
+                        else if (pd.Attributes.OfType<ColumnAttribute>().Any())
+                        {
+                            var jp = pd.Attributes.OfType<ColumnAttribute>().First();
+
+                            property.Order = jp.Order;
+                            if (!jp.Name.IsNullOrWhiteSpace())
+                                property.PropertyName = jp.Name.Trim();
+                        }
+
+                        if (pd.Attributes.OfType<JsonPropertyAttribute>().Any())
+                        {
+                            var jp = pd.Attributes.OfType<JsonPropertyAttribute>().First();
+                            property.PropertyName = jp.PropertyName;
+                            property.Order = jp.Order;
+                            property.Required = jp.Required;
+                            property.ReferenceLoopHandling = jp.ItemReferenceLoopHandling;
+                            property.IsReference = jp.IsReference;
+                            property.TypeNameHandling = jp.TypeNameHandling;
+                            property.ObjectCreationHandling = jp.ObjectCreationHandling;
+                            property.ReferenceLoopHandling = jp.ReferenceLoopHandling;
+                            property.DefaultValueHandling = jp.DefaultValueHandling;
+                            property.NullValueHandling = jp.NullValueHandling;
+                            property.ItemTypeNameHandling = jp.ItemTypeNameHandling;
+                            property.ItemIsReference = jp.ItemIsReference;
+                        }
+
+                        ExtractJsonPathIfAny(property, pd);
+
+                        if (CanIncludeConverter(pd))
+                        {
+                            property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(null, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
+                            {
+                                Configuration = _configuration as ChoFileRecordConfiguration,
+                                Reader = Reader,
+                                CallbackRecordFieldRead = CallbackRecordFieldRead,
+                                Writer = Writer,
+                                CallbackRecordFieldWrite = CallbackRecordFieldWrite
+                            };
+                        }
                     }
                 }
             }
-
             if (_configuration.NullValueHandling == ChoNullValueHandling.Ignore)
                 property.NullValueHandling = NullValueHandling.Ignore;
             else
@@ -363,21 +367,24 @@ namespace ChoETL
                 }
             }
 
-            if (_configuration != null && _configuration.ContainsRecordConfigForType(type))
+            if (_configuration is IChoJSONRecordConfiguration config)
             {
-                var dict = _configuration.GetRecordConfigDictionaryForType(type);
-                if (dict != null && dict.ContainsKey(propertyName))
+                if (config != null && config.ContainsRecordConfigForType(type))
                 {
-                    newJsonPropertyName = ((ChoFileRecordFieldConfiguration)dict[propertyName]).FieldName;
-                    return propertyName != newJsonPropertyName;
+                    var dict = config.GetRecordConfigDictionaryForType(type);
+                    if (dict != null && dict.ContainsKey(propertyName))
+                    {
+                        newJsonPropertyName = ((ChoFileRecordFieldConfiguration)dict[propertyName]).FieldName;
+                        return propertyName != newJsonPropertyName;
+                    }
                 }
             }
-
             var rfc = _configuration.RecordFieldConfigurations.ToArray();
 
-            if (rfc.Any(f => f.DeclaringMember == propertyFullName))
+            if (rfc.OfType<IChoJSONRecordFieldConfiguration>().Any(f => f.DeclaringMember == propertyFullName))
             {
-                newJsonPropertyName = rfc.OfType<ChoFileRecordFieldConfiguration>().First(f => f.DeclaringMember == propertyFullName).FieldName;
+                var fc = rfc.OfType<IChoJSONRecordFieldConfiguration>().First(f => f.DeclaringMember == propertyFullName) as ChoFileRecordFieldConfiguration;
+                newJsonPropertyName = fc?.FieldName;
                 return propertyName != newJsonPropertyName;
             }
 
@@ -469,13 +476,13 @@ namespace ChoETL
         {
             if (Configuration != null)
             {
-                var lrt = Configuration.GetRecordConfigDictionaryForType(rt);
                 if (Configuration is IChoJSONRecordConfiguration config)
                 {
+                    var lrt = config.GetRecordConfigDictionaryForType(rt);
                     if (lrt == null)
                         config.MapRecordFieldsForType(rt);
 
-                    lrt = Configuration.GetRecordConfigDictionaryForType(rt);
+                    lrt = config.GetRecordConfigDictionaryForType(rt);
                     if (lrt != null)
                     {
                         if (lrt.ContainsKey(fn))
@@ -493,10 +500,11 @@ namespace ChoETL
         private object[] GetTypeConverters(Type rt, string fn)
         {
             var fc = _fc == null ? GetFieldConfiguration(rt, fn) : _fc;
-            if (fc == null)
-                return null;
 
-            var conv = fc.GetConverters();
+            object[] conv = null;
+            if (fc is IChoJSONRecordFieldConfiguration fc1)
+                conv = fc1.GetConverters();
+
             if (fc == null)
             {
                 conv = ChoTypeDescriptor.GetTypeConverters(_mi);
@@ -812,6 +820,7 @@ namespace ChoETL
                 if (_fc != null && _fc.SourceType != null)
                     _objType = _fc.SourceType;
 
+                IChoJSONRecordFieldConfiguration jsonFC = _fc as IChoJSONRecordFieldConfiguration;
                 if (RaiseBeforeRecordFieldWrite(rec, crs.Index, name, ref value))
                 {
                     if (_fc != null)
@@ -821,7 +830,7 @@ namespace ChoETL
                         else
                         {
                             if (value != null && _objType != null)
-                                value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+                                value = ChoConvert.ConvertTo(value, _objType, null, jsonFC?.PropConverters, jsonFC?.PropConverterParams, _culture);
                         }
 
                         if (_fc.CustomSerializer == null)
@@ -1317,12 +1326,35 @@ namespace ChoETL
         Formatting Formatting { get; set; }
         JsonSerializerSettings JsonSerializerSettings { get; set; }
         Func<object, JToken> ObjectToJTokenConverter { get; set; }
+        bool ContainsRecordConfigForType(Type rt);
+        Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt);
     }
 
     public interface IChoJSONRecordFieldConfiguration
     {
         IContractResolver ContractResolver { get; set; }
         string JSONPath { get; set; }
+        PropertyDescriptor PD
+        {
+            get;
+            set;
+        }
+        string DeclaringMember
+        {
+            get;
+            set;
+        }
+        object[] GetConverters();
+        object[] PropConverters
+        {
+            get;
+            set;
+        }
+        object[] PropConverterParams
+        {
+            get;
+            set;
+        }
     }
 
     public interface IChoJsonContractResolver

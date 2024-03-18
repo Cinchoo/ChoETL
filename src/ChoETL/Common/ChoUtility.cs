@@ -1453,7 +1453,7 @@ namespace ChoETL
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
             ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, string key = null,
             bool? turnOffPluralization = null, Func<string, object, bool?> xmlArrayQualifierOverride = null,
-            bool useOriginalNodeName = false
+            bool useOriginalNodeName = false, string valueNamePrefix = null
             )
         {
             if (target is ExpandoObject)
@@ -1481,7 +1481,7 @@ namespace ChoETL
             }
             else if (target is IDictionary)
             {
-                var dObj = new ChoDynamicObject(((IDictionary)target).ToDictionary());
+                var dObj = new ChoDynamicObject(((IDictionary)target).ToDictionary(valueNamePrefix: valueNamePrefix));
                 target = dObj;
                 dObj.DynamicObjectName = key;
             }

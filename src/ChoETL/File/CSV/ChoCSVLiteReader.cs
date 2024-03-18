@@ -140,7 +140,9 @@ namespace ChoETL
             return ParseLines(ReadLines(reader, EOLDelimiter, quoteChar, mayContainEOLInData), delimiter, quoteChar);
         }
 
+#if !DEBUG
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public IEnumerable<string[]> ReadLines(IEnumerable<string> lines, char delimiter = ',', char quoteChar = '\"')
         {
             if (lines == null)

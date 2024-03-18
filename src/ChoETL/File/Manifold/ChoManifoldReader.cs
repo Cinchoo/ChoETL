@@ -48,7 +48,7 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -75,7 +75,7 @@ namespace ChoETL
                 _textReader = new Lazy<TextReader>(() =>
                 {
                     if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
                     else
                         return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
@@ -89,7 +89,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -120,7 +120,7 @@ namespace ChoETL
                 _textReader = new Lazy<TextReader>(() =>
                 {
                     if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
                     else
                         return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
@@ -180,7 +180,7 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoManifoldRecordConfiguration();
             else
-                Configuration.RecordType = typeof(object);
+                Configuration.RecordTypeInternal = typeof(object);
 
             _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;

@@ -590,6 +590,8 @@ namespace ChoXmlReaderTest
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
             //XmlArray2JSON();
 
+            var x1 = Activator.CreateInstance(typeof(DateTime));
+
             var configuration = new ChoXmlRecordConfiguration { ErrorMode = ChoErrorMode.ThrowAndStop };
             //throw new Exception("Debugger catches this");
             var x = new ChoXmlReader<MyObject>("XmlFile5.xml", configuration);
@@ -612,6 +614,187 @@ namespace ChoXmlReaderTest
             //LoadXmlUsingConfigAndPOCO();
             //DesrializeUsingProxy();
         }
+
+        [Test]
+        public void SOAPMessageToDataTableTest()
+        {
+            string soapXml = @"<soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
+<soap:Header>
+    <correlationId xmlns:ns4=""http://www.abc.de/abc_v4""
+                   xmlns:ns3=""http://www.abc.de/abc_v3""
+                   xmlns:ns2=""http://www.abc.de/abc_v2""
+                   xmlns=""http://www.abc.de/bone_v1"">100</correlationId>
+</soap:Header>
+<soap:Body>
+    <searchResponse xmlns=""http://www.abc.de/abc_v1""
+                    xmlns:ns2=""http://www.abc.de/abc_v2""
+                    xmlns:ns3=""http://www.abc.de/abc_v3""
+                    xmlns:ns4=""http://www.abc.de/abc_v4"">
+        <candidate>
+            <identifier>
+                <type>VAT</type>
+                <value>DE123437641</value>
+            </identifier>
+            <identifier>
+                <type>ONR</type>
+                <value>19276000</value>
+            </identifier>
+            <identifier>
+                <type>TAX_ID</type>
+                <value>5333044444444</value>
+            </identifier>
+            <registry>
+                <type>HRB</type>
+                <number>1268</number>
+            </registry>
+            <hitType>COMPANY</hitType>
+            <name>Möbelhaus Peter Neumann - Negativ GmbH - Basisdaten Nachtragstest</name>
+            <location>
+                <street>Friedlandstr.</street>
+                <house>2</house>
+                <city>Aachen</city>
+                <zip>52064</zip>
+                <country>
+                    <code>DEU</code>
+                    <text>Deutschland</text>
+                </country>
+            </location>
+            <unitType>HEADOFFICE</unitType>
+            <status>active</status>
+            <similarity>100</similarity>
+        </candidate>
+        <candidate>
+            <identifier>
+                <type>VAT</type>
+                <value>DE666814999</value>
+            </identifier>
+            <identifier>
+                <type>ONR</type>
+                <value>26120001</value>
+            </identifier>
+            <identifier>
+                <type>TAX_ID</type>
+                <value>5333044444444</value>
+            </identifier>
+            <registry>
+                <type>HRB</type>
+                <number>1234</number>
+                <city>Hamburg</city>
+            </registry>
+            <hitType>COMPANY</hitType>
+            <name>Möbelhaus Peter Neumann GmbH</name>
+            <location>
+                <street>Seewartenstr.</street>
+                <house>9</house>
+                <city>Hamburg</city>
+                <zip>20459</zip>
+                <country>
+                    <code>DEU</code>
+                    <text>Deutschland</text>
+                </country>
+            </location>
+            <unitType>HEADOFFICE</unitType>
+            <status>active</status>
+            <similarity>100</similarity>
+        </candidate>
+    </searchResponse>
+</soap:Body>
+</soap:Envelope>";
+
+            string expected = @"identifiers_0_identifier_type,identifiers_0_identifier_value,identifiers_1_identifier_type,identifiers_1_identifier_value,identifiers_2_identifier_type,identifiers_2_identifier_value,registry_type,registry_number,hitType,name,location_street,location_house,location_city,location_zip,location_country_code,location_country_text,unitType,status,similarity
+VAT,DE123437641,ONR,19276000,TAX_ID,5333044444444,HRB,1268,COMPANY,Möbelhaus Peter Neumann - Negativ GmbH - Basisdaten Nachtragstest,Friedlandstr.,2,Aachen,52064,DEU,Deutschland,HEADOFFICE,active,100
+VAT,DE666814999,ONR,26120001,TAX_ID,5333044444444,HRB,1234,COMPANY,Möbelhaus Peter Neumann GmbH,Seewartenstr.,9,Hamburg,20459,DEU,Deutschland,HEADOFFICE,active,100";
+
+            using (var r = ChoXmlReader.LoadText(soapXml)
+                .WithXPath("//candidate")
+                .WithXmlNamespace("", "http://www.abc.de/abc_v1")
+                .Configure(c => c.IgnoreRootDictionaryFieldPrefix = true)
+                )
+            {
+                var actual = r.AsDataTable().Dump();
+                Assert.AreEqual(expected, actual);
+            }
+
+        }
+        [Test]
+        public static void Issue100()
+        {
+            string xml = @"<Root xmlns:c=""Ala ma kota"">
+
+<!-- ... -->
+
+        <c:Histogram>
+            <Data Width=""10"" Height=""20"" />
+        </c:Histogram>
+
+<!-- ... -->
+
+</Root>";
+
+            string expected = @"[
+  {
+    ""Data"": {
+      ""Width"": 10,
+      ""Height"": 20
+    }
+  }
+]";
+            using (var r = ChoXmlReader<Histogram>.LoadText(xml)
+                .WithXPath("c:Histogram")
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+
+        }
+
+        [Test]
+        public static void Issue100_1()
+        {
+            string xml = @"<Root xmlns:c=""Ala ma kota"">
+
+<!-- ... -->
+
+        <c:Histogram>
+            <c:Data Width=""10"" Height=""20"" />
+        </c:Histogram>
+
+<!-- ... -->
+
+</Root>";
+
+            string expected = @"[
+  {
+    ""Data"": {
+      ""Width"": 10,
+      ""Height"": 20
+    }
+  }
+]";
+            using (var r = ChoXmlReader<Histogram>.LoadText(xml)
+                .WithXPath("c:Histogram")
+                )
+            {
+                var actual = JsonConvert.SerializeObject(r, Newtonsoft.Json.Formatting.Indented);
+                Assert.AreEqual(expected, actual);
+            }
+
+        }
+
+        public class Histogram
+        {
+            public Data Data { get; set; }
+        }
+
+        public class Data
+        {
+            [XmlAttribute]
+            public int Width { get; set; }
+            [XmlAttribute]
+            public int Height { get; set; }
+        }
+
         [Test]
         public static void XmlArray2JSON()
         {
@@ -1799,7 +1982,7 @@ namespace ChoXmlReaderTest
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .WithMaxScanRows(1)
                     //.IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
                     )
@@ -1858,7 +2041,7 @@ namespace ChoXmlReaderTest
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .WithMaxScanRows(1)
                     .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
                     )
@@ -4545,7 +4728,7 @@ Corporate Office,Egypt,988915,01/03/1986,hesh.a.metwally@gmail.com,2020-07-01T11
 
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
-                    .Configure(c => c.NestedColumnSeparator = '-')
+                    .Configure(c => c.NestedKeySeparator = '-')
                     )
                     w.Write(recs);
             }
@@ -4572,7 +4755,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
                 using (var w = new ChoCSVWriter(msg)
                     .WithFirstLineHeader()
                     .Configure(c => c.UseNestedKeyFormat = true)
-                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.NestedKeySeparator = '/')
                     .Configure(c => c.ThrowAndStopOnMissingField = false)
                     )
                     w.Write(recs);
@@ -8306,6 +8489,9 @@ A_TempFZ1_Set,A_TempHZ2_Set,A_TempHZ3_Set
                 using (var writer = new ChoCSVWriter(FileNameXmlToCSVSample6ActualCSV).WithFirstLineHeader())
                     writer.Write(parser);
             }
+
+            var actual = File.ReadAllText(FileNameXmlToCSVSample6ActualCSV);
+            var expected = File.ReadAllText(FileNameXmlToCSVSample6ExpectedCSV);
 
             FileAssert.AreEqual(FileNameXmlToCSVSample6ExpectedCSV, FileNameXmlToCSVSample6ActualCSV);
         }

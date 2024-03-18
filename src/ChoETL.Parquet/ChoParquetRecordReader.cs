@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Parquet;
 using Parquet.Data;
+using Parquet.Schema;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -51,7 +52,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             if (source == null)
                 yield break;
 
@@ -92,8 +93,12 @@ namespace ChoETL
                 List<DataColumn[]> rowGroup = new List<DataColumn[]>();
                 using (ParquetRowGroupReader groupReader = sr.OpenRowGroupReader(i))
                 {
-                    var dc = dataFields.Select(groupReader.ReadColumn).ToArray();
-                    rowGroup.Add(dc);
+                    List<DataColumn> columns = new List<DataColumn>();
+                    //var dc = dataFields.Select(groupReader.ReadColumnAsync).ToArray();
+                    foreach (var df in dataFields)
+                        columns.Add(ChoAsyncHelper.RunSync<DataColumn>(() => groupReader.ReadColumnAsync(df)));
+
+                    rowGroup.Add(columns.ToArray());
                 }
                 if (!RaiseAfterRowGroupLoaded(i, rowGroup))
                     yield return rowGroup;
@@ -115,7 +120,7 @@ namespace ChoETL
                     {
                         try
                         {
-                            return groupReader.ReadColumn(f);
+                            return ChoAsyncHelper.RunSync<DataColumn>(() => groupReader.ReadColumnAsync(f));
                         }
                         catch (Exception ex)
                         {
@@ -223,11 +228,11 @@ namespace ChoETL
 
                     if (!_configCheckDone)
                     {
-                        if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
+                        if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMappedInternal)
                         {
                         }
                         else
-                            Configuration.Validate(pair);
+                            Configuration.ValidateInternal(pair);
                         var dict = Configuration.ParquetRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                         //if (Configuration.MaxScanRows == 0)
                         RaiseMembersDiscovered(dict);
@@ -239,7 +244,7 @@ namespace ChoETL
                     if (TraceSwitch.TraceVerbose)
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading node [{0}]...".FormatString(pair.Item1));
 
-                    rec = Configuration.IsDynamicObject ? new ChoDynamicObject()
+                    rec = Configuration.IsDynamicObjectInternal ? new ChoDynamicObject()
                     {
                         ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                     } : ChoActivator.CreateInstance(RecordType);
@@ -250,7 +255,7 @@ namespace ChoETL
                     if (rec == null)
                         continue;
 
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                         if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
                         {
@@ -299,7 +304,7 @@ namespace ChoETL
                 }
             }
 
-            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
             {
                 if (buffer.Count > 0)
                 {
@@ -321,7 +326,7 @@ namespace ChoETL
             bool ignoreFieldValue = pair.Item2.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
             if (ignoreFieldValue)
                 return false;
-            else if (pair.Item2 == null && !Configuration.IsDynamicObject)
+            else if (pair.Item2 == null && !Configuration.IsDynamicObjectInternal)
             {
                 rec = RecordType.CreateInstanceAndDefaultToMembers(Configuration.RecordFieldConfigurationsDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value as ChoRecordFieldConfiguration));
                 return true;
@@ -341,10 +346,10 @@ namespace ChoETL
                         throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                 }
 
-                if (!Configuration.RecordTypeMapped)
+                if (!Configuration.RecordTypeMappedInternal)
                 {
                     Configuration.MapRecordFields(recType);
-                    Configuration.Validate(null);
+                    Configuration.ValidateInternal(null);
                 }
 
                 rec = recType.IsDynamicType() ? new ChoDynamicObject()
@@ -353,8 +358,8 @@ namespace ChoETL
                 } : ChoActivator.CreateInstance(recType);
                 RecordType = recType;
             }
-            else if (Configuration.IsDynamicObject)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject()
+            else if (Configuration.IsDynamicObjectInternal)
+                rec = Configuration.IsDynamicObjectInternal ? new ChoDynamicObject()
                 {
                     ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                 } : ChoActivator.CreateInstance(RecordType);
@@ -494,11 +499,11 @@ namespace ChoETL
             lineNo = pair.Item1;
             var node = pair.Item2;
 
-            if (Configuration.LiteParsing && Configuration.IsDynamicObject && rec is ChoDynamicObject)
-            {
-                ((ChoDynamicObject)rec).SetDictionary(node as IDictionary<string, object>);
-                return true;
-            }
+            //if (Configuration.LiteParsing && Configuration.IsDynamicObjectInternal && rec is ChoDynamicObject)
+            //{
+            //    ((ChoDynamicObject)rec).SetDictionary(node as IDictionary<string, object>);
+            //    return true;
+            //}
 
             fieldValue = null;
             fieldConfig = null;
@@ -507,7 +512,7 @@ namespace ChoETL
             object rootRec = rec;
             foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                 {
                     if (Configuration.IgnoredFields.Contains(kvp.Key))
                         continue;
@@ -515,22 +520,22 @@ namespace ChoETL
 
                 fieldValue = null;
                 fieldConfig = kvp.Value;
-                if (Configuration.PIDict != null)
+                if (Configuration.PIDictInternal != null)
                 {
                     // if FieldName is set
                     if (!string.IsNullOrEmpty(fieldConfig.FieldName))
                     {
                         // match using FieldName
-                        Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
+                        Configuration.PIDictInternal.TryGetValue(fieldConfig.FieldName, out pi);
                     }
                     if (pi == null)
                     {
                         // otherwise match usign the property name
-                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                        Configuration.PIDictInternal.TryGetValue(kvp.Key, out pi);
                     }
                 }
 
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMemberInternal, rootRec);
 
                 if (!node.ContainsKey(kvp.Value.FieldName))
                 {
@@ -544,7 +549,7 @@ namespace ChoETL
                     continue;
                 try
                 {
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                     }
                     else
@@ -557,7 +562,7 @@ namespace ChoETL
 
                     object v1 = node;
 
-                    if (Configuration.IsDynamicObject && fieldConfig.FieldType != null && IsInNeedOfCustomFormatter(fieldConfig.FieldType))
+                    if (Configuration.IsDynamicObjectInternal && fieldConfig.FieldType != null && IsInNeedOfCustomFormatter(fieldConfig.FieldType))
                     {
                         fieldValue = CustomDeserialize(fieldValue.ToNString(), fieldConfig.FieldType);
                     }
@@ -593,7 +598,7 @@ namespace ChoETL
                             continue;
                     }
 
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
@@ -615,9 +620,9 @@ namespace ChoETL
 
                         if (pi != null)
                         {
-                            if (Configuration.LiteParsing)
+                            if (false) //Configuration.LiteParsing)
                             {
-                                ChoType.SetPropertyValue(rec, fieldConfig.PI,
+                                ChoType.SetPropertyValue(rec, fieldConfig.PIInternal,
                                     fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) ? fieldValue : Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
                             }
                             else
@@ -656,7 +661,7 @@ namespace ChoETL
 
                     try
                     {
-                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObjectInternal)
                         {
                             var dict = rec as IDictionary<string, Object>;
 
@@ -705,7 +710,7 @@ namespace ChoETL
                                 {
                                     try
                                     {
-                                        if (Configuration.IsDynamicObject)
+                                        if (Configuration.IsDynamicObjectInternal)
                                         {
                                             var dict = rec as IDictionary<string, Object>;
 
@@ -735,11 +740,11 @@ namespace ChoETL
             return true;
         }
 
-        private string CleanFieldValue(ChoFileRecordFieldConfiguration config, Type fieldType, string fieldValue)
+        private string CleanFieldValue(ChoParquetRecordFieldConfiguration config, Type fieldType, string fieldValue)
         {
             if (fieldValue == null) return fieldValue;
 
-            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType, Configuration.FieldValueTrimOption);
+            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForReadInternal(fieldType, Configuration.FieldValueTrimOption);
 
             switch (fieldValueTrimOption)
             {

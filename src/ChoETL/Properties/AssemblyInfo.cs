@@ -34,8 +34,6 @@ using System.Security;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.1.62")] 
-[assembly: AssemblyFileVersion("1.2.1.62")]
+[assembly: AssemblyVersion("1.2.1.64")] 
+[assembly: AssemblyFileVersion("1.2.1.64")]
 //[assembly: ChoAssemblyBetaVersion("beta1")]
-
-//oy2kf5volvyhhed6shqqxj7jd4365eeufpksxfui7xl2hi

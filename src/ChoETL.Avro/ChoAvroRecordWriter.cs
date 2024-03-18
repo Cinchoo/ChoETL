@@ -197,7 +197,7 @@ namespace ChoETL
 
         public IEnumerable<T> WriteTo<T>(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
-            Configuration.ResetStates();
+            Configuration.ResetStatesInternal();
             Configuration.Init();
 
             if (records == null) yield break;

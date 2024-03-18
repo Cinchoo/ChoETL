@@ -53,7 +53,7 @@ namespace ChoETL
 
             Init();
 
-            _streamReader = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _streamReader = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -81,7 +81,7 @@ namespace ChoETL
                 _streamReader = new Lazy<StreamReader>(() =>
                 {
                     if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
                     else
                         return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
@@ -95,7 +95,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _streamReader = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _streamReader = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncodingInternal(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -134,7 +134,7 @@ namespace ChoETL
             if (inStream is MemoryStream)
                 _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream));
             else
-                _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+                _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -191,8 +191,8 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoParquetRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
-            Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
+                Configuration.RecordTypeInternal = recordType;
+            Configuration.IsDynamicObjectInternal = Configuration.RecordTypeInternal.IsDynamicType();
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
             {
@@ -203,7 +203,7 @@ namespace ChoETL
 
         private ParquetReader Create(StreamReader sr)
         {
-            var r = new ParquetReader(sr.BaseStream, Configuration.ParquetOptions);
+            var r = ChoAsyncHelper.RunSync<ParquetReader>(() => ParquetReader.CreateAsync(sr.BaseStream, Configuration.ParquetOptions, leaveStreamOpen: Configuration.LeaveStreamOpen));
             if (Configuration != null)
             {
                 //if (Configuration.Culture != null)
@@ -242,7 +242,8 @@ namespace ChoETL
                 rr.InterceptRowGroup = true;
 
             var e = rr.AsEnumerable(_parquetReader).GetEnumerator();
-            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() =>
+            {
                 ++_recordNumber;
                 return e.MoveNext();
             }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
@@ -258,18 +259,27 @@ namespace ChoETL
             return AsDataReader(null);
         }
 
-        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
+        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered, Action<IDictionary<string, object>> selector = null)
         {
             CheckDisposed();
             this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             return this.Select(s =>
             {
+                IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, 
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator,
                         Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
-                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary() as object;
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
                 else
-                    return s;
+                {
+                    dict = s.ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix).Flatten(Configuration.NestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : Configuration.NestedKeySeparator,
+                        Configuration.ArrayIndexSeparator, Configuration.ArrayEndIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix, Configuration.ArrayValueNamePrefix,
+                        Configuration.IgnoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: Configuration.ArrayValueNamePrefix);
+                }
+
+                selector?.Invoke(dict);
+
+                return dict as object;
             }).AsDataReader();
         }
 
@@ -425,12 +435,12 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetReader<T> NestedColumnSeparator(char value)
+        public ChoParquetReader<T> NestedKeySeparator(char value)
         {
             if (value == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid nested column separator passed.");
 
-            Configuration.NestedColumnSeparator = value;
+            Configuration.NestedKeySeparator = value;
             return this;
         }
 
@@ -465,7 +475,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             Configuration.IgnoreField(field);
             return this;
@@ -479,7 +489,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.ParquetRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -516,7 +526,7 @@ namespace ChoETL
                     if (!_clearFields)
                     {
                         ClearFields();
-                        Configuration.MapRecordFields(Configuration.RecordType);
+                        Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                         //Configuration.ColumnOrderStrict = true;
                     }
 
@@ -530,8 +540,8 @@ namespace ChoETL
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
                     var nfc = new ChoParquetRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn };
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : null;
                     if (pd != null)
                     {
                         if (nfc.FieldType == null)
@@ -566,7 +576,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -594,7 +604,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -605,7 +615,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithField<TField>(Expression<Func<T, TField>> field,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -639,7 +649,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -653,7 +663,7 @@ namespace ChoETL
         public ChoParquetReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
@@ -666,7 +676,7 @@ namespace ChoETL
         private ChoParquetReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null, 
+            Func<dynamic, object> valueSelector = null,
             Func<object, object> customSerializer = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
@@ -678,7 +688,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName,
@@ -694,7 +704,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
 
             Configuration.IndexMap(field, minumum, maximum, null);
@@ -706,34 +716,49 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
 
             Configuration.DictionaryMap(field, keys, null);
             return this;
         }
 
-        public ChoParquetReader<T> IgnoreEmptyLine(bool flag = true)
-        {
-            Configuration.IgnoreEmptyLine = flag;
-            return this;
-        }
+        //public ChoParquetReader<T> IgnoreEmptyLine(bool flag = true)
+        //{
+        //    Configuration.IgnoreEmptyLine = flag;
+        //    return this;
+        //}
 
-        public ChoParquetReader<T> ColumnCountStrict(bool flag = true)
-        {
-            Configuration.ColumnCountStrict = flag;
-            return this;
-        }
+        //public ChoParquetReader<T> ColumnCountStrict(bool flag = true)
+        //{
+        //    Configuration.ColumnCountStrict = flag;
+        //    return this;
+        //}
 
-        public ChoParquetReader<T> ColumnOrderStrict(bool flag = true)
-        {
-            Configuration.ColumnOrderStrict = flag;
-            return this;
-        }
+        //public ChoParquetReader<T> ColumnOrderStrict(bool flag = true)
+        //{
+        //    Configuration.ColumnOrderStrict = flag;
+        //    return this;
+        //}
 
         public ChoParquetReader<T> ThrowAndStopOnMissingField(bool flag = true)
         {
             Configuration.ThrowAndStopOnMissingField = flag;
+            return this;
+        }
+
+        public ChoParquetReader<T> TreatDateTimeAsDateTimeOffset(bool flag = true, TimeSpan? offset = null)
+        {
+            Configuration.TreatDateTimeAsDateTimeOffset = flag;
+            Configuration.DateTimeOffset = offset;
+            return this;
+        }
+
+        public ChoParquetReader<T> TreatDateTimeAsString(bool flag = true, string format = null)
+        {
+            Configuration.TreatDateTimeAsString = flag;
+            if (format != null)
+                Configuration.TypeConverterFormatSpec.DateTimeFormat = format;
             return this;
         }
 
@@ -760,7 +785,7 @@ namespace ChoETL
 
         public ChoParquetReader<T> MapRecordFields(params Type[] recordTypes)
         {
-            Configuration.RecordTypeMapped = true;
+            Configuration.RecordTypeMappedInternal = true;
             if (recordTypes != null)
             {
                 foreach (var t in recordTypes)

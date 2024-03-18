@@ -285,6 +285,72 @@ namespace ChoETL
                 return XmlRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
+        public static new int MaxLineSize
+        {
+            get { throw new NotSupportedException(); }
+        }
+        //public static new string EOLDelimiter
+        //{
+        //    get { throw new NotSupportedException(); }
+        //}
+        public static new string MayContainEOLInData
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new bool IgnoreEmptyLine
+        {
+            get { throw new NotSupportedException(); }
+        }
+        //public static new bool ColumnCountStrict
+        //{
+        //    get { throw new NotSupportedException(); }
+        //}
+        //public static new bool ColumnOrderStrict
+        //{
+        //    get { throw new NotSupportedException(); }
+        //}
+        public static new bool EscapeQuoteAndDelimiter
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new string Comment
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new string[] Comments
+        {
+            get { throw new NotSupportedException(); }
+        }
+        public static new bool LiteParsing
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteAllFields
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteChar
+        {
+            get;
+            set;
+        }
+        public static new bool? QuoteEscapeChar
+        {
+            get;
+            set;
+        }
+        public static new bool QuoteLeadingAndTrailingSpaces
+        {
+            get;
+            set;
+        }
+        public static new bool? MayHaveQuotedFields
+        {
+            get { return QuoteAllFields; }
+            set { QuoteAllFields = value; }
+        }
 
         public ChoXmlRecordConfiguration() : this(null)
         {
@@ -344,22 +410,22 @@ namespace ChoETL
             return UseProxy != null ? UseProxy.Value : false;
         }
 
-        public override bool ContainsRecordConfigForType(Type rt)
+        protected override bool ContainsRecordConfigForType(Type rt)
         {
             return XmlRecordFieldConfigurationsForType.ContainsKey(rt);
         }
 
-        public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        protected override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
         {
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return XmlRecordFieldConfigurationsForType[rt].Values.ToArray();
             else
                 return null;
         }
 
-        public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        protected override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
         {
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return XmlRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
@@ -535,8 +601,8 @@ namespace ChoETL
                         {
                             var obj = new ChoXmlRecordFieldConfiguration(pd.Name, pd.Attributes.OfBaseType<ChoXmlNodeRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (recordFieldConfigurations != null)
                             {
                                 if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
@@ -594,8 +660,8 @@ namespace ChoETL
                                 pd.Attributes.OfType<Attribute>().ToArray());
 
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;
@@ -692,7 +758,7 @@ namespace ChoETL
             //return nsPrefix;
         }
 
-        public override void Validate(object state)
+        protected override void Validate(object state)
         {
             base.Validate(state);
 
@@ -874,15 +940,15 @@ namespace ChoETL
             if (dupFields.Length > 0)
                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
-            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(StringComparer.InvariantCultureIgnoreCase);
-            PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
+            PIDictInternal = new Dictionary<string, System.Reflection.PropertyInfo>(StringComparer.InvariantCultureIgnoreCase);
+            PDDictInternal = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var fc in XmlRecordFieldConfigurations)
             {
-                var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
-                    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                var pd1 = fc.DeclaringMemberInternal.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
+                    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMemberInternal);
                 if (pd1 != null)
                 {
-                    fc.PropertyDescriptor = pd1;
+                    fc.PropertyDescriptorInternal = pd1;
 
                     XmlArrayItemAttribute xmlArrayItemAttr = pd1.Attributes.OfType<XmlArrayItemAttribute>().FirstOrDefault();
                     if (xmlArrayItemAttr != null)
@@ -923,13 +989,13 @@ namespace ChoETL
                     }
                 }
 
-                if (fc.PropertyDescriptor == null)
-                    fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
-                if (fc.PropertyDescriptor == null)
+                if (fc.PropertyDescriptorInternal == null)
+                    fc.PropertyDescriptorInternal = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                if (fc.PropertyDescriptorInternal == null)
                     continue;
 
-                PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.Name, fc.PropertyDescriptor);
+                PIDictInternal.Add(fc.Name, fc.PropertyDescriptorInternal.ComponentType.GetProperty(fc.PropertyDescriptorInternal.Name));
+                PDDictInternal.Add(fc.Name, fc.PropertyDescriptorInternal);
             }
 
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
@@ -1171,7 +1237,7 @@ namespace ChoETL
             if (XmlRecordFieldConfigurations.Count == 0)
                 MapRecordFields<T>();
 
-            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == field.GetFullyQualifiedMemberName()).FirstOrDefault();
             if (fc != null)
                 XmlRecordFieldConfigurations.Remove(fc);
 
@@ -1180,7 +1246,7 @@ namespace ChoETL
 
         public ChoXmlRecordConfiguration IgnoreField(string fieldName)
         {
-            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == fieldName || f.FieldName == fieldName).FirstOrDefault();
             if (fc != null)
                 XmlRecordFieldConfigurations.Remove(fc);
 
@@ -1268,7 +1334,7 @@ namespace ChoETL
             if (rt == null)
                 return;
 
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 XmlRecordFieldConfigurationsForType.Remove(rt);
         }
 
@@ -1294,7 +1360,7 @@ namespace ChoETL
             if (rt == null)
                 return null;
 
-            if (ContainsRecordConfigForType(rt))
+            if (ContainsRecordConfigForTypeInternal(rt))
                 return CreateRecordConfigurationForType(rt);
 
             List<ChoXmlRecordFieldConfiguration> recordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
@@ -1383,8 +1449,8 @@ namespace ChoETL
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : fullyQualifiedMemberName;
                 }
                 else
                 {
@@ -1393,8 +1459,8 @@ namespace ChoETL
                     else
                         pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName);
 
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                    nfc.PropertyDescriptorInternal = pd;
+                    nfc.DeclaringMemberInternal = fullyQualifiedMemberName;
                 }
                 if (pd != null)
                 {
@@ -1416,8 +1482,8 @@ namespace ChoETL
             {
                 MapRecordFieldsForType(subType);
                 var fc = new ChoXmlRecordFieldConfiguration(propertyName, attr, otherAttrs);
-                fc.PropertyDescriptor = pd;
-                fc.DeclaringMember = fqm;
+                fc.PropertyDescriptorInternal = pd;
+                fc.DeclaringMemberInternal = fqm;
                 AddFieldForType(subType, fc);
 
                 return fc;
@@ -1428,8 +1494,8 @@ namespace ChoETL
                     XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(propertyName, attr, otherAttrs));
 
                 var nfc = XmlRecordFieldConfigurations.First(fc => fc.Name == propertyName);
-                nfc.PropertyDescriptor = pd;
-                nfc.DeclaringMember = fqm;
+                nfc.PropertyDescriptorInternal = pd;
+                nfc.DeclaringMemberInternal = fqm;
 
                 return nfc;
             }

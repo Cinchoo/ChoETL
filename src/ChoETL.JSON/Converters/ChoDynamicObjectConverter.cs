@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,9 +15,11 @@ namespace ChoETL
 {
     public interface IChoDynamicObjectRecordConfiguration
     { 
+        CultureInfo Culture { get; }
         ChoIgnoreFieldValueMode? IgnoreFieldValueMode { get; set; }
         HashSet<string> IgnoredFields { get; set; }
         object[] GetConvertersForType(Type fieldType, object value);
+        object[] GetConverterParamsForType(Type fieldType, object value = null);
     }
 
     public class ChoDynamicObjectConverter : JsonConverter, IChoJSONConverter
@@ -218,13 +221,15 @@ namespace ChoETL
                         if (itemType != null)
                         {
                             object[] convs = null;
+                            object[] convParams = null;
                             var config = Context?.Configuration as IChoDynamicObjectRecordConfiguration;
                             if (config != null)
                             {
                                 convs = config.GetConvertersForType(itemType, v);
+                                convParams = config.GetConverterParamsForType(itemType, v);
                             }
 
-                            v = ChoConvert.ConvertFrom(v, typeof(object), null, convs);
+                            v = ChoConvert.ConvertFrom(v, typeof(object), null, convs, convParams, config.Culture);
                         }
 
                         if (_ignoreFields == null || !_ignoreFields.Contains(propertyName))

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,11 +35,11 @@ namespace ChoETL
             get;
             set;
         }
-        public bool TurnOffMemoryMappedFile
+        internal bool TurnOffMemoryMappedFile
         {
             get;
             set;
-        }
+        } = true;
 
         public bool LiteParsing
         {
@@ -179,14 +180,14 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
-        public char? NestedColumnSeparator
-        {
-            //get;
-            //set;
-            get { return NestedKeySeparator; }
-            set { NestedKeySeparator = value; }
-        }
+        //[DataMember]
+        //public char? NestedKeySeparator
+        //{
+        //    //get;
+        //    //set;
+        //    get { return NestedKeySeparator; }
+        //    set { NestedKeySeparator = value; }
+        //}
         [DataMember]
         public char? NestedKeySeparator
         {
@@ -269,11 +270,17 @@ namespace ChoETL
             get;
             set;
         }
-        public bool RecordTypeMapped
+        protected bool RecordTypeMapped
         {
             get;
             set;
         }
+        internal bool RecordTypeMappedInternal
+        {
+            get => RecordTypeMapped;
+            set => RecordTypeMapped = value;
+        }
+
         [DataMember]
         public ChoNullValueHandling NullValueHandling
         {
@@ -447,21 +454,29 @@ namespace ChoETL
                 KnownTypeDiscriminator = kta.Discriminator.Trim();
         }
 
-        public string GetArrayIndexSeparator()
+        protected string GetArrayIndexSeparator()
         {
             return ArrayIndexSeparator == null || ArrayIndexSeparator == ChoCharEx.NUL ?
                 (ChoETLSettings.ArrayIndexSeparator == ChoCharEx.NUL ? String.Empty : ChoETLSettings.ArrayIndexSeparator.ToNString())
                 : ArrayIndexSeparator.Value.ToNString();
         }
 
-        public char GetArrayIndexSeparatorChar()
+        protected char GetArrayIndexSeparatorChar()
         {
             return ArrayIndexSeparator == null || ArrayIndexSeparator == ChoCharEx.NUL ?
                 (ChoETLSettings.ArrayIndexSeparator == ChoCharEx.NUL ? '_' : ChoETLSettings.ArrayIndexSeparator)
                 : ArrayIndexSeparator.Value;
         }
+        internal string GetArrayIndexSeparatorInternal()
+        {
+            return GetArrayIndexSeparator();
+        }
+        internal char GetArrayIndexSeparatorCharInternal()
+        {
+            return GetArrayIndexSeparatorChar();
+        }
 
-        public override void Validate(object state)
+        protected override void Validate(object state)
         {
             base.Validate(state);
 
@@ -471,14 +486,14 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Invalid '{0}' quote character specified.".FormatString(QuoteChar));
             if (EOLDelimiter.Contains(QuoteChar))
                 throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(QuoteChar, EOLDelimiter));
-            if (NestedColumnSeparator != null)
+            if (NestedKeySeparator != null)
             {
-                if (NestedColumnSeparator.Value == ChoCharEx.NUL)
-                    throw new ChoRecordConfigurationException("Invalid '{0}' nested column separator specified.".FormatString(NestedColumnSeparator));
-                if (NestedColumnSeparator.Value == QuoteChar)
-                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be quote character [{1}]".FormatString(NestedColumnSeparator, QuoteChar));
-                if (EOLDelimiter.Contains(NestedColumnSeparator.Value))
-                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(NestedColumnSeparator, EOLDelimiter));
+                if (NestedKeySeparator.Value == ChoCharEx.NUL)
+                    throw new ChoRecordConfigurationException("Invalid '{0}' nested column separator specified.".FormatString(NestedKeySeparator));
+                if (NestedKeySeparator.Value == QuoteChar)
+                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be quote character [{1}]".FormatString(NestedKeySeparator, QuoteChar));
+                if (EOLDelimiter.Contains(NestedKeySeparator.Value))
+                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(NestedKeySeparator, EOLDelimiter));
             }
             if (ArrayIndexSeparator != null)
             {
@@ -498,7 +513,7 @@ namespace ChoETL
             }
         }
 
-        public Encoding GetEncoding(Stream inStream)
+        protected Encoding GetEncoding(Stream inStream)
         {
             if (_encoding == null)
             {
@@ -526,8 +541,12 @@ namespace ChoETL
 
             return Encoding;
         }
+        internal Encoding GetEncodingInternal(Stream inStream)
+        {
+            return GetEncoding(inStream);
+        }
 
-        public Encoding GetEncoding(string fileName)
+        protected Encoding GetEncoding(string fileName)
         {
             if (_encoding == null)
             {
@@ -547,20 +566,33 @@ namespace ChoETL
 
             return Encoding;
         }
-
-        public virtual bool ContainsRecordConfigForType(Type rt)
+        internal Encoding GetEncodingInternal(string fileName)
+        {
+            return GetEncoding(fileName);
+        }
+        protected virtual bool ContainsRecordConfigForType(Type rt)
         {
             throw new NotSupportedException();
         }
-
-        public virtual ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        internal bool ContainsRecordConfigForTypeInternal(Type rt)
+        {
+            return ContainsRecordConfigForType(rt);
+        }
+        protected virtual ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
         {
             throw new NotSupportedException();
         }
-
-        public virtual Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        internal ChoRecordFieldConfiguration[] GetRecordConfigForTypeInternal(Type rt)
+        {
+            return GetRecordConfigForType(rt);
+        }
+        protected virtual Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
         {
             throw new NotSupportedException();
+        }
+        internal Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForTypeInternal(Type rt)
+        {
+            return GetRecordConfigDictionaryForType(rt);
         }
 
         protected override void Clone(ChoRecordConfiguration config)
@@ -582,7 +614,7 @@ namespace ChoETL
             fconfig.ColumnCountStrict = ColumnCountStrict;
             fconfig.ColumnOrderStrict = ColumnOrderStrict;
             fconfig.EscapeQuoteAndDelimiter = EscapeQuoteAndDelimiter;
-            fconfig.NestedColumnSeparator = NestedColumnSeparator;
+            fconfig.NestedKeySeparator = NestedKeySeparator;
             fconfig.QuoteChar = QuoteChar;
             fconfig.BackslashQuote = BackslashQuote;
             fconfig.DoubleQuoteChar = DoubleQuoteChar;

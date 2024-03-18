@@ -17,7 +17,7 @@
 		<PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
 		<PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<Version>1.2.1.62</Version>
+		<Version>1.2.1.64</Version>
 		<AssemblyName>ChoETL.Core</AssemblyName>
 		<RootNamespace>ChoETL</RootNamespace>
 		<SignAssembly>true</SignAssembly>
@@ -157,7 +157,8 @@
 		<Compile Include="..\ChoETL\Common\ChoArray.cs" Link="Common\ChoArray.cs" />
 		<Compile Include="..\ChoETL\Common\ChoAssembly.cs" Link="Common\ChoAssembly.cs" />
 		<Compile Include="..\ChoETL\Common\ChoAssemblyResolver.cs" Link="Common\ChoAssemblyResolver.cs" />
-		<Compile Include="..\ChoETL\Common\ChoBaseProfile.cs" Link="Common\ChoBaseProfile.cs" />
+        <Compile Include="..\ChoETL\Common\ChoAsyncHelper.cs" Link="Common\ChoAsyncHelper.cs" />
+        <Compile Include="..\ChoETL\Common\ChoBaseProfile.cs" Link="Common\ChoBaseProfile.cs" />
 		<Compile Include="..\ChoETL\Common\ChoBinaryHeap.cs" Link="Common\ChoBinaryHeap.cs" />
 		<Compile Include="..\ChoETL\Common\ChoBufferProfile.cs" Link="Common\ChoBufferProfile.cs" />
 		<Compile Include="..\ChoETL\Common\ChoCharEx.cs" Link="Common\ChoCharEx.cs" />

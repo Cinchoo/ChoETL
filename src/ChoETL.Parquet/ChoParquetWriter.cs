@@ -127,7 +127,7 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoParquetRecordConfiguration(recordType);
             else
-                Configuration.RecordType = recordType;
+                Configuration.RecordTypeInternal = recordType;
 
             _writer = new ChoParquetRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
@@ -216,12 +216,12 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetWriter<T> NestedColumnSeparator(char value)
+        public ChoParquetWriter<T> NestedKeySeparator(char value)
         {
             if (value == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid nested column separator passed.");
 
-            Configuration.NestedColumnSeparator = value;
+            Configuration.NestedKeySeparator = value;
             return this;
         }
 
@@ -257,18 +257,18 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetWriter<T> WithEOLDelimiter(string delimiter)
-        {
-            Configuration.EOLDelimiter = delimiter;
-            return this;
-        }
+        //public ChoParquetWriter<T> WithEOLDelimiter(string delimiter)
+        //{
+        //    Configuration.EOLDelimiter = delimiter;
+        //    return this;
+        //}
 
-        public ChoParquetWriter<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
-        {
-            Configuration.QuoteAllFields = flag;
-            Configuration.QuoteChar = quoteChar;
-            return this;
-        }
+        //public ChoParquetWriter<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
+        //{
+        //    Configuration.QuoteAllFields = flag;
+        //    Configuration.QuoteChar = quoteChar;
+        //    return this;
+        //}
 
         public ChoParquetWriter<T> ClearFields()
         {
@@ -282,7 +282,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
             Configuration.IgnoreField(field);
             return this;
@@ -296,7 +296,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.ParquetRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -333,7 +333,7 @@ namespace ChoETL
                     if (!_clearFields)
                     {
                         ClearFields();
-                        Configuration.MapRecordFields(Configuration.RecordType);
+                        Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                     }
 
                     fnTrim = fn.NTrim();
@@ -346,8 +346,8 @@ namespace ChoETL
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
                     var nfc = new ChoParquetRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn };
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    nfc.PropertyDescriptorInternal = fc != null ? fc.PropertyDescriptorInternal : pd;
+                    nfc.DeclaringMemberInternal = fc != null ? fc.DeclaringMemberInternal : null;
                     if (pd != null)
                     {
                         if (nfc.FieldType == null)
@@ -412,7 +412,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.Map(name, mapper);
@@ -487,7 +487,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
                     ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
+                    Configuration.MapRecordFields(Configuration.RecordTypeInternal);
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, null, fieldName,
@@ -503,7 +503,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
 
             Configuration.IndexMap(field, minumum, maximum, null);
@@ -515,7 +515,7 @@ namespace ChoETL
             if (!_clearFields)
             {
                 ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
+                Configuration.MapRecordFields(Configuration.RecordTypeInternal);
             }
 
             Configuration.DictionaryMap(field, keys, null);
@@ -538,6 +538,14 @@ namespace ChoETL
         {
             Configuration.TreatDateTimeAsDateTimeOffset = flag;
             Configuration.DateTimeOffset = offset;
+            return this;
+        }
+
+        public ChoParquetWriter<T> TreatDateTimeAsString(bool flag = true, string format = null)
+        {
+            Configuration.TreatDateTimeAsString = flag;
+            if (format != null)
+                Configuration.TypeConverterFormatSpec.DateTimeFormat = format;
             return this;
         }
 
@@ -571,11 +579,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetWriter<T> WithComments(params string[] comments)
-        {
-            Configuration.Comments = comments;
-            return this;
-        }
+        //public ChoParquetWriter<T> WithComments(params string[] comments)
+        //{
+        //    Configuration.Comments = comments;
+        //    return this;
+        //}
 
         #endregion Fluent API
 
@@ -613,7 +621,7 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     Write(expando);
                 else
                 {
@@ -654,7 +662,7 @@ namespace ChoETL
                 }
 
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.IsDynamicObjectInternal)
                     Write(expando);
                 else
                 {

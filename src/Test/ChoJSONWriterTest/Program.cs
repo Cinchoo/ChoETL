@@ -1807,6 +1807,134 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
             }
         }
 
+        [Test]
+        public static void Issue296()
+        {
+            string csv = @"23056634;'MEGA TOUR 43696 ';'CP1';24;15;'remark 1';'JORIS IDE NV'
+23056634;'MEGA TOUR 43696 ';'CP1';24;15;'remark 1';'JORIS IDE NV'
+23056634;'MEGA TOUR 43696 ';'CP1';24;15;'remark 1';'JORIS IDE NV'";
+
+            string expected = @"[
+  {
+    ""mission"": {
+      ""dossier"": ""23056634"",
+      ""reference"": ""'MEGA TOUR 43696 '""
+    },
+    ""mutation"": {
+      ""mutation"": ""'CP1'"",
+      ""empties"": ""24"",
+      ""loaded"": ""15""
+    },
+    ""address"": {
+      ""address"": ""'remark 1'"",
+      ""street_add"": ""'JORIS IDE NV'""
+    }
+  },
+  {
+    ""mission"": {
+      ""dossier"": ""23056634"",
+      ""reference"": ""'MEGA TOUR 43696 '""
+    },
+    ""mutation"": {
+      ""mutation"": ""'CP1'"",
+      ""empties"": ""24"",
+      ""loaded"": ""15""
+    },
+    ""address"": {
+      ""address"": ""'remark 1'"",
+      ""street_add"": ""'JORIS IDE NV'""
+    }
+  },
+  {
+    ""mission"": {
+      ""dossier"": ""23056634"",
+      ""reference"": ""'MEGA TOUR 43696 '""
+    },
+    ""mutation"": {
+      ""mutation"": ""'CP1'"",
+      ""empties"": ""24"",
+      ""loaded"": ""15""
+    },
+    ""address"": {
+      ""address"": ""'remark 1'"",
+      ""street_add"": ""'JORIS IDE NV'""
+    }
+  }
+]";
+            string json = TransformCSVtoJSON(csv, '.');
+            Console.WriteLine(json);
+
+            Assert.AreEqual(expected, json);
+        }
+
+        public static string TransformCSVtoJSON(string pSourceCSV, char? nestedColumnSep = null)
+        {
+            ChoCSVRecordConfiguration choCSVRecordConfiguration = new ChoCSVRecordConfiguration();
+            choCSVRecordConfiguration.IgnoreEmptyLine = true;
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoCSVReader.LoadText(pSourceCSV, choCSVRecordConfiguration)
+                            .WithDelimiter(";")
+                            .ThrowAndStopOnMissingField(false)
+                            .WithField("mission.dossier", position: 1)
+                            .WithField("mission.reference", position: 2)
+                            .WithField("mutation.mutation", position: 3)
+                            .WithField("mutation.empties", position: 4)
+                            .WithField("mutation.loaded", position: 5)
+                            .WithField("address.address", position: 6)
+                            .WithField("address.street_add", position: 7)
+                            .NestedKeySeparator(nestedColumnSep)
+                            )
+            {
+                var recs = p.ToArray();
+                using (var w = new ChoJSONWriter(sb))
+                    w.Write(recs);
+            }
+            return sb.ToString();
+        }
+        [Test]
+        public static void Issue296_1()
+        {
+            string csv = @"23056634;'MEGA TOUR 43696 ';'CP1';24;15;'remark 1';'JORIS IDE NV'
+23056634;'MEGA TOUR 43696 ';'CP1';24;15;'remark 1';'JORIS IDE NV'
+23056634;'MEGA TOUR 43696 ';'CP1';24;15;'remark 1';'JORIS IDE NV'";
+
+            string expected = @"[
+  {
+    ""mission.dossier"": ""23056634"",
+    ""mission.reference"": ""'MEGA TOUR 43696 '"",
+    ""mutation.mutation"": ""'CP1'"",
+    ""mutation.empties"": ""24"",
+    ""mutation.loaded"": ""15"",
+    ""address.address"": ""'remark 1'"",
+    ""address.street_add"": ""'JORIS IDE NV'""
+  },
+  {
+    ""mission.dossier"": ""23056634"",
+    ""mission.reference"": ""'MEGA TOUR 43696 '"",
+    ""mutation.mutation"": ""'CP1'"",
+    ""mutation.empties"": ""24"",
+    ""mutation.loaded"": ""15"",
+    ""address.address"": ""'remark 1'"",
+    ""address.street_add"": ""'JORIS IDE NV'""
+  },
+  {
+    ""mission.dossier"": ""23056634"",
+    ""mission.reference"": ""'MEGA TOUR 43696 '"",
+    ""mutation.mutation"": ""'CP1'"",
+    ""mutation.empties"": ""24"",
+    ""mutation.loaded"": ""15"",
+    ""address.address"": ""'remark 1'"",
+    ""address.street_add"": ""'JORIS IDE NV'""
+  }
+]";
+            //ChoETLSettings.KeySeparator = '#';
+            string json = TransformCSVtoJSON(csv, '#');
+            Console.WriteLine(json);
+
+            Assert.AreEqual(expected, json);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;

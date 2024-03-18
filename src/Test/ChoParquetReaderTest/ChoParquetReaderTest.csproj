@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <StartupObject>ChoParquetReaderTest.Program</StartupObject>
+      <TargetFrameworks>net6.0-windows</TargetFrameworks>
+      <StartupObject>ChoParquetReaderTest.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

@@ -128,12 +128,16 @@ namespace ChoETL
             set;
         }
         [IgnoreDataMember]
-        public bool IsDefaultValueSpecified
+        protected bool IsDefaultValueSpecified
         {
             get;
-            internal set;
+            set;
         }
-
+        internal bool IsDefaultValueSpecifiedInternal
+        {
+            get { return IsDefaultValueSpecified; }
+            set { IsDefaultValueSpecified = value; }
+        }
         private object _defaultValue;
         public object DefaultValue
         {
@@ -141,15 +145,20 @@ namespace ChoETL
             set
             {
                 _defaultValue = value;
-                IsDefaultValueSpecified = _defaultValue != null;
+                IsDefaultValueSpecifiedInternal = _defaultValue != null;
             }
         }
 
+        internal bool IsFallbackValueSpecifiedInternal
+        {
+            get { return IsFallbackValueSpecified; }
+            set { IsFallbackValueSpecified = value; }
+        }
         [IgnoreDataMember]
-        public bool IsFallbackValueSpecified
+        protected bool IsFallbackValueSpecified
         {
             get;
-            internal set;
+            set;
         }
 
         private object _fallbackValue;
@@ -159,35 +168,69 @@ namespace ChoETL
             set
             {
                 _fallbackValue = value;
-                IsFallbackValueSpecified = _fallbackValue != null;
+                IsFallbackValueSpecifiedInternal = _fallbackValue != null;
             }
         }
 
-        public string DeclaringMember
+        protected string DeclaringMember
         {
             get;
             set;
         }
-        public PropertyDescriptor PropertyDescriptor
+        internal string DeclaringMemberInternal
+        {
+            get => DeclaringMember;
+            set => DeclaringMember = value;
+        }
+        protected PropertyDescriptor PropertyDescriptor
         {
             get;
             set;
+        }
+        internal PropertyDescriptor PropertyDescriptorInternal
+        {
+            get => PropertyDescriptor;
+            set => PropertyDescriptor = value;
         }
 
         internal readonly List<object> Converters = new List<object>();
         internal readonly List<object> ItemConverters = new List<object>();
         internal readonly List<object> KeyConverters = new List<object>();
         internal readonly List<object> ValueConverters = new List<object>();
-        public PropertyInfo PI { get; set; }
-        public PropertyDescriptor PD { get; set; }
-        public object[] PropConverters
+        protected PropertyInfo PI { get; set; }
+        protected PropertyDescriptor PD { get; set; }
+        internal PropertyInfo PIInternal
+        {
+            get => PI;
+            set => PI = value;
+        }
+        internal PropertyDescriptor PDInternal
+        {
+            get => PD;
+            set => PD = value;
+        }
+        protected object[] PropConverters
         {
             get;
             set;
         }
-        public object[] PropConverterParams;
-        public object PropCustomSerializer;
-        public object PropCustomSerializerParams;
+        internal object[] PropConvertersInternal
+        {
+            get => PropConverters;
+            set => PropConverters = value;
+        }
+        protected object[] PropConverterParams
+        {
+            get;
+            set;
+        }
+        internal object[] PropConverterParamsInternal
+        {
+            get => PropConverterParams;
+            set => PropConverterParams = value;
+        }
+        public object PropCustomSerializer { get; set; }
+        public object PropCustomSerializerParams { get; set; }
 
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
@@ -213,29 +256,32 @@ namespace ChoETL
             Name = Name.NTrim().FixName();
         }
 
-        public object[] GetConverters()
+        protected object[] GetConverters()
         {
-            if (PropConverters.IsNullOrEmpty())
-                return PropConverters;
+            if (PropConvertersInternal.IsNullOrEmpty())
+                return PropConvertersInternal;
             else if (Converters != null)
                 return Converters.ToArray();
             else
                 return null;
         }
 
-        public bool HasConverters()
+        internal bool HasConvertersInternal()
+        {
+            return HasConverters();
+        }
+        protected bool HasConverters()
         {
             return (Converters != null && Converters.Count > 0)
-                || (PropConverters != null && PropConverters.Length > 0)
+                || (PropConvertersInternal != null && PropConvertersInternal.Length > 0)
                 || ValueConverter != null;
         }
-
-        public Type GetSourceTypeFromConvertersIfAny()
+        internal Type GetSourceTypeFromConvertersIfAny()
         {
             Type srcType = null;
-            if (PropConverters != null)
+            if (PropConvertersInternal != null)
             {
-                foreach (var c in PropConverters.Where(c1 => c1 != null))
+                foreach (var c in PropConvertersInternal.Where(c1 => c1 != null))
                 {
                     var attr = ChoType.GetCustomAttribute<ChoSourceTypeAttribute>(c.GetType(), true);
                     if (attr != null)
@@ -387,7 +433,7 @@ namespace ChoETL
                 KeyConverters.Remove(converter);
         }
 
-    #if !NETSTANDARD2_0
+#if !NETSTANDARD2_0
         public void AddValueConverter(IValueConverter converter)
         {
             if (converter == null) return;

@@ -244,7 +244,7 @@ namespace ChoETL
         {
             return FlattenBy(dict, fields, false);
         }
-        public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, string[] fields, 
+        public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, string[] fields,
             bool turnOffSingularization = false, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null
             )
         {
@@ -263,7 +263,7 @@ namespace ChoETL
             }
         }
 
-        private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields, string key = null, 
+        private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields, string key = null,
             bool turnOffSingularization = false, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null
             )
         {
@@ -281,12 +281,12 @@ namespace ChoETL
                 }
                 yield break;
             }
-            else 
+            else
             {
                 foreach (var kvp in dict.Where(kvp => !fields.Any(f => f == kvp.Key)))
                 {
                     if (kvp.Value != null)
-                    dest.Add(kvp.Key, kvp.Value);
+                        dest.Add(kvp.Key, kvp.Value);
                 }
             }
 
@@ -386,7 +386,7 @@ namespace ChoETL
             }
         }
 
-        public static IDictionary<string, object> FlattenToDictionary(this object target, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, 
+        public static IDictionary<string, object> FlattenToDictionary(this object target, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null,
             bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null)
         {
             var dict = Flatten(target, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix,
@@ -401,7 +401,7 @@ namespace ChoETL
             return dict;
         }
 
-        public static IEnumerable<KeyValuePair<string, object>> Flatten(this object target, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, 
+        public static IEnumerable<KeyValuePair<string, object>> Flatten(this object target, char? nestedKeySeparator = null, char? arrayIndexSeparator = null,
             char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false,
             string valueNamePrefix = null)
         {
@@ -410,7 +410,7 @@ namespace ChoETL
 
             if (target is IDictionary)
             {
-                return Flatten(((IDictionary)target).Keys.Cast<object>().ToDictionary(key => key.ToNString(), key => ((IDictionary)target)[key]), 
+                return Flatten(((IDictionary)target).Keys.Cast<object>().ToDictionary(key => key.ToNString(), key => ((IDictionary)target)[key]),
                     nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix);
             }
             else if (target.GetType().IsSimple())
@@ -423,28 +423,28 @@ namespace ChoETL
                 }
                 else
                 {
-                    return ((IList)target).OfType<object>().Select((o, i) => new KeyValuePair<string, object>($"{ChoETLSettings.GetValueNamePrefixOrDefault(valueNamePrefix)}{i + ChoETLSettings.ValueNameStartIndex}", 
-                        o.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, 
+                    return ((IList)target).OfType<object>().Select((o, i) => new KeyValuePair<string, object>($"{ChoETLSettings.GetValueNamePrefixOrDefault(valueNamePrefix)}{i + ChoETLSettings.ValueNameStartIndex}",
+                        o.ToDictionary(valueNamePrefix: valueNamePrefix).Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix,
                         valueNamePrefix).ToArray()));
                 }
             }
             else
             {
-                return target.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix,
+                return target.ToDictionary(valueNamePrefix: valueNamePrefix).Flatten(nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix,
                     valueNamePrefix).ToArray();
             }
         }
 
-        public static IDictionary<string, object> FlattenToDictionary(this IDictionary<string, object> dict, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, 
+        public static IDictionary<string, object> FlattenToDictionary(this IDictionary<string, object> dict, char? nestedKeySeparator = null, char? arrayIndexSeparator = null,
             char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false,
             string valueNamePrefix = null, bool ignoreRootDictionaryFieldPrefix = false)
         {
             return Flatten(dict, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix,
-                valueNamePrefix, ignoreRootDictionaryFieldPrefix).ToDictionary();
+                valueNamePrefix, ignoreRootDictionaryFieldPrefix).ToDictionary(valueNamePrefix: valueNamePrefix);
         }
 
-        public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null, 
-            char? arrayIndexSeparator = null, 
+        public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null,
+            char? arrayIndexSeparator = null,
             char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false,
             string valueNamePrefix = null, bool ignoreRootDictionaryFieldPrefix = false)
         {
@@ -456,14 +456,14 @@ namespace ChoETL
             //        ignoreDictionaryFieldPrefix, valueNamePrefix);
 
             if (dict is ChoDynamicObject && ((ChoDynamicObject)dict).DynamicObjectName != ChoDynamicObject.DefaultName)
-                return Flatten(dict, ignoreRootDictionaryFieldPrefix ? null : ((ChoDynamicObject)dict).DynamicObjectName, nestedKeySeparator, arrayIndexSeparator, 
+                return Flatten(dict, ignoreRootDictionaryFieldPrefix ? null : ((ChoDynamicObject)dict).DynamicObjectName, nestedKeySeparator, arrayIndexSeparator,
                     arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix);
             else
-                return Flatten(dict, (string)null, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, 
+                return Flatten(dict, (string)null, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator,
                     ignoreDictionaryFieldPrefix, valueNamePrefix);
         }
 
-        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string pkey, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, 
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string pkey, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null,
             bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null)
         {
             nestedKeySeparator = nestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : nestedKeySeparator;
@@ -488,7 +488,19 @@ namespace ChoETL
                     if (!ignoreDictionaryFieldPrefix)
                     {
                         if (dobj.DynamicObjectName != ChoDynamicObject.DefaultName)
-                            key = $"{key}{nestedKeySeparator}{dobj.DynamicObjectName}";
+                        {
+                            if (valueNamePrefix != null && dobj.DynamicObjectName.StartsWith(valueNamePrefix))
+                            {
+                                var indexTxt = dobj.DynamicObjectName.Substring(valueNamePrefix.Length);
+                                if (long.TryParse(indexTxt, out long index1))
+                                {
+                                }
+                                else
+                                    key = $"{key}{nestedKeySeparator}{dobj.DynamicObjectName}";
+                            }
+                            else
+                                key = $"{key}{nestedKeySeparator}{dobj.DynamicObjectName}";
+                        }
                     }
 
                     foreach (var kvp1 in Flatten(item as IDictionary<string, object>, key, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
@@ -540,7 +552,7 @@ namespace ChoETL
             }
 
         }
-        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary dict, string key = null, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, 
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary dict, string key = null, char? nestedKeySeparator = null, char? arrayIndexSeparator = null,
             char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null)
         {
             if (dict == null)
@@ -570,7 +582,7 @@ namespace ChoETL
                     //lkey = key == null ? dKey : "{0}{2}{1}".FormatString(key, dKey, nestedKeySeparator);
                     if (true) //!ignoreDictionaryFieldPrefix)
                     {
-                        foreach (var tuple in Flatten(dict[key] as IDictionary<string, object>, lkey, nestedKeySeparator, arrayIndexSeparator, 
+                        foreach (var tuple in Flatten(dict[key] as IDictionary<string, object>, lkey, nestedKeySeparator, arrayIndexSeparator,
                             arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
                             yield return tuple;
                     }
@@ -598,10 +610,10 @@ namespace ChoETL
                     else
                         lkey = key == null ? dKey : "{0}{2}{1}".FormatString(key, dKey, nestedKeySeparator);
 
-//                    lkey = key == null ? dKey : "{0}{2}{1}".FormatString(key, dKey, nestedKeySeparator);
+                    //                    lkey = key == null ? dKey : "{0}{2}{1}".FormatString(key, dKey, nestedKeySeparator);
                     if (true) //!ignoreDictionaryFieldPrefix)
                     {
-                        foreach (var tuple in Flatten(dict[key] as IDictionary, lkey, nestedKeySeparator, arrayIndexSeparator, 
+                        foreach (var tuple in Flatten(dict[key] as IDictionary, lkey, nestedKeySeparator, arrayIndexSeparator,
                             arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
                             yield return tuple;
                     }
@@ -625,7 +637,7 @@ namespace ChoETL
                             break;
                     }
 
-                    foreach (var tuple in Flatten(dict[key] as IList, lkey, nestedKeySeparator, arrayIndexSeparator, null, 
+                    foreach (var tuple in Flatten(dict[key] as IList, lkey, nestedKeySeparator, arrayIndexSeparator, null,
                         ignoreDictionaryFieldPrefix, valueNamePrefix /*, true */))
                         yield return tuple;
                 }
@@ -633,15 +645,15 @@ namespace ChoETL
                     yield return new KeyValuePair<string, object>(key == null ? dKey.ToString() : "{0}{2}{1}".FormatString(key, dKey.ToString(), nestedKeySeparator), dict[key]);
                 else
                 {
-                    foreach (var tuple in Flatten(dict[key].ToDynamicObject() as IDictionary<string, object>, key == null ? dKey : "{0}{2}{1}".FormatString(key, dKey, nestedKeySeparator), nestedKeySeparator, 
+                    foreach (var tuple in Flatten(dict[key].ToDynamicObject() as IDictionary<string, object>, key == null ? dKey : "{0}{2}{1}".FormatString(key, dKey, nestedKeySeparator), nestedKeySeparator,
                         arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
                         yield return tuple;
                 }
             }
         }
 
-        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, 
-            char? nestedKeySeparator = null, char? arrayIndexSeparator = null, 
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null,
+            char? nestedKeySeparator = null, char? arrayIndexSeparator = null,
             char? arrayEndIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null
             )
         {
@@ -683,7 +695,7 @@ namespace ChoETL
 
                     if (true) //!ignoreDictionaryFieldPrefix)
                     {
-                        foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, lkey, nestedKeySeparator, 
+                        foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, lkey, nestedKeySeparator,
                             arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
                             yield return tuple;
                     }
@@ -712,7 +724,7 @@ namespace ChoETL
                         lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
                     if (true) //!ignoreDictionaryFieldPrefix)
                     {
-                        foreach (var tuple in Flatten(kvp.Value as IDictionary, lkey, nestedKeySeparator, arrayIndexSeparator, 
+                        foreach (var tuple in Flatten(kvp.Value as IDictionary, lkey, nestedKeySeparator, arrayIndexSeparator,
                             arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
                             yield return tuple;
                     }
@@ -747,7 +759,7 @@ namespace ChoETL
                         lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
                     }
 
-                    foreach (var tuple in Flatten(kvp.Value as IList, lkey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value, arrayIndexSeparator, 
+                    foreach (var tuple in Flatten(kvp.Value as IList, lkey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value, arrayIndexSeparator,
                         arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
                         yield return tuple;
                 }
@@ -773,7 +785,7 @@ namespace ChoETL
                         {
                             if (!kvp.Value.GetType().IsSimple())
                             {
-                                foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, null, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator, 
+                                foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, null, nestedKeySeparator, arrayIndexSeparator, arrayEndIndexSeparator,
                                     ignoreDictionaryFieldPrefix, valueNamePrefix))
                                     yield return tuple;
                             }
@@ -785,7 +797,7 @@ namespace ChoETL
                         {
                             if (!kvp.Value.GetType().IsSimple())
                             {
-                                foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator, 
+                                foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator,
                                     arrayIndexSeparator, arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
                                     yield return tuple;
                             }

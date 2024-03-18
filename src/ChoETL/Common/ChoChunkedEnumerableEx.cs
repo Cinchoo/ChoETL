@@ -174,7 +174,7 @@ namespace ChoETL
             }
         }
 
-        public static IEnumerable<IEnumerable<T>> Chunk<T>(this IEnumerable<T> source, int chunksize)
+        public static IEnumerable<IEnumerable<T>> LazyChunkEx<T>(this IEnumerable<T> source, int chunksize)
         {
             if (chunksize < 1) throw new InvalidOperationException();
 
@@ -195,6 +195,11 @@ namespace ChoETL
             {
                 wrapper.RemoveRef();
             }
+        }
+
+        public static IEnumerable<T[]> ChunkEx<T>(this IEnumerable<T> source, int chunksize)
+        {
+            return LazyChunkEx(source, chunksize).Select(d => d.ToArray());
         }
     }
 }

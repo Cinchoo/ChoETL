@@ -46,6 +46,11 @@ namespace ChoETL
             get;
             set;
         }
+        public static new bool LiteParsing
+        {
+            get;
+            set;
+        }
 
         [DataMember]
         public List<ChoKVPRecordFieldConfiguration> KVPRecordFieldConfigurations
@@ -172,7 +177,7 @@ namespace ChoETL
             if (KVPRecordFieldConfigurations.Count == 0)
                 MapRecordFields<T>();
 
-            var fc = KVPRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            var fc = KVPRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == field.GetFullyQualifiedMemberName()).FirstOrDefault();
             if (fc != null)
                 KVPRecordFieldConfigurations.Remove(fc);
 
@@ -181,7 +186,7 @@ namespace ChoETL
 
         public ChoKVPRecordConfiguration IgnoreField(string fieldName)
         {
-            var fc = KVPRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            var fc = KVPRecordFieldConfigurations.Where(f => f.DeclaringMemberInternal == fieldName || f.FieldName == fieldName).FirstOrDefault();
             if (fc != null)
                 KVPRecordFieldConfigurations.Remove(fc);
 
@@ -276,8 +281,8 @@ namespace ChoETL
                         {
                             var obj = new ChoKVPRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (!KVPRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 KVPRecordFieldConfigurations.Add(obj);
                         }
@@ -295,8 +300,8 @@ namespace ChoETL
                         {
                             var obj = new ChoKVPRecordFieldConfiguration(pd.Name);
                             obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.PropertyDescriptorInternal = pd;
+                            obj.DeclaringMemberInternal = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;
@@ -345,7 +350,7 @@ namespace ChoETL
             }
         }
 
-        public override void Validate(object state)
+        protected override void Validate(object state)
         {
             if (state == null)
             {
@@ -439,22 +444,22 @@ namespace ChoETL
                 if (dupFields.Length > 0 /* && !IgnoreDuplicateFields */)
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
 
-                PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
-                PDDict = new Dictionary<string, PropertyDescriptor>(FileHeaderConfiguration.StringComparer);
+                PIDictInternal = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
+                PDDictInternal = new Dictionary<string, PropertyDescriptor>(FileHeaderConfiguration.StringComparer);
                 foreach (var fc in KVPRecordFieldConfigurations)
                 {
-                    var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
-                        : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                    var pd1 = fc.DeclaringMemberInternal.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
+                        : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMemberInternal);
                     if (pd1 != null)
-                        fc.PropertyDescriptor = pd1;
+                        fc.PropertyDescriptorInternal = pd1;
 
-                    if (fc.PropertyDescriptor == null)
-                        fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
-                    if (fc.PropertyDescriptor == null)
+                    if (fc.PropertyDescriptorInternal == null)
+                        fc.PropertyDescriptorInternal = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                    if (fc.PropertyDescriptorInternal == null)
                         continue;
 
-                    PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                    PDDict.Add(fc.Name, fc.PropertyDescriptor);
+                    PIDictInternal.Add(fc.Name, fc.PropertyDescriptorInternal.ComponentType.GetProperty(fc.PropertyDescriptorInternal.Name));
+                    PDDictInternal.Add(fc.Name, fc.PropertyDescriptorInternal);
                 }
 
 

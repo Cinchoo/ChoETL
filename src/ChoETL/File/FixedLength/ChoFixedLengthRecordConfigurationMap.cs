@@ -128,11 +128,11 @@ namespace ChoETL
 
         public ChoFixedLengthRecordFieldConfigurationMap PropertyConverter(IChoValueConverter converter)
         {
-            if (_config.PropConverters.IsNullOrEmpty())
-                _config.PropConverters = new object[] { converter };
+            if (_config.PropConvertersInternal.IsNullOrEmpty())
+                _config.PropConvertersInternal = new object[] { converter };
             else
             {
-                _config.PropConverters = ChoArray.Combine<object>(_config.PropConverters, new object[] { converter });
+                _config.PropConvertersInternal = ChoArray.Combine<object>(_config.PropConvertersInternal, new object[] { converter });
             }
             return this;
         }
@@ -140,11 +140,11 @@ namespace ChoETL
 #if !NETSTANDARD2_0
         public ChoFixedLengthRecordFieldConfigurationMap PropertyConverter(System.Windows.Data.IValueConverter converter)
         {
-            if (_config.PropConverters.IsNullOrEmpty())
-                _config.PropConverters = new object[] { converter };
+            if (_config.PropConvertersInternal.IsNullOrEmpty())
+                _config.PropConvertersInternal = new object[] { converter };
             else
             {
-                _config.PropConverters = ChoArray.Combine<object>(_config.PropConverters, new object[] { converter });
+                _config.PropConvertersInternal = ChoArray.Combine<object>(_config.PropConvertersInternal, new object[] { converter });
             }
             return this;
         }
