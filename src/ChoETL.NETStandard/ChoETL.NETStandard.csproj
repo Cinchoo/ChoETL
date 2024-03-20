@@ -17,7 +17,7 @@
 		<PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
 		<PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-		<Version>1.2.1.64</Version>
+		<Version>1.2.1.65</Version>
 		<AssemblyName>ChoETL.Core</AssemblyName>
 		<RootNamespace>ChoETL</RootNamespace>
 		<SignAssembly>true</SignAssembly>
@@ -43,7 +43,8 @@
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
 	</ItemGroup>
 	<ItemGroup>
-		<Compile Include="..\ChoETL\Common\Attributes\ChoFieldPositionAttribute.cs" Link="Common\Attributes\ChoFieldPositionAttribute.cs" />
+        <Compile Include="..\ChoETL\Common\Attributes\ChoQuoteFieldAttribute.cs" Link="Common\Attributes\ChoQuoteFieldAttribute.cs" />
+        <Compile Include="..\ChoETL\Common\Attributes\ChoFieldPositionAttribute.cs" Link="Common\Attributes\ChoFieldPositionAttribute.cs" />
 		<Compile Include="..\ChoETL\Common\Attributes\ChoDictionaryKeyAttribute.cs" Link="Common\Attributes\ChoDictionaryKeyAttribute.cs" />
 		<Compile Include="..\ChoETL\Common\Attributes\ChoDataTableColumnTypeAttribute.cs" Link="Common\Attributes\ChoDataTableColumnTypeAttribute.cs" />
 		<Compile Include="..\ChoETL\Common\Attributes\ChoMetadataRefTypeAttribute.cs" Link="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />
