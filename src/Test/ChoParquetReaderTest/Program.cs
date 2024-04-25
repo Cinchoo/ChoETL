@@ -11,6 +11,9 @@ using NUnit.Framework;
 using Newtonsoft.Json;
 using NUnit.Framework.Constraints;
 using System.IO;
+using System.Diagnostics;
+using Parquet;
+using System.Threading.Tasks;
 
 namespace ChoParquetReaderTest
 {
@@ -66,11 +69,11 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
                 .ParquetOptions(o => o.TreatByteArrayAsString = true))
             {
                 var dt = r.AsDataTable();
-                var actual = JsonConvert.SerializeObject(dt, new JsonSerializerSettings() 
-                { 
-                    DateFormatString = "yyyy-MM-ddTHH:mm:sszzz", 
+                var actual = JsonConvert.SerializeObject(dt, new JsonSerializerSettings()
+                {
+                    DateFormatString = "yyyy-MM-ddTHH:mm:sszzz",
                     DateTimeZoneHandling = DateTimeZoneHandling.Utc,
-                    Formatting = Formatting.Indented 
+                    Formatting = Formatting.Indented
                 });
                 Assert.AreEqual(expected, actual);
             }
@@ -240,14 +243,14 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
             using (var r = new ChoParquetReader("myData52.parquet"))
             {
                 var rec = r.Take(1);
-                    
+
                 Console.WriteLine(rec.Dump());
                 var actual = JsonConvert.SerializeObject(rec, new JsonSerializerSettings()
                 {
                     DateFormatString = "yyyy-MM-ddTHH:mm:sszzz",
                     Formatting = Formatting.Indented,
                 });
-            
+
                 Assert.AreEqual(expected, actual);
             }
         }
@@ -276,7 +279,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
             public long? Id { get; set; }
             public double? Price { get; set; }
             public double? Quantity { get; set; }
-            public DateTime? CreateDateTime{ get; set; }
+            public DateTime? CreateDateTime { get; set; }
             public bool? IsActive { get; set; }
             public Decimal? Total { get; set; }
         }
@@ -330,9 +333,79 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016 12:00:00 AM +00:00,80000,56531508-89c0
 
         }
 
+        public class FlightInfo
+        {
+            public DateTime FL_DATE { get; set; }
+            public int? DEP_DELAY { get; set; }
+            public int? ARR_DELAY { get; set; }
+            public int? AIR_TIME { get; set; }
+            public int? DISTANCE { get; set; }
+            public double? DEP_TIME { get; set; }
+            public double? ARR_TIME { get; set; }
+        }
+
+        public class FlightInfoEx
+        {
+            public DateTime FL_DATE { get; set; }
+            public string DEP_DELAY { get; set; }
+            public string ARR_DELAY { get; set; }
+            public string AIR_TIME { get; set; }
+            public string DISTANCE { get; set; }
+            public string DEP_TIME { get; set; }
+            public string ARR_TIME { get; set; }
+        }
+
+        static void LoadTest()
+        {
+            string testFile = "Flights 1m.parquet";
+
+            Stopwatch w = new Stopwatch();
+            w.Start();
+
+            var table = ParquetReader.ReadTableFromFileAsync(testFile);
+            w.Stop();
+            w.Elapsed.Print();
+
+            w.Restart();
+            using (var r = new ChoParquetReader<FlightInfo>(testFile)
+                .Configure(c => c.CustomSetMemberValueOverride = (r, fn, fv, fc, culture) =>
+                {
+                    if (r is FlightInfo fi)
+                    {
+                        if (fn == nameof(FlightInfo.FL_DATE))
+                            fi.FL_DATE = DateTime.Parse(fv.ToNString());
+                        else if (fn == nameof(FlightInfo.DEP_DELAY))
+                            fi.DEP_DELAY = int.Parse(fv.ToNString());
+                        else if (fn == nameof(FlightInfo.ARR_DELAY))
+                            fi.ARR_DELAY = int.Parse(fv.ToNString());
+                        else if (fn == nameof(FlightInfo.AIR_TIME))
+                            fi.AIR_TIME = int.Parse(fv.ToNString());
+                        else if (fn == nameof(FlightInfo.DISTANCE))
+                            fi.DISTANCE = int.Parse(fv.ToNString());
+                        else if (fn == nameof(FlightInfo.DEP_TIME))
+                            fi.DEP_TIME = double.Parse(fv.ToNString());
+                        else if (fn == nameof(FlightInfo.ARR_TIME))
+                            fi.ARR_TIME = double.Parse(fv.ToNString());
+                    }
+                })
+                )
+            {
+                //r.AsDataTable().Rows.Count.Print();
+                var recs = r.ToArray();
+                recs.Length.Print();
+                recs.FirstOrDefault().Print();
+                //r.First().Print();
+            }
+            w.Stop();
+            w.Elapsed.Print();
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            LoadTest();
+            return;
+
             WriteParquetWithNullableFields();
             return;
             //Issue144();

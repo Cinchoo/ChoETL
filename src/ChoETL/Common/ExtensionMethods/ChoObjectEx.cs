@@ -283,7 +283,7 @@ namespace ChoETL
         }
 
         public static T ConvertToObject<T>(this object source)
-            //where T : class, new()
+        //where T : class, new()
         {
             return (T)ConvertToObject(source, typeof(T));
         }
@@ -452,15 +452,23 @@ namespace ChoETL
             if (target is IEnumerable<KeyValuePair<string, object>>)
             {
                 var list = new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>);
-                return list.ToDictionary(x => x.Key, x => x.Value.ToDictionaryInternal(valueNamePrefix: valueNamePrefix));
+                return list.ToDictionary(x => x.Key, x =>
+                {
+                    if (ChoETLSettings.AllowFlattenArrayOfTypeInternal(x.Value?.GetType()))
+                        return x.Value.ToDictionaryInternal(propName: x.Key, valueNamePrefix: valueNamePrefix);
+                    else
+                        return x.Value;
+                });
             }
             if (target is IEnumerable<Tuple<string, object>>)
                 return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2.ToDictionaryInternal(valueNamePrefix: valueNamePrefix));
             if (target is IList)
+            {
                 return ((IList)(target)).OfType<object>().Select((item, index) =>
                 {
                     return new KeyValuePair<string, object>($"{ChoETLSettings.GetValueNamePrefixOrDefault(valueNamePrefix)}{index + ChoETLSettings.ValueNameStartIndex}", item);
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal(kvp.Key, valueNamePrefix: valueNamePrefix));
+            }
 
             string propNamex = null;
             Dictionary<string, object> dict = new Dictionary<string, object>();

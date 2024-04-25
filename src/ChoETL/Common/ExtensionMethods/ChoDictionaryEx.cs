@@ -737,31 +737,38 @@ namespace ChoETL
                 }
                 else if (kvp.Value is IList)
                 {
-                    string lkey = null;
-                    switch (ChoETLSettings.ArrayBracketNotation)
+                    if (ChoETLSettings.AllowFlattenArrayOfTypeInternal(kvp.Value.GetType()))
                     {
-                        case ChoArrayBracketNotation.Square:
-                            lkey = key == null ? kvp.Key : "{0}{2}[{1}]".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
-                            break;
-                        case ChoArrayBracketNotation.Parenthesis:
-                            lkey = key == null ? kvp.Key : "{0}{2}({1})".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
-                            break;
-                        default:
-                            lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
-                            break;
-                    }
-                    if (ignoreDictionaryFieldPrefix)
-                    {
-                        //lkey = key;
+                        string lkey = null;
+                        switch (ChoETLSettings.ArrayBracketNotation)
+                        {
+                            case ChoArrayBracketNotation.Square:
+                                lkey = key == null ? kvp.Key : "{0}{2}[{1}]".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                                break;
+                            case ChoArrayBracketNotation.Parenthesis:
+                                lkey = key == null ? kvp.Key : "{0}{2}({1})".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                                break;
+                            default:
+                                lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                                break;
+                        }
+                        if (ignoreDictionaryFieldPrefix)
+                        {
+                            //lkey = key;
+                        }
+                        else
+                        {
+                            lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
+                        }
+
+                        foreach (var tuple in Flatten(kvp.Value as IList, lkey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value, arrayIndexSeparator,
+                            arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
+                            yield return tuple;
                     }
                     else
                     {
-                        lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
+                        yield return new KeyValuePair<string, object>(kvp.Key, kvp.Value);
                     }
-
-                    foreach (var tuple in Flatten(kvp.Value as IList, lkey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value, arrayIndexSeparator,
-                        arrayEndIndexSeparator, ignoreDictionaryFieldPrefix, valueNamePrefix))
-                        yield return tuple;
                 }
                 else if (kvp.Value == null || kvp.Value.GetType().IsSimple())
                 {

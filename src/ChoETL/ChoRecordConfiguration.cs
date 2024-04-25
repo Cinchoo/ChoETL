@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -15,11 +16,14 @@ using System.Windows.Data;
 
 namespace ChoETL
 {
+    public delegate void CustomSetMemberValueOverrideHandler(object record, string fieldName, object fieldValue, ChoRecordFieldConfiguration fc, CultureInfo culture);
+ 
     [DataContract]
     public abstract class ChoRecordConfiguration
     {
         protected Lazy<object> _recObject;
         protected ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
+        public CustomSetMemberValueOverrideHandler CustomSetMemberValueOverride { get; set; }
 
         public Func<string, object, object> ValueConverterBack
         {

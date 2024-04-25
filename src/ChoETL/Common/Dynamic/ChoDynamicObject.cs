@@ -90,6 +90,29 @@ namespace ChoETL
                 return prefix;
         }
 
+        public static Func<Type, bool> AllowFlattenArrayOfType = null;
+        internal static bool AllowFlattenArrayOfTypeInternal(Type type)
+        {
+            if (type == null)
+                return true;
+
+            if (!typeof(IList).IsAssignableFrom(type))
+                return true;
+            if (type.IsCollection() && !type.HasElementType)
+                return true;
+
+            var elementType = type.GetElementType();
+
+            if (AllowFlattenArrayOfType != null)
+                return AllowFlattenArrayOfType(elementType);
+
+            if (elementType == typeof(byte)
+                || elementType.IsValueType)
+                return false;
+
+            return true;
+        }
+
         public static Func<string, string> ToPlural { get; set; }
         public static Func<string, string> ToSingular { get; set; }
     }

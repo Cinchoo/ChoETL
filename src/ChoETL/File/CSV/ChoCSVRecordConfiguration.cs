@@ -645,6 +645,9 @@ namespace ChoETL
             {
                 obj.Optional = pd.Attributes.OfType<OptionalFieldAttribute>().Any();
 
+                ChoQuoteFieldAttribute qfAttr = pd.Attributes.OfType<ChoQuoteFieldAttribute>().FirstOrDefault();
+                if (qfAttr != null)
+                    obj.QuoteField = qfAttr.QuoteField;
                 StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                 if (slAttr != null && slAttr.MaximumLength > 0)
                     obj.Size = slAttr.MaximumLength;
