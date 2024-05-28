@@ -3502,6 +3502,9 @@ Old cottage,a775a0e8-9e22-4157-bfe4-b13a564fb18d,Carrowduff,,0,0,0,,,,,,4/10/202
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
+            WriteDataReaderTest();
+            return;
+
             Issue283();
             return;
 
@@ -3995,81 +3998,121 @@ Circle,200,Lou,10/23/1990,$0.00,N,";
         [Test]
         public static void WriteDataTableTest()
         {
-            return;
             string expected = @"Id,Name
-1,Lou
-50,Jason
-200,Mike";
-            string actual = null;
+1,Tom
+2,Mark";
 
-            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
-            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
-            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
-            //            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;AttachDBFileName=" + Environment.CurrentDirectory + @"\WriteData.mdf";
-
-            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.FileHeaderConfiguration.HasHeaderRecord = true;
-
-            SqlConnection conn = new SqlConnection(connString);
-            conn.Open();
-            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
-            SqlDataAdapter da = new SqlDataAdapter(cmd);
             DataTable dt = new DataTable();
-            da.Fill(dt);
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("Name", typeof(string));
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter(writer, config))
+            dt.Rows.Add(1, "Tom");
+            dt.Rows.Add(2, "Mark");
+
+            StringBuilder actual = new StringBuilder();
+            using (var w = new ChoCSVWriter(actual)
+                .WithFirstLineHeader())
             {
-                parser.Write(dt);
-
-                writer.Flush();
-                stream.Position = 0;
-
-                actual = reader.ReadToEnd();
+                w.Write(dt);
             }
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual(expected, actual.ToString());
+
+//            return;
+//            string expected = @"Id,Name
+//1,Lou
+//50,Jason
+//200,Mike";
+//            string actual = null;
+
+//            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+//            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+//            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
+//            //            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+//            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;AttachDBFileName=" + Environment.CurrentDirectory + @"\WriteData.mdf";
+
+//            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+//            config.FileHeaderConfiguration.HasHeaderRecord = true;
+
+//            SqlConnection conn = new SqlConnection(connString);
+//            conn.Open();
+//            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
+//            SqlDataAdapter da = new SqlDataAdapter(cmd);
+//            DataTable dt = new DataTable();
+//            da.Fill(dt);
+
+//            using (var stream = new MemoryStream())
+//            using (var reader = new StreamReader(stream))
+//            using (var writer = new StreamWriter(stream))
+//            using (var parser = new ChoCSVWriter(writer, config))
+//            {
+//                parser.Write(dt);
+
+//                writer.Flush();
+//                stream.Position = 0;
+
+//                actual = reader.ReadToEnd();
+//            }
+//            Assert.AreEqual(expected, actual);
         }
 
         [Test]
         public static void WriteDataReaderTest()
         {
-            return;
             string expected = @"Id,Name
-1,Lou
-50,Jason
-200,Mike";
-            string actual = null;
+1,Tom
+2,Mark";
 
-            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
-            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
-            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
-            //            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;AttachDBFileName=" + Environment.CurrentDirectory + @"\WriteData.mdf";
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("Name", typeof(string));
 
-            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.FileHeaderConfiguration.HasHeaderRecord = true;
+            dt.Rows.Add(1, "Tom");
+            dt.Rows.Add(2, "Mark");
 
-            SqlConnection conn = new SqlConnection(connString);
-            conn.Open();
-            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
-            IDataReader dr = cmd.ExecuteReader();
+            var dr = new DataTableReader(dt);
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter(writer, config))
+            StringBuilder actual = new StringBuilder();
+            using (var w = new ChoCSVWriter(actual)
+                .WithFirstLineHeader())
             {
-                parser.Write(dr);
-
-                writer.Flush();
-                stream.Position = 0;
-
-                actual = reader.ReadToEnd();
+                w.Write(dr);
             }
-            Assert.AreEqual(expected, actual);
+            Assert.AreEqual(expected, actual.ToString());
+
+            //            return;
+            //            string expected = @"Id,Name
+            //1,Lou
+            //50,Jason
+            //200,Mike";
+            //            string actual = null;
+
+            //            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+            //            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
+            //            //            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            //            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;AttachDBFileName=" + Environment.CurrentDirectory + @"\WriteData.mdf";
+
+            //            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            //            config.FileHeaderConfiguration.HasHeaderRecord = true;
+
+            //            SqlConnection conn = new SqlConnection(connString);
+            //            conn.Open();
+            //            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
+            //            IDataReader dr = cmd.ExecuteReader();
+
+            //            using (var stream = new MemoryStream())
+            //            using (var reader = new StreamReader(stream))
+            //            using (var writer = new StreamWriter(stream))
+            //            using (var parser = new ChoCSVWriter(writer, config))
+            //            {
+            //                parser.Write(dr);
+
+            //                writer.Flush();
+            //                stream.Position = 0;
+
+            //                actual = reader.ReadToEnd();
+            //            }
+            //            Assert.AreEqual(expected, actual);
         }
 
         [Test]

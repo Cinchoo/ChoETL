@@ -267,7 +267,11 @@ namespace ChoETL
                     return typeof(DateTimeOffset);
             }
             else if (underlyingType.IsSimpleSpecial())
+            {
+                if (type.IsNullableType())
+                    return type;
                 return underlyingType;
+            }
             else
                 return typeof(string);
         }

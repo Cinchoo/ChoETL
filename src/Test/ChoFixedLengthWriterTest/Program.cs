@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -30,6 +31,54 @@ namespace ChoFixedLengthWriterTest
             // Needs to be reset because of some tests changes these settings
             ChoTypeConverterFormatSpec.Instance.Reset();
             ChoXmlSettings.Reset();
+        }
+
+        [Test]
+        public static void WriteDataTableTest()
+        {
+            string expected = @"Id,Name
+1,Tom
+2,Mark";
+
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("Name", typeof(string));
+
+            dt.Rows.Add(1, "Tom");
+            dt.Rows.Add(2, "Mark");
+
+            StringBuilder actual = new StringBuilder();
+            using (var w = new ChoFixedLengthWriter(actual)
+                .WithFirstLineHeader())
+            {
+                w.Write(dt);
+            }
+            Assert.AreEqual(expected, actual.ToString());
+        }
+
+        [Test]
+        public static void WriteDataReaderTest()
+        {
+            string expected = @"Id,Name
+1,Tom
+2,Mark";
+
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("Name", typeof(string));
+
+            dt.Rows.Add(1, "Tom");
+            dt.Rows.Add(2, "Mark");
+
+            var dr = new DataTableReader(dt);
+
+            StringBuilder actual = new StringBuilder();
+            using (var w = new ChoFixedLengthWriter(actual)
+                .WithFirstLineHeader())
+            {
+                w.Write(dr);
+            }
+            Assert.AreEqual(expected, actual.ToString());
         }
 
         [Test]

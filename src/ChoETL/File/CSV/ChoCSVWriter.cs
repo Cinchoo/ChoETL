@@ -168,8 +168,101 @@ namespace ChoETL
             _writer.WriteTo(_textWriter.Value, records).Loop(() => ++_recordNumber);
         }
 
+        public void Write(IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            DataTable schemaTable = dr.GetSchemaTable();
+
+            Configuration.UseNestedKeyFormat = false;
+
+            if (Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
+            {
+                string colName = null;
+                Type colType = null;
+                foreach (DataRow row in schemaTable.Rows)
+                {
+                    colName = row["ColumnName"].CastTo<string>();
+                    colType = row["DataType"] as Type;
+                    //if (!colType.IsSimple()) continue;
+
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName) { FieldType = colType });
+                }
+            }
+
+            var ordinals = Configuration.CSVRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
+            while (dr.Read())
+            {
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
+
+                foreach (var fc in ordinals)
+                {
+                    expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
+                }
+
+                if (Configuration.IsDynamicObjectInternal)
+                    Write(expando);
+                else
+                {
+                    Write((T)ChoObjectEx.ConvertToObject<T>(expando));
+                }
+            }
+        }
+
+        public void Write(DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            DataTable schemaTable = dt;
+
+            int ordinal = 0;
+            if (Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
+            {
+                string colName = null;
+                Type colType = null;
+                foreach (DataColumn col in schemaTable.Columns)
+                {
+                    colName = col.ColumnName;
+                    colType = col.DataType;
+                    //if (!colType.IsSimple()) continue;
+
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName) { FieldType = colType });
+                }
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
+
+                foreach (var fc in Configuration.CSVRecordFieldConfigurations)
+                {
+                    expandoDic.Add(fc.Name, row[fc.Name]);
+                }
+
+                if (Configuration.IsDynamicObjectInternal)
+                    Write(expando);
+                else
+                {
+                    Write((T)ChoObjectEx.ConvertToObject<T>(expando));
+                }
+            }
+        }
+
         public void Write(T record)
         {
+            if (record is DataTable)
+            {
+                Write(record as DataTable);
+                return;
+            }
+            else if (record is IDataReader)
+            {
+                Write(record as IDataReader);
+                return;
+            }
+
             if (record is DataTable)
                 throw new ChoParserException("Invalid data passed.");
             else if (record is IDataReader)
