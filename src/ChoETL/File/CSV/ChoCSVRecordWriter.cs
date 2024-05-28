@@ -613,8 +613,8 @@ namespace ChoETL
                         }
                         else
                         {
-                            if (pi == null)
-                                pi = Configuration.PIDictInternal.Where(kvp1 => kvp.Value.FieldPosition == kvp.Value.FieldPosition).FirstOrDefault().Value;
+                            //if (pi == null)
+                            //    pi = Configuration.PIDictInternal.Where(kvp1 => kvp.Value.FieldPosition == kvp.Value.FieldPosition).FirstOrDefault().Value;
 
                             if (pi == null)
                                 throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));

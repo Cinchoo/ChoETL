@@ -3497,15 +3497,116 @@ Old cottage,a775a0e8-9e22-4157-bfe4-b13a564fb18d,Carrowduff,,0,0,0,,,,,,4/10/202
                 r.Select(r1 => new ChoDynamicObject(r1.FlattenToDictionary('/'))).Print();
             }
         }
+        [Test]
+        public static void WriteCSVUsingConfigWithNoMatchingFieldNamesButWithPosition()
+        {
+            string expected = @"Id1,Name1
+1,Mark
+2,Jason";
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id1", 1));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1", 2));
+
+            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
+
+            EmployeeRecSimple rec1 = new EmployeeRecSimple();
+            rec1.Id = 1;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRecSimple rec2 = new EmployeeRecSimple();
+            rec2.Id = 2;
+            rec2.Name = "Jason";
+            objs.Add(rec2);
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var parser = new ChoCSVWriter<EmployeeRecSimple>(csvOut, config).WithFirstLineHeader())
+            {
+                parser.Write(objs);
+            }
+
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void WriteCSVUsingConfigWithMatchingFieldNames()
+        {
+            string expected = @"Id,Name
+1,Mark
+2,Jason";
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+
+            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
+
+            EmployeeRecSimple rec1 = new EmployeeRecSimple();
+            rec1.Id = 1;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRecSimple rec2 = new EmployeeRecSimple();
+            rec2.Id = 2;
+            rec2.Name = "Jason";
+            objs.Add(rec2);
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var parser = new ChoCSVWriter<EmployeeRecSimple>(csvOut, config).WithFirstLineHeader())
+            {
+                parser.Write(objs);
+            }
+
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void WriteCSVUsingConfigWithNoMatchingFieldNames()
+        {
+            string expected = @"Name1,Id
+Mark,1
+Jason,2";
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id"));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1",2));
+
+            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
+
+            EmployeeRecSimple rec1 = new EmployeeRecSimple();
+            rec1.Id = 1;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRecSimple rec2 = new EmployeeRecSimple();
+            rec2.Id = 2;
+            rec2.Name = "Jason";
+            objs.Add(rec2);
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var parser = new ChoCSVWriter<EmployeeRecSimple>(csvOut, config).WithFirstLineHeader())
+            {
+                parser.Write(objs);
+            }
+
+            csvOut.Print();
+            var actual = csvOut.ToString();
+            Assert.AreEqual(expected, actual);
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
+<<<<<<< HEAD
             WriteDataReaderTest();
             return;
 
             Issue283();
+=======
+            WriteCSVUsingConfigWithNoMatchingFieldNames();
+>>>>>>> 97f98bd3a72956ebf90c4300d8285e0ec504b764
             return;
 
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };

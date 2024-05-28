@@ -947,7 +947,18 @@ namespace ChoETL
                 if (fc.PropertyDescriptorInternal == null)
                     fc.PropertyDescriptorInternal = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
                 if (fc.PropertyDescriptorInternal == null)
+                {
+                    if (fc.IsFieldPositionAssgined)
+                    {
+                        if (fc.FieldPosition - 1 >= 0)
+                            fc.PropertyDescriptorInternal = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Skip(fc.FieldPosition  - 1).FirstOrDefault();
+                    }
+                }
+
+                if (fc.PropertyDescriptorInternal == null)
+                {
                     continue;
+                }
 
                 if (!IsDynamicObject)
                 {
