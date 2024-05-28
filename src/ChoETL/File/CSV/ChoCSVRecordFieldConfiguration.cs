@@ -28,6 +28,7 @@ namespace ChoETL
             set;
         }
 
+        internal bool IsFieldPositionAssgined = false;
         private int _fieldPosition = 0;
         [DataMember]
         public int FieldPosition
@@ -39,6 +40,7 @@ namespace ChoETL
                     Priority = value;
 
                 _fieldPosition = value;
+                IsFieldPositionAssgined = true;
             }
         }
 
