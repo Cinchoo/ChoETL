@@ -3599,14 +3599,11 @@ Jason,2";
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-<<<<<<< HEAD
+            WriteCSVUsingConfigWithNoMatchingFieldNames();
             WriteDataReaderTest();
             return;
 
             Issue283();
-=======
-            WriteCSVUsingConfigWithNoMatchingFieldNames();
->>>>>>> 97f98bd3a72956ebf90c4300d8285e0ec504b764
             return;
 
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
