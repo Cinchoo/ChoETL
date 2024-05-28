@@ -240,12 +240,17 @@ namespace ChoETL
                 else if (Configuration.TreatDateTimeAsString)
                     return typeof(string);
                 else
-                    return typeof(DateTime);
+                    return type; // typeof(DateTime);
             }
             else if (underlyingType == typeof(TimeSpan))
                 return typeof(string);
             else if (underlyingType == typeof(ChoCurrency))
-                return typeof(decimal);
+            {
+                if (type.IsNullableType())
+                    return typeof(decimal?);
+                else
+                    return typeof(decimal);
+            }
             else if (underlyingType == typeof(Guid))
                 return typeof(string);
             else if (underlyingType.IsEnum)

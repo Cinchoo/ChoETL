@@ -386,6 +386,12 @@ namespace ChoETL
         public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture,
             ChoRecordConfiguration config = null)
         {
+            if (config != null && config.CustomSetMemberValueOverride != null)
+            {
+                config.CustomSetMemberValueOverride(rec, fn, fieldValue, fieldConfig, culture);
+                return;
+            }
+
             if (fieldConfig.PDInternal == null)
                 fieldConfig.PDInternal = fieldConfig.PropertyDescriptorInternal;
 
@@ -394,7 +400,7 @@ namespace ChoETL
             if (ConvertMemberValue(rec, fn, fieldConfig, ref fieldValue, culture, config))
             {
                 if (fieldConfig.PIInternal != null)
-                    ChoType.SetPropertyValue(rec, fieldConfig.PIInternal.Name, fieldValue);
+                    ChoType.SetPropertyValue(rec, fieldConfig.PIInternal/*.Name*/, fieldValue);
                 else if (fieldConfig.PDInternal != null)
                     fieldConfig.PDInternal.SetValue(rec, fieldValue);
             }

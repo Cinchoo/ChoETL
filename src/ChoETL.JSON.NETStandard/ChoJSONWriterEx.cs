@@ -30,7 +30,7 @@ namespace ChoETL
                     )
                 {
                     w.Configure(config);
-                    w.UseJsonSerialization();
+                    //w.UseJsonSerialization();
 
                     w.Write(data.Select(rec => rec.ConvertToNestedObject()));
                 }

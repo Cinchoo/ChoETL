@@ -2444,30 +2444,188 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
         BlockingCollection<string> msg = new BlockingCollection<string>();
 
+        public class LoadTestRecord
+        {
+            public string SvyStartTime { get; set; }
+        }
+
+        private static DataTable GenerateDTWithBlobValues()
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("Blob", typeof(byte[]));
+
+            dt.Rows.Add(1, "First".ToByteArrayEx());
+            dt.Rows.Add(2, "Second".ToByteArrayEx());
+
+            return dt;
+        }
+
+        [Test]
+        public static void BlobDataTable2ParquetWithNestedKeyFormatOff()
+        {
+            var dt = GenerateDTWithBlobValues();
+
+            string filePath = "BlobDataTable2ParquetWithNestedKeyFormatOff.parquet";
+
+            string expected = @"Id,Blob
+1,""70,105,114,115,116""
+2,""83,101,99,111,110,100""";
+            using (var w = new ChoParquetWriter(filePath)
+                .UseNestedKeyFormat(false)
+                )
+            {
+                w.Write(dt);
+            }
+
+
+            var actual = ReadParquetFileAsCSV(filePath);
+            actual.Print();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void BlobDataTable2Parquet()
+        {
+            var dt = GenerateDTWithBlobValues();
+
+            string filePath = "BlobDataTable2Parquet.parquet";
+
+            string expected = @"Id,Blob
+1,""70,105,114,115,116""
+2,""83,101,99,111,110,100""";
+            using (var w = new ChoParquetWriter(filePath)
+                )
+            {
+                w.Write(dt);
+            }
+
+
+            var actual = ReadParquetFileAsCSV(filePath);
+            actual.Print();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void BlobDataTable2ParquetUsingAllowFlattenArrayOfType()
+        {
+            var dt = GenerateDTWithBlobValues();
+
+            string filePath = "BlobDataTable2ParquetUsingAllowFlattenArrayOfType.parquet";
+
+            string expected = @"Id,Blob
+1,""70,105,114,115,116""
+2,""83,101,99,111,110,100""";
+
+            ChoETLSettings.AllowFlattenArrayOfType = (t) =>
+            {
+                if (t == typeof(byte) || t.IsValueType)
+                    return false;
+
+                return true;
+            };
+
+            using (var w = new ChoParquetWriter(filePath)
+                )
+            {
+                w.Write(dt);
+            }
+
+
+            var actual = ReadParquetFileAsCSV(filePath);
+            actual.Print();
+            Assert.AreEqual(expected, actual);
+        }
+
+        private static DataTable GenerateDataTableWithNullableValueTypes()
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Id", typeof(int));
+            dt.Columns.Add("MgrId", typeof(long));
+            dt.Columns.Add("Salary", typeof(double));
+            dt.Columns.Add("JoinedDate", typeof(DateTime));
+
+
+            dt.Rows.Add(1, 100, 100000.10, DateTime.Now);
+            dt.Rows.Add(2, 200, 200000.10, DateTime.Now.AddDays(-1));
+            dt.Rows.Add(DBNull.Value, DBNull.Value, DBNull.Value, DBNull.Value);
+
+            return dt;
+        }
+
+        [Test]
+        public static void GenParquetFileWithNullableValueTypeDataTable()
+        {
+            var dt = GenerateDataTableWithNullableValueTypes();
+
+            string filePath = "GenParquetFileWithNullableValueTypeDataTable.parquet";
+
+            string expected = @"Id,MgrId,Salary,JoinedDate
+1,100,100000.1,4/21/2024
+2,200,200000.1,4/20/2024
+,,,";
+
+
+            using (var w = new ChoParquetWriter(filePath)
+                .Configure(c => c.MapParquetType = t =>
+                {
+                    if (t.IsValueType)
+                        return ChoType.GetNullableType(t);
+                    else
+                        return t;
+                })
+                )
+            {
+                w.Write(dt);
+            }
+
+
+            var actual = ReadParquetFileAsCSV(filePath);
+            actual.Print();
+            Assert.AreEqual(expected, actual);
+        }
+
+
         static void Main(string[] args)
         {
+            GenParquetFileWithNullableValueTypeDataTable();
+            return;
+
             string csvFilePath = @"C:\Users\nraj39\Downloads\sample_file_1_row.csv";
             string jsonFilePath = @"C:\Users\nraj39\Downloads\sample_file_1_row.json";
 
             //ParallelWrite(jsonFilePath);
             //return;
 
-            CreateTestCSVFile(1_000);
+            CreateTestCSVFile(10_000);
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
             using (var r = new ChoCSVReader(csvFilePath)
                     .Configure(c => c.LiteParsing = true)
-                    //.Configure(c => c.NestedKeySeparator = '/')
-                    //.Configure(c => c.ConvertToNestedObject = true)
+                    .CustomMemberValueOverride
+                    ((r, fn, fv, fc, c) =>
+                    {
+
+                    })
+                //.Configure(c => c.NestedKeySeparator = '/')
+                //.Configure(c => c.ConvertToNestedObject = true)
                 .WithFirstLineHeader())
             {
+                //using (var w = new ChoJSONWriter(jsonFilePath)
+                //    //.UseJsonSerialization()
+                //    )
+                //{
+                //    w.Write(r);
+                //}
+                ChoJSONWriterEx.ParallelWrite(jsonFilePath, r, 1000);
 
-                ChoJSONWriterEx.ParallelWrite(jsonFilePath, r, 100);
-                /*
-                //r.Loop();
-                //r.First().Print(); //.Loop();
+                //var recs = r.Select(r1 => r1.ConvertToNestedObject()).ToArray();
+                //recs.First().Print(); //.Loop();
+
+                stopwatch.Stop();
+                stopwatch.Elapsed.Print();
+
+                return;
                 var chunks = r.ChunkEx(1000).ToArray();
                 chunks.Length.Print();
 
@@ -2488,7 +2646,6 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 });
                 ConcatFiles(outFilePathList.ToArray(), jsonFilePath);
                 DeleteFiles(outFilePathList.ToArray());
-                */
             }
 
             stopwatch.Stop();
@@ -2525,7 +2682,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
         private readonly List<KeyValuePair<ChoCSVReader<dynamic>, ChoJSONWriter<dynamic>>> _rwPairs = new List<KeyValuePair<ChoCSVReader<dynamic>, ChoJSONWriter<dynamic>>>();
         private string _csvHeaderLine;
 
-        public ParallelCSVToJsonGenerator(string csvFilePath, string jaonFilePath, int noOfParallelism = 10) 
+        public ParallelCSVToJsonGenerator(string csvFilePath, string jaonFilePath, int noOfParallelism = 10)
         {
             _csvFilePath = csvFilePath;
             _jsonFilePath = jaonFilePath;

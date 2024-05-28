@@ -104,6 +104,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.Benchmark", "..\ChoE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoQuickJSONToCSVConversion", "..\Test\ChoQuickJSONToCSVConversion\ChoQuickJSONToCSVConversion.csproj", "{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoCSVQuoteFieldTest", "..\Test\ChoCSVQuoteFieldTest\ChoCSVQuoteFieldTest.csproj", "{488ECEA9-E03A-4C4A-AB46-35AAC69DD2DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -266,6 +268,10 @@ Global
 		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{488ECEA9-E03A-4C4A-AB46-35AAC69DD2DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{488ECEA9-E03A-4C4A-AB46-35AAC69DD2DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{488ECEA9-E03A-4C4A-AB46-35AAC69DD2DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{488ECEA9-E03A-4C4A-AB46-35AAC69DD2DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -301,6 +307,7 @@ Global
 		{C6DD33F3-07ED-4D54-8F00-A6AE3952DA8F} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{E14BBEC6-453A-4035-A0B3-A9A9BB527482} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{488ECEA9-E03A-4C4A-AB46-35AAC69DD2DB} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D35E7445-B861-41CC-B854-44981E4F9FFB}

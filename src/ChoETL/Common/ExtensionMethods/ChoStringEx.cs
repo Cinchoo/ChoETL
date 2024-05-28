@@ -1407,6 +1407,11 @@ namespace ChoETL
 
         #region ToByteArray Method
 
+        public static byte[] ToByteArrayEx(this string text)
+        {
+            return Encoding.ASCII.GetBytes(text);
+        }
+
         public static byte[] ToByteArray(this string text)
         {
             if (text.IsNullOrEmpty())

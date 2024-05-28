@@ -1037,6 +1037,14 @@ namespace ChoETL
 
             return this;
         }
+
+        public ChoCSVReader<T> CustomMemberValueOverride(CustomSetMemberValueOverrideHandler handler)
+        {
+            if (handler != null)
+                Configuration.CustomSetMemberValueOverride = (handler);
+
+            return this;
+        }
         public ChoCSVReader<T> Setup(Action<ChoCSVReader<T>> action)
         {
             if (action != null)
