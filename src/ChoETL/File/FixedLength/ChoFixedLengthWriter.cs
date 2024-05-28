@@ -161,6 +161,7 @@ namespace ChoETL
 
             Configuration.UseNestedKeyFormat = false;
 
+            int startIndex = 0;
             if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
@@ -171,7 +172,9 @@ namespace ChoETL
                     colType = row["DataType"] as Type;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(colName) { FieldType = colType });
+                    var size = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
+                    Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(colName) { FieldType = colType, StartIndex = startIndex, Size = size });
+                    startIndex += size;
                 }
             }
 
@@ -202,6 +205,7 @@ namespace ChoETL
             DataTable schemaTable = dt;
 
             int ordinal = 0;
+            int startIndex = 0;
             if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
@@ -212,7 +216,10 @@ namespace ChoETL
                     colType = col.DataType;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(colName) { FieldType = colType });
+                    var size = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
+
+                    Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(colName) { FieldType = colType, StartIndex = startIndex, Size = size });
+                    startIndex += size;
                 }
             }
 

@@ -506,8 +506,8 @@ namespace ChoETL
             if (RecordLength <= 0)
             {
                 int maxStartIndex = FixedLengthRecordFieldConfigurations.Max(f => f.StartIndex);
-                int maxSize = FixedLengthRecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex).Max(f1 => f1.Size.Value);
-                var fc = FixedLengthRecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex && f.Size.Value == maxSize).FirstOrDefault();
+                int maxSize = FixedLengthRecordFieldConfigurations.Any(f => f.StartIndex == maxStartIndex && f.Size != null) ? FixedLengthRecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex && f.Size != null).Max(f1 => f1.Size.Value) : 0;
+                var fc = FixedLengthRecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex && f.Size != null && f.Size.Value == maxSize).FirstOrDefault();
                 if (fc != null)
                 {
                     RecordLength = fc.StartIndex + fc.Size.Value;

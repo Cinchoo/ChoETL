@@ -1572,14 +1572,14 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
     ""Price"": null,
     ""Quantity"": ""2"",
     ""Name"": null,
-    ""CreateDate"": ""0001-01-01T12:00:00+00:00""
+    ""CreateDate"": null
   },
   {
     ""Id"": ""100"",
     ""Price"": null,
     ""Quantity"": null,
     ""Name"": null,
-    ""CreateDate"": ""0001-01-01T12:00:00+00:00""
+    ""CreateDate"": null
   },
   {
     ""Id"": null,
@@ -2544,8 +2544,8 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             dt.Columns.Add("JoinedDate", typeof(DateTime));
 
 
-            dt.Rows.Add(1, 100, 100000.10, DateTime.Now);
-            dt.Rows.Add(2, 200, 200000.10, DateTime.Now.AddDays(-1));
+            dt.Rows.Add(1, 100, 100000.10, _currentDateTime);
+            dt.Rows.Add(2, 200, 200000.10, _currentDateTime.AddDays(-1));
             dt.Rows.Add(DBNull.Value, DBNull.Value, DBNull.Value, DBNull.Value);
 
             return dt;
@@ -2559,8 +2559,8 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             string filePath = "GenParquetFileWithNullableValueTypeDataTable.parquet";
 
             string expected = @"Id,MgrId,Salary,JoinedDate
-1,100,100000.1,4/21/2024
-2,200,200000.1,4/20/2024
+1,100,100000.1,6/10/2023
+2,200,200000.1,6/9/2023
 ,,,";
 
 

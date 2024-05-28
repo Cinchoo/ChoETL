@@ -21,7 +21,7 @@ namespace ChoFixedLengthWriterTest
         {
 			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            POCOTest();
+            WriteDataReaderTest();
         }
 
         [SetUp]
@@ -36,9 +36,9 @@ namespace ChoFixedLengthWriterTest
         [Test]
         public static void WriteDataTableTest()
         {
-            string expected = @"Id,Name
-1,Tom
-2,Mark";
+            string expected = @"Id        Name                     
+0000000001Tom                      
+0000000002Mark                     ";
 
             DataTable dt = new DataTable();
             dt.Columns.Add("Id", typeof(int));
@@ -59,9 +59,9 @@ namespace ChoFixedLengthWriterTest
         [Test]
         public static void WriteDataReaderTest()
         {
-            string expected = @"Id,Name
-1,Tom
-2,Mark";
+            string expected = @"Id        Name                     
+0000000001Tom                      
+0000000002Mark                     ";
 
             DataTable dt = new DataTable();
             dt.Columns.Add("Id", typeof(int));
