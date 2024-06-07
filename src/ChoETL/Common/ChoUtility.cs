@@ -2251,8 +2251,9 @@ namespace ChoETL
                 };
             }
 
-            if (columnMappings == null || columnMappings.Count == 0)
+            if (columnMappings != null && columnMappings.Count > 0)
             {
+                bcp.ColumnMappings.Clear();
                 foreach (KeyValuePair<string, string> keyValuePair in columnMappings)
                     bcp.ColumnMappings.Add(keyValuePair.Key, keyValuePair.Value);
             }
