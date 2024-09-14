@@ -18,9 +18,12 @@ namespace ChoETL
     {
         private string GetTypeFormat(object parameter)
         {
-            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
-            if (ts != null)
+            var typeFormat = parameter.GetValueAt<object>(0);
+
+            if (typeFormat is ChoTypeConverterFormatSpec ts)
                 return ts.DateTimeFormat;
+            else if (typeFormat is string tf)
+                return tf;
 
             return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
         }

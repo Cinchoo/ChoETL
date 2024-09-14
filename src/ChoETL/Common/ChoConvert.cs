@@ -197,7 +197,7 @@ namespace ChoETL
                     for (int index = 0; index < converters.Length; ++index)
                     {
                         object conv = converters[index];
-                        if (parameters != null && parameters.Length > 0)
+                        if (parameters != null && parameters.Length > 0 && index < parameters.Length)
                             objArray = parameters[index];
 
                         if (config != null && objArray == null)

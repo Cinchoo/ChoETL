@@ -515,7 +515,7 @@ namespace ChoETL
                                 RaiseMembersDiscovered(dict);
 
                                 foreach (object rec1 in buffer)
-                                    yield return ConvertToNestedObjectIfApplicable(new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec)) as object, headerLineLoaded);
+                                    yield return ConvertToNestedObjectIfApplicable(new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec, config: Configuration)) as object, headerLineLoaded);
                             }
                         }
                         else
