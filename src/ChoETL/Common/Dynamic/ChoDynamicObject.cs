@@ -726,7 +726,9 @@ namespace ChoETL
 
         public dynamic Clone()
         {
-            return new ChoDynamicObject(CloneDictionary(_kvpDict));
+            var dobj = new ChoDynamicObject(CloneDictionary(_kvpDict));
+            dobj.DynamicObjectName = _dynamicObjectName;
+            return dobj;
         }
 
         private IDictionary<string, object> CloneDictionary(IDictionary<string, object> dict)
@@ -761,6 +763,10 @@ namespace ChoETL
         {
             if (value == null)
                 return null;
+            else if (value is ChoDynamicObject dobj)
+            {
+                return dobj.Clone();
+            }
             else if (value is IDictionary)
                 return CloneDictionary(value as IDictionary);
             else if (value is IDictionary<string, object>)
