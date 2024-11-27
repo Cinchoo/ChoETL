@@ -18,12 +18,14 @@ namespace ChoETL
     {
         private ChoEnumFormatSpec GetTypeFormat(object parameter)
         {
-            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
-            if (ts != null)
+            var typeFormat = parameter.GetValueAt<object>(0);
+
+            if (typeFormat is ChoTypeConverterFormatSpec ts)
                 return ts.EnumFormat;
 
             return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
         }
+
         public virtual object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string && targetType.IsEnum)

@@ -20,11 +20,18 @@ namespace ChoETL
         {
 
         }
-        private ChoBooleanFormatSpec GetTypeFormat(object parameter)
+        private ChoBooleanFormatSpec GetTypeFormat(object parameter, out string customBoolFormatText)
         {
-            ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
-            if (ts != null)
+            customBoolFormatText = null;
+            var typeFormat = parameter.GetValueAt<object>(0);
+
+            if (typeFormat is ChoTypeConverterFormatSpec ts)
+            {
+                customBoolFormatText = ts.CustomBooleanFormatText;
                 return ts.BooleanFormat;
+            }
+            else if (typeFormat is string tf)
+                return ChoBooleanFormatSpec.Custom;
 
             return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
         }
@@ -37,45 +44,100 @@ namespace ChoETL
                 txt = txt.NTrim();
 
                 if (txt.IsNull())
-                    return false;
+                    throw new ChoParserException($"Invalid data `{txt}` found.");
 
-                ChoBooleanFormatSpec booleanFormat = GetTypeFormat(parameter); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
+                string customBoolFormatText = null;
+                ChoBooleanFormatSpec booleanFormat = GetTypeFormat(parameter, out customBoolFormatText); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
                 switch (booleanFormat)
                 {
                     case ChoBooleanFormatSpec.YOrN:
                         if (txt.Length == 1)
-                            return txt[0] == 'Y' || txt[0] == 'y' ? true : false;
-                        else
-                            return false;
+                        {
+                            if (txt[0] == 'Y' || txt[0] == 'y')
+                                return true;
+                            else if (txt[0] == 'N' || txt[0] == 'n')
+                                return false;
+                        }
+
+                        throw new ChoParserException($"Invalid data `{txt}` found.");
                     case ChoBooleanFormatSpec.TOrF:
                         if (txt.Length == 1)
-                            return txt[0] == 'T' || txt[0] == 't' ? true : false;
-                        else
-                            return false;
+                        {
+                            if (txt[0] == 'T' || txt[0] == 't')
+                                return true;
+                            else if (txt[0] == 'F' || txt[0] == 'f')
+                                return false;
+                        }
+
+                        throw new ChoParserException($"Invalid data `{txt}` found.");
                     case ChoBooleanFormatSpec.TrueOrFalse:
-                        return String.Compare(txt, "true", true) == 0 ? true : false;
+                        if (String.Compare(txt, "true", true) == 0)
+                            return true;
+                        else if (String.Compare(txt, "false", true) == 0)
+                            return false;
+
+                        throw new ChoParserException($"Invalid data `{txt}` found.");
                     case ChoBooleanFormatSpec.YesOrNo:
-                        return String.Compare(txt, "yes", true) == 0 ? true : false;
+                        if (String.Compare(txt, "yes", true) == 0)
+                            return true;
+                        else if (String.Compare(txt, "no", true) == 0)
+                            return false;
+
+                        throw new ChoParserException($"Invalid data `{txt}` found.");
                     case ChoBooleanFormatSpec.ZeroOrOne:
                         if (txt.Length == 1)
-                            return txt[0] == '1' ? true : false;
-                        else
-                            return false;
+                        {
+                            if (txt[0] == '1')
+                                return true;
+                            else if (txt[0] == '0')
+                                return false;
+                        }
+
+                        throw new ChoParserException($"Invalid data `{txt}` found.");
                     default:
                         string boolTxt = parameter.GetValueAt<string>(0);
                         if (boolTxt.IsNullOrWhiteSpace())
+                            boolTxt = customBoolFormatText;
+
+                        string trueBoolTxt = boolTxt.SplitNTrim().FirstOrDefault();
+                        string falseBoolTxt = boolTxt.SplitNTrim().Skip(1).FirstOrDefault();
+                        if (trueBoolTxt.IsNullOrWhiteSpace()
+                            || falseBoolTxt.IsNullOrWhiteSpace())
                         {
                             if (txt.Length == 1)
                             {
-                                return txt[0] == 'Y' || txt[0] == 'y' || txt[0] == '1' ? true : false;
+                                if (txt[0] == 'Y' || txt[0] == 'y'
+                                    || txt[0] == 'T' || txt[0] == 't'
+                                    || txt[0] == '1')
+                                    return true;
+                                else if (txt[0] == 'N' || txt[0] == 'n'
+                                    || txt[0] == 'F' || txt[0] == 'f'
+                                    || txt[0] == '0')
+                                    return false;
+
+                                throw new ChoParserException($"Invalid data `{txt}` found.");
                             }
                             else
                             {
-                                return String.Compare(txt, "true", true) == 0 || String.Compare(txt, "yes", true) == 0 ? true : false;
+                                if (String.Compare(txt, "true", true) == 0
+                                    || String.Compare(txt, "yes", true) == 0)
+                                    return true;
+                                else if (String.Compare(txt, "false", true) == 0
+                                    || String.Compare(txt, "no", true) == 0)
+                                    return false;
+
+                                throw new ChoParserException($"Invalid data `{txt}` found.");
                             }
                         }
                         else
-                            return String.Compare(txt, boolTxt, true) == 0 ? true : false;
+                        {
+                            if (String.Compare(txt, trueBoolTxt, true) == 0)
+                                return true;
+                            else if (String.Compare(txt, falseBoolTxt, true) == 0)
+                                return false;
+
+                            throw new ChoParserException($"Invalid data `{txt}` found.");
+                        }
                 }
             }
             else
@@ -93,7 +155,8 @@ namespace ChoETL
                 {
                     bool boolValue = (bool)value;
 
-                    ChoBooleanFormatSpec booleanFormat = GetTypeFormat(parameter); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
+                    string customBoolFormatText = null;
+                    ChoBooleanFormatSpec booleanFormat = GetTypeFormat(parameter, out customBoolFormatText); //.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
                     switch (booleanFormat)
                     {
                         case ChoBooleanFormatSpec.TOrF:
@@ -105,7 +168,19 @@ namespace ChoETL
                         case ChoBooleanFormatSpec.YesOrNo:
                             return boolValue ? "Yes" : "No";
                         default:
-                            return boolValue ? "1" : "0";
+                            if (customBoolFormatText == null)
+                                return boolValue ? "1" : "0";
+                            else
+                            {
+                                string boolTxt = parameter.GetValueAt<string>(0);
+                                if (boolTxt.IsNullOrWhiteSpace())
+                                    boolTxt = customBoolFormatText;
+
+                                string trueBoolTxt = boolTxt.SplitNTrim().FirstOrDefault();
+                                string falseBoolTxt = boolTxt.SplitNTrim().Skip(1).FirstOrDefault();
+
+                                return boolValue ? trueBoolTxt : falseBoolTxt;
+                            }
                     }
                 }
             }

@@ -135,9 +135,9 @@ namespace ChoETL
             {
                 if (fieldConfig.Converters.IsNullOrEmpty())
                 {
-                    object[] fcParams = GetPropertyConvertersParams(fieldConfig);
+                    object[] fcParams = null;
+                    object[] convs = null;
                     Type fieldType = fieldConfig.PDInternal != null ? fieldConfig.PDInternal.PropertyType : null;
-                    object[] convs = fieldConfig.PropConvertersInternal;
                     if (convs.IsNullOrEmpty() && config != null)
                     {
                         var convs1 = config.GetConvertersForType(fieldType, fieldValue);
@@ -147,6 +147,18 @@ namespace ChoETL
                             fcParams = GetPropertyConvertersParams(config.GetConverterParamsForType(fieldType, fieldValue), fieldConfig.FormatText);
                         }
                     }
+                    if (convs.IsNullOrEmpty())
+                    {
+                        object[] convs1 = fieldConfig.PropConvertersInternal;
+                        if (!convs1.IsNullOrEmpty())
+                        {
+                            convs = convs1;
+                            fcParams = GetPropertyConvertersParams(fieldConfig);
+                        }
+                    }
+                    else
+                        fcParams = GetPropertyConvertersParams(fieldConfig);
+
                     if (!convs.IsNullOrEmpty())
                     {
                         fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType == null ? typeof(object) : fieldConfig.FieldType, null, convs, fcParams, culture,
@@ -695,7 +707,7 @@ namespace ChoETL
 
                         var ft = nativeType ? fieldType : (fieldConfig.SourceType != null ? fieldConfig.SourceType :
                             (fieldValue == null ? typeof(string) : fieldValue.GetType()));
-                        object[] convs = fieldConfig.PropConvertersInternal;
+                        object[] convs = null; // fieldConfig.PropConvertersInternal;
                         if (convs.IsNullOrEmpty() && config != null)
                         {
                             var convs1 = config.GetConvertersForType(propType, fieldValue);
@@ -705,6 +717,18 @@ namespace ChoETL
                                 fcParams = GetPropertyConvertersParams(config.GetConverterParamsForType(ft, fieldValue), fieldConfig.FormatText);
                             }
                         }
+                        if (convs.IsNullOrEmpty())
+                        {
+                            object[] convs1 = fieldConfig.PropConvertersInternal;
+                            if (!convs1.IsNullOrEmpty())
+                            {
+                                convs = convs1;
+                                fcParams = GetPropertyConvertersParams(fieldConfig);
+                            }
+                        }
+                        else
+                            fcParams = GetPropertyConvertersParams(fieldConfig);
+
                         fieldValue = ChoConvert.ConvertTo(fieldValue, ft, null, convs, null, culture, config: config);
                     }
                     else

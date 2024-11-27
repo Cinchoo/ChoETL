@@ -2071,7 +2071,7 @@ Date,Count
                 .WithFirstLineHeader()
                 .WithField("Id", fieldType: typeof(int))
                 .WithField("DateCreated", fieldType: typeof(DateTime), formatText: "yyyyMMdd")
-                .WithField("IsActive", fieldType: typeof(bool), formatText: "A")
+                .WithField("IsActive", fieldType: typeof(bool), formatText: "A,B")
                 //.Configure(c => c.RegisterTypeConverterForType<bool>(new ChoBooleanCustomConverter()))
                 //.WithField("IsActive", fieldType: typeof(bool), valueConverter: o => o.ToNString() == "A")
                 )
@@ -2088,7 +2088,7 @@ Date,Count
             public int Id { get; set; }
             [DisplayFormat(DataFormatString = "yyyyMMdd")]
             public DateTime DateCreated { get; set; }
-            [DisplayFormat(DataFormatString = "A")]
+            [DisplayFormat(DataFormatString = "A,B")]
             public bool IsActive { get; set; }
 
             public override bool Equals(object obj)
@@ -2123,8 +2123,9 @@ Date,Count
                 1, 20180201, A
                 2, 20171120, B";
 
-            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.Custom;
-            using (var p = new ChoCSVReader<Consumer>(new StringReader(csv)))
+            //ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.Custom;
+            using (var p = new ChoCSVReader<Consumer>(new StringReader(csv))
+                )
             {
                 foreach (var rec in p)
                     actual.Add(rec);
@@ -2173,8 +2174,10 @@ Date,Count
                 1, 20180201, A
                 2, 20171120, B";
 
-            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.Custom;
-            using (var p = new ChoCSVReader<ConsumerOptIn>(new StringReader(csv)))
+            //ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.Custom;
+            using (var p = new ChoCSVReader<ConsumerOptIn>(new StringReader(csv))
+                .WithField(f => f.IsActive, formatText: "A,B")
+                )
             {
                 foreach (var rec in p)
                     actual.Add(rec);
@@ -7183,6 +7186,140 @@ Debug,RollingFile,Serilog.Formatting.Json.JsonFormatter, Serilog,C:\Logs\logConf
                 Assert.AreEqual(expected, actual);
             }
         }
+
+        public class EmployeeC
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public bool IsActive { get; set; }
+        }
+
+        [Test]
+        public static void CaptureError3()
+        {
+            string csv = @"Id, Name, IsActive
+1, Tom, 0
+2, Mark, 1
+3, Shelly, 2";
+
+            string expected = @"";
+            using (var r = ChoCSVReader<EmployeeC>.LoadText(csv)
+                .WithFirstLineHeader()
+                .TypeConverterFormatSpec(ts => ts.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne)
+                //.Configure(c => c.RegisterTypeConverterForType<Boolean>(new BooleanCustomConverter()))
+                //.ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                Assert.Catch<ChoReaderException>(() =>
+                {
+                    var actual = JsonConvert.SerializeObject(r, Formatting.Indented);
+                    Assert.AreEqual(expected, actual);
+                }
+                );
+            }
+        }
+
+        public class BooleanCustomConverter : IChoValueConverter
+        {
+            private ChoBooleanFormatSpec GetTypeFormat(object parameter)
+            {
+                ChoTypeConverterFormatSpec ts = parameter.GetValueAt<ChoTypeConverterFormatSpec>(0);
+                if (ts != null)
+                    return ts.BooleanFormat;
+
+                return parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
+            }
+
+            public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                if (targetType != typeof(bool))
+                    return value;
+
+                if (value is string)
+                {
+                    string txt = value as string;
+                    txt = txt.NTrim();
+
+                    if (txt.IsNull())
+                        return false;
+
+                    ChoBooleanFormatSpec booleanFormat = GetTypeFormat(parameter);
+                    switch (booleanFormat)
+                    {
+                        case ChoBooleanFormatSpec.YOrN:
+                            if (txt.Length == 1)
+                                return txt[0] == 'Y' || txt[0] == 'y' ? true : false;
+                            else
+                                return false;
+                        case ChoBooleanFormatSpec.TOrF:
+                            if (txt.Length == 1)
+                                return txt[0] == 'T' || txt[0] == 't' ? true : false;
+                            else
+                                return false;
+                        case ChoBooleanFormatSpec.TrueOrFalse:
+                            return String.Compare(txt, "true", true) == 0 ? true : false;
+                        case ChoBooleanFormatSpec.YesOrNo:
+                            return String.Compare(txt, "yes", true) == 0 ? true : false;
+                        case ChoBooleanFormatSpec.ZeroOrOne:
+                            if (txt.Length == 1)
+                                return txt[0] == '1' ? true : false;
+                            else
+                                return false;
+                        default:
+                            string boolTxt = parameter.GetValueAt<string>(0);
+                            if (boolTxt.IsNullOrWhiteSpace())
+                            {
+                                if (txt.Length == 1)
+                                {
+                                    return txt[0] == 'Y' || txt[0] == 'y' || txt[0] == '1' ? true : false;
+                                }
+                                else
+                                {
+                                    return String.Compare(txt, "true", true) == 0 || String.Compare(txt, "yes", true) == 0 ? true : false;
+                                }
+                            }
+                            else
+                                return String.Compare(txt, boolTxt, true) == 0 ? true : false;
+                    }
+                }
+                else
+                    return value;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+            {
+                if (targetType == typeof(string))
+                {
+                    if (value == null)
+                        value = false;
+
+                    if (value is bool)
+                    {
+                        bool boolValue = (bool)value;
+
+                        ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
+                        switch (booleanFormat)
+                        {
+                            case ChoBooleanFormatSpec.TOrF:
+                                return boolValue ? "T" : "F";
+                            case ChoBooleanFormatSpec.YOrN:
+                                return boolValue ? "Y" : "N";
+                            case ChoBooleanFormatSpec.TrueOrFalse:
+                                return boolValue ? "True" : "False";
+                            case ChoBooleanFormatSpec.YesOrNo:
+                                return boolValue ? "Yes" : "No";
+                            default:
+                                return boolValue ? "1" : "0";
+                        }
+                    }
+                }
+
+                return value;
+            }
+        }
         [Test]
         public static void Issue123()
         {
@@ -7670,7 +7807,7 @@ Row3Column0,Row3Column2,Row3Column3";
             var actual = json.ToString();
             Assert.AreEqual(expected, actual);
         }
-        public class ChoBooleanCustomConverter : IValueConverter
+        public class ChoBooleanCustomConverter : IChoValueConverter
         {
             public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
             {
@@ -7804,8 +7941,9 @@ Mrs,24.3,N,100247,CUXXX,email@gmail.com,User,Test,Test User,17/09/1957,64,DAILIE
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
                 .WithMaxScanRows(2)
-                .Configure(c => c.RegisterTypeConverterForType<Boolean>(new ChoBooleanCustomConverter()))
+                //.Configure(c => c.RegisterTypeConverterForType<Boolean>(new ChoBooleanCustomConverter()))
                 .TypeConverterFormatSpec(tf => tf.DateTimeFormat = "dd/MM/yyyy")
+                .TypeConverterFormatSpec(tf => tf.BooleanFormat = ChoBooleanFormatSpec.YOrN)
                 .Configure(c => c.FieldTypeAssessor = new ChoFieldTypeAssessor((k, t, fs, ci) =>
                 {
                     if (t.ToNString().Length == 1 && (t.ToNString() == "Y" || t.ToNString() == "N"))

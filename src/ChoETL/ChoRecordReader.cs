@@ -109,14 +109,16 @@ namespace ChoETL
 
         protected virtual IDictionary<string, object> MigrateToNewSchema(IDictionary<string, object> rec, 
             IDictionary<string, Type> recTypes,
-            ChoTypeConverterFormatSpec typeConverterFormatSpec = null, bool ignoreSetDynamicObjectName = false)
+            ChoTypeConverterFormatSpec typeConverterFormatSpec = null, bool ignoreSetDynamicObjectName = false,
+            ChoRecordConfiguration config = null)
         {
             IDictionary<string, object> newRec = new ChoDynamicObject(); //  new Dictionary<string, object>();
             foreach (var kvp in rec)
             {
                 //newRec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                 if (recTypes.ContainsKey(kvp.Key))
-                    newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key], typeConverterFormatSpec: typeConverterFormatSpec));
+                    newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key], typeConverterFormatSpec: typeConverterFormatSpec,
+                        config: config));
                 else
                     newRec.Add(kvp.Key, kvp.Value); // typeof(ChoDynamicObject));
 

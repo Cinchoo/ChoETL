@@ -202,7 +202,8 @@ namespace ChoETL
         {
             return FlattenBy(dicts, fields, false);
         }
-        public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, string[] fields, bool turnOffSingularization)
+        public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, string[] fields, bool turnOffSingularization,
+            bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null)
         {
             var cache = dicts != null ? dicts.OfType<object>().ToArray() : null;
             if (cache == null)
@@ -222,7 +223,7 @@ namespace ChoETL
                 {
                     if (rec is IDictionary<string, object>)
                     {
-                        foreach (var child in FlattenBy((IDictionary<string, object>)rec, fields, turnOffSingularization))
+                        foreach (var child in FlattenBy((IDictionary<string, object>)rec, fields, turnOffSingularization, ignoreDictionaryFieldPrefix, valueNamePrefix))
                             yield return child;
                     }
                     else

@@ -45,6 +45,7 @@ namespace ChoETL
         public string DateTimeOffsetFormat { get; set; }
         public DateTimeStyles DateTimeStyles { get; set; }
         public ChoBooleanFormatSpec BooleanFormat { get; set; }
+        public string CustomBooleanFormatText { get; set; }
         public ChoEnumFormatSpec EnumFormat { get; set; }
 
         public NumberStyles? CurrencyNumberStyle { get; set; }

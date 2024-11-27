@@ -406,7 +406,7 @@ namespace ChoETL
                             RaiseMembersDiscovered(dict);
 
                             foreach (object rec1 in buffer)
-                                yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec));
+                                yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec, config: Configuration));
 
                             buffer.Clear();
                         }
@@ -448,7 +448,7 @@ namespace ChoETL
                     RaiseMembersDiscovered(dict);
 
                     foreach (object rec1 in buffer)
-                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec));
+                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes, Configuration.TypeConverterFormatSpec, config: Configuration));
                 }
             }
 
