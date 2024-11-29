@@ -90,10 +90,12 @@ namespace ChoETL
             {
                 _sr = new Lazy<StreamReader>(() =>
                 {
-                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
-                        return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
-                    else
-                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                    return new StreamReader(inStream);
+                 
+                    //if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                    //    return new StreamReader(inStream, Configuration.GetEncodingInternal(inStream), false, Configuration.BufferSize);
+                    //else
+                    //    return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
                 });
             }
             //_closeStreamOnDispose = true;
