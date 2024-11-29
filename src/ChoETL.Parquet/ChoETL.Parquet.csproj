@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>1.0.1.33</Version>
+    <Version>1.0.1.34</Version>
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Description>Parquet extension to Cinchoo ETL framework</Description>
