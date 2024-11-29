@@ -131,9 +131,15 @@ namespace ChoETL
             return null;
         }
 
+        bool _headerWritten = false;
         public void WriteFields(object writer, params object[] fieldValues)
         {
             _sw = writer;
+
+            TextWriter sw = writer as TextWriter;
+            ChoGuard.ArgumentNotNull(sw, "TextWriter");
+            WriteHeaderLine(sw, null);
+
             if (fieldValues == null)
                 return;
 
@@ -946,6 +952,12 @@ namespace ChoETL
 
         private void WriteHeaderLine(TextWriter sw, string[] fieldNames)
         {
+            if (_headerWritten)
+            {
+                return;
+            }
+            
+            _headerWritten = true;
             if (HasExcelSeparator && _firstLine)
                 Write(sw, "sep={0}".FormatString(Configuration.Delimiter));
 
