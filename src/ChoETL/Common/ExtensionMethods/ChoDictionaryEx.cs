@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace ChoETL
 {
@@ -200,10 +201,10 @@ namespace ChoETL
 
         public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, params string[] fields)
         {
-            return FlattenBy(dicts, fields, false);
+            return FlattenBy(dicts, fields, false, true);
         }
-        public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, string[] fields, bool turnOffSingularization,
-            bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null)
+        public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, string[] fields, bool turnOffSingularization = false,
+            bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null, string nestedKeySeparator = "_")
         {
             var cache = dicts != null ? dicts.OfType<object>().ToArray() : null;
             if (cache == null)
@@ -223,7 +224,8 @@ namespace ChoETL
                 {
                     if (rec is IDictionary<string, object>)
                     {
-                        foreach (var child in FlattenBy((IDictionary<string, object>)rec, fields, turnOffSingularization, ignoreDictionaryFieldPrefix, valueNamePrefix))
+                        foreach (var child in FlattenBy((IDictionary<string, object>)rec, fields, turnOffSingularization, ignoreDictionaryFieldPrefix, 
+                            valueNamePrefix, nestedKeySeparator))
                             yield return child;
                     }
                     else
@@ -235,18 +237,19 @@ namespace ChoETL
         {
             return Flatten(dict, false);
         }
-        public static IEnumerable<dynamic> Flatten(this IDictionary<string, object> dict, bool turnOffSingularization, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null
+        public static IEnumerable<dynamic> Flatten(this IDictionary<string, object> dict, bool turnOffSingularization, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null,
+            string nestedKeySeparator = "_"
             )
         {
             var fields = GetNestedKeys(dict).ToArray();
-            return FlattenBy(dict, fields, turnOffSingularization, ignoreDictionaryFieldPrefix, valueNamePrefix);
+            return FlattenBy(dict, fields, turnOffSingularization, ignoreDictionaryFieldPrefix, valueNamePrefix, nestedKeySeparator);
         }
         public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, params string[] fields)
         {
             return FlattenBy(dict, fields, false);
         }
         public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, string[] fields,
-            bool turnOffSingularization = false, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null
+            bool turnOffSingularization = false, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null, string nestedKeySeparator = "_"
             )
         {
             if (fields.IsNullOrEmpty())
@@ -256,18 +259,26 @@ namespace ChoETL
                 yield return dict;
             else
             {
+                string parentKey = null;
                 dynamic dest = new ChoDynamicObject();
-                dest.Merge(dict);
+                if (dict is ChoDynamicObject dobj)
+                {
+                    if (dobj.DynamicObjectName != ChoDynamicObject.DefaultName)
+                        parentKey = dobj.DynamicObjectName;
+                }
+                dest.Merge(dict, nestedKeySeparator: "_", ignoreDictionaryFieldPrefix: ignoreDictionaryFieldPrefix, parentKey: parentKey);
 
-                foreach (var rec in FlattenByInternal(dict, dest, fields, null, turnOffSingularization, ignoreDictionaryFieldPrefix, valueNamePrefix))
+                foreach (var rec in FlattenByInternal(dict, dest, fields, null, turnOffSingularization, ignoreDictionaryFieldPrefix, valueNamePrefix, nestedKeySeparator))
                     yield return rec;
             }
         }
 
         private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields, string key = null,
-            bool turnOffSingularization = false, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null
+            bool turnOffSingularization = false, bool ignoreDictionaryFieldPrefix = false, string valueNamePrefix = null, string nestedKeySeparator = "_"
             )
         {
+            nestedKeySeparator = nestedKeySeparator ?? "_";
+
             if (fields.Length == 0)
             {
                 if (!key.IsNullOrWhiteSpace())
@@ -284,10 +295,22 @@ namespace ChoETL
             }
             else
             {
+                if (key != null)
+                {
+                    if (dict is ChoDynamicObject dobj)
+                    {
+                        dobj.DynamicObjectName = key;
+                    }
+                }
                 foreach (var kvp in dict.Where(kvp => !fields.Any(f => f == kvp.Key)))
                 {
+                    string key1 = kvp.Key;
+                    if (key != null && !ignoreDictionaryFieldPrefix)
+                    {
+                        key1 = $"{key}{nestedKeySeparator}{key1}";
+                    }
                     if (kvp.Value != null)
-                        dest.Add(kvp.Key, kvp.Value);
+                        dest.Add(key1, kvp.Value);
                 }
             }
 
@@ -316,6 +339,7 @@ namespace ChoETL
                         foreach (var child in (IList)dictField)
                         {
                             var newKey = turnOffSingularization ? field : field.ToSingular();
+
                             var dest1 = dest.Clone();
                             dest1.Remove(field);
                             //dest1.Add($"{newKey}", child);
@@ -353,7 +377,7 @@ namespace ChoETL
                         foreach (IDictionary<string, object> child in (IEnumerable)dictField)
                         {
                             var dest1 = dest.Clone();
-                            dest1.Merge(child);
+                            dest1.Merge(child, nestedKeySeparator: nestedKeySeparator, ignoreDictionaryFieldPrefix: ignoreDictionaryFieldPrefix, parentKey: key);
                             dest1.Remove(field);
                             if (fields.Skip(1).Count() == 0)
                                 yield return dest1;
@@ -368,17 +392,27 @@ namespace ChoETL
                 }
                 else
                 {
+                    string name = null;
+                    if (ele is ChoDynamicObject dobj)
+                    {
+                        if (dobj.DynamicObjectName != ChoDynamicObject.DefaultName)
+                            name = dobj.DynamicObjectName;
+                    }
                     IDictionary<string, object> child = ele as IDictionary<string, object>;
                     if (child != null)
                     {
                         var dest1 = dest.Clone();
-                        dest1.Merge(child);
+                        var key1 = name;
+                        if (!ignoreDictionaryFieldPrefix && !key.IsNullOrWhiteSpace())
+                            key1 = $"{key}{nestedKeySeparator}{key1}";
+
+                        dest1.Merge(child, nestedKeySeparator: nestedKeySeparator, ignoreDictionaryFieldPrefix: ignoreDictionaryFieldPrefix, parentKey: key1);
                         dest1.Remove(field);
                         if (fields.Skip(1).Count() == 0)
                             yield return dest1;
                         else
                         {
-                            foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray(), null, turnOffSingularization,
+                            foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray(), name, turnOffSingularization,
                                 ignoreDictionaryFieldPrefix, valueNamePrefix))
                                 yield return ret;
                         }

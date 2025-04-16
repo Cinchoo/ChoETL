@@ -385,6 +385,7 @@ namespace ChoETL
         public bool TurnOffBuiltInJsonConverters { get; private set; }
         public bool IgnoreArrayIndex { get; set; } = true;
         public string FlattenByNodeName { get; set; }
+        public string[] FlattenObjectByFieldNames { get; set; }
         public string FlattenByJsonPath { get; set; }
         public Func<object, JToken> ObjectToJTokenConverter { get; set; }
         public bool FlattenIfJArrayWhenReading { get; set; } = true;

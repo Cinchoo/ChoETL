@@ -785,20 +785,25 @@ namespace ChoETL
                 return value;
         }
 
-        public void Merge(IDictionary<string, object> obj, bool skipIfSrcExists = false)
+        public void Merge(IDictionary<string, object> obj, bool skipIfSrcExists = false,
+            bool ignoreDictionaryFieldPrefix = false, string nestedKeySeparator = "_", string parentKey = null)
         {
             if (obj == null)
                 return;
 
             foreach (var kvp in obj)
             {
-                if (ContainsKey(kvp.Key))
+                string key = kvp.Key;
+                if (!ignoreDictionaryFieldPrefix && !parentKey.IsNullOrWhiteSpace())
+                    key = $"{parentKey}{nestedKeySeparator}{key}";
+
+                if (ContainsKey(key))
                 {
                     if (skipIfSrcExists)
                         continue;
                 }
 
-                SetPropertyValue(kvp.Key, kvp.Value);
+                SetPropertyValue(key, kvp.Value);
                 //this[kvp.Key] = kvp.Value;
             }
         }
@@ -1256,6 +1261,8 @@ namespace ChoETL
             }
         }
 
+        public bool SkipXmlWrite { get; set; }
+
         public int Count
         {
             get
@@ -1614,7 +1621,7 @@ namespace ChoETL
                         if (nsMgr.GetNamespaceForPrefix(nsPrefix1) == null)
                             continue;
                     }
-                    msg.AppendFormat(@" {0}=""{1}""", key1, this[key1]);
+                    msg.AppendFormat(@" {0}=""{1}""", key1, System.Net.WebUtility.HtmlEncode(this[key1].ToNString()));
                 }
             }
             if (IsJsonArrayElement(tag))
@@ -1636,8 +1643,8 @@ namespace ChoETL
                 if (hasAttrs)
                 {
                     msg.AppendFormat(">");
-                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(this[ChoDynamicObjectSettings.XmlValueToken].ToNString(), EOLDelimiter));
-                    msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
+                    msg.AppendFormat("{0}{1}", String.Empty, Indent(System.Net.WebUtility.HtmlEncode(this[ChoDynamicObjectSettings.XmlValueToken].ToNString()), String.Empty));
+                    msg.AppendFormat("{0}</{1}>", String.Empty, tag);
                 }
                 else
                 {
@@ -1649,7 +1656,7 @@ namespace ChoETL
                     }
 
                     msg.AppendFormat(">");
-                    msg.AppendFormat("{0}", value.ToNString());
+                    msg.AppendFormat("{0}", System.Net.WebUtility.HtmlEncode(value.ToNString()));
                     msg.AppendFormat("</{0}>", tag);
                 }
             }
@@ -1717,9 +1724,11 @@ namespace ChoETL
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
 
-            if (value is ChoDynamicObject)
+            if (value is ChoDynamicObject dobj)
             {
-                var dobj = value as ChoDynamicObject;
+                if (dobj.SkipXmlWrite)
+                    return;
+
                 if (dobj.NName == ChoDynamicObject.DefaultName && !key.IsNullOrWhiteSpace())
                     dobj.NName = key;
 
@@ -1796,6 +1805,9 @@ namespace ChoETL
                             {
                                 if (val is ChoDynamicObject collValue)
                                 {
+                                    if (collValue.SkipXmlWrite)
+                                        continue;
+
                                     if (collValue.NName == ChoDynamicObject.DefaultName && !key.IsNullOrWhiteSpace())
                                         collValue.NName = key.ToSingular();
 

@@ -9539,17 +9539,17 @@ a3cc4aaf-d4a3-4838-8205-7f2de6a8bad0|372||UploadComplete|||ExportSCMergedCompany
     ""Z"": -299.99999999999994
   }
 ]";
-                //.RegisterNodeConverterForType<List<Class2>>(o =>
-                // {
-                //     var value = o as JToken[];
-                //     var list = new List<Class2>();
-                //     foreach (var item in value.OfType<JArray>())
-                //     {
-                //         list.AddRange(item.ToObject<Class2[]>());
-                //     }
+            //.RegisterNodeConverterForType<List<Class2>>(o =>
+            // {
+            //     var value = o as JToken[];
+            //     var list = new List<Class2>();
+            //     foreach (var item in value.OfType<JArray>())
+            //     {
+            //         list.AddRange(item.ToObject<Class2[]>());
+            //     }
 
-                //     return list;
-                // })
+            //     return list;
+            // })
 
             using (var r = ChoJSONReader<D3Point>.LoadText(json)
                 .RegisterNodeConverterForType<D3Point>(o =>
@@ -11684,12 +11684,8 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
             string expected = @"<Root xmlns:xml=""http://www.w3.org/XML/1998/namespace"">
   <XElement>
     <properties>
-      <replace name=""firstElement"">
-      11111
-    </replace>
-      <replace name=""secondElement"">
-      2222
-    </replace>
+      <replace name=""firstElement"">11111</replace>
+      <replace name=""secondElement"">2222</replace>
     </properties>
   </XElement>
 </Root>";
@@ -13205,10 +13201,10 @@ something,""[{""""lala"""": """"a""""},{""""lala"""": """"b""""}]""";
                          //.WithField("Phone", jsonPath: "$.['Contact.Phone.Value']", isArray: false)
                          )
             {
-                r.Print();
-                return;
+                //r.Print();
+                //return;
                 DataTable dt = r.AsDataTable();
-                dt.DumpAsJson().Print();
+                dt.Print();
             }
         }
 
@@ -15096,10 +15092,324 @@ asdf,b,c,1,2";
 
         }
 
+        static string json325 = @"{
+  ""Name"": ""Test"",
+  ""type"": ""Test"",
+  ""entry"": [
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1807""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""john"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""Robet""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+
+          },
+          {
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
+    },
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1808""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""hello"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""test""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+          },
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
+    },
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1809""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""john"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""Robet""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+          },
+          {
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
+    },
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1810""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""hello"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""test""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+          },
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
+    }
+  ]
+}
+";
+
+        static void Json2CSVArrayOrSingleNodeHandling_Issue325()
+        {
+
+            using (var r = ChoJSONReader.LoadText(json325)
+                         .Configure(c => c.DefaultArrayHandling = false)
+                         .Configure(c => c.FlattenNode = true)
+                         .Configure(c => c.UseNestedKeyFormat = true)
+                         .Configure(c => c.FlattenByNodeName = "entry.resource.testtension")
+                         //.Configure(c => c.FlattenByJsonPath = "$..entry.resource.testtension")
+                         //.Configure(c => c.IgnoreArrayIndex = false)
+                         .Configure(c => c.NestedKeySeparator = '~')
+                         .Configure(c => c.NestedKeySeparator = '.')
+                //.WithJSONPath($"$..entry")
+                )
+            {
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithMaxScanRows(10)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.UseNestedKeyFormat = true)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    w.Write(r);
+                    //var r1 = r
+                    //    .Select(rec =>
+                    //    {
+                    //        //foreach (dynamic entry in rec.entry)
+                    //        {
+                    //            foreach (dynamic item in rec.resource.testtension)
+                    //            {
+                    //                if (item.value is IList)
+                    //                {
+
+                    //                }
+                    //                else
+                    //                    item.value = new string[] { item.value };
+                    //            }
+                    //        }
+                    //        return rec;
+                    //    })
+                    //    .FlattenBy(new string[] { "entry", "resource", "testtension" }).ToArray();
+
+                    //w.Write(r1);
+                }
+            }
+        }
+
+        static void Json2CSVArrayOrSingleNodeHandling_Issue325_1()
+        {
+
+            using (var r = ChoJSONReader.LoadText(json325)
+                //.WithJSONPath($"$..entry")
+                )
+            {
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithMaxScanRows(10)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.UseNestedKeyFormat = true)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    var r1 = r
+                        .Select(rec =>
+                        {
+                            foreach (dynamic entry in rec.entry)
+                            {
+                                foreach (dynamic item in entry.resource.testtension)
+                                {
+                                    if (item.value is IList)
+                                    {
+
+                                    }
+                                    else
+                                        item.value = new string[] { item.value };
+                                }
+                            }
+                            return rec;
+                        })
+                        .FlattenBy(new string[] { "entry", "resource", "testtension" }).ToArray();
+
+                    w.Write(r1);
+                }
+            }
+        }
+        static void Json2CSVArrayOrSingleNodeHandling_Issue325_2()
+        {
+            using (var r = ChoJSONReader.LoadText(json325)
+                .Configure(c => c.FlattenObjectByFieldNames = new string[] { "entry", "resource", "testtension" })
+                .Setup(c => c.AfterRecordLoad += (o, e) =>
+                {
+                    foreach (dynamic entry in ((dynamic)e.Record).entry)
+                    {
+                        foreach (dynamic item in entry.resource.testtension)
+                        {
+                            if (item.value is IList)
+                            {
+
+                            }
+                            else
+                                item.value = new string[] { item.value };
+                        }
+                    }
+                })
+                //.WithJSONPath($"$..entry")
+                )
+            {
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithMaxScanRows(10)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.UseNestedKeyFormat = true)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Sample32();
+            //FlattenNestedObjects();
+            //return;
+
+            Json2CSVArrayOrSingleNodeHandling_Issue325_2();
             return;
 
             Issue235();
@@ -20668,8 +20978,9 @@ ABC24689753";
                 .WithXPath("Companies/Company")
                 )
             {
-                w.Write(new ChoJSONReader(FileNameJsonToXmlJsonInput, new ChoJSONRecordConfiguration()
-                    /*.Configure(c => c.MaxScanRows = 1)*/));
+                var recs = new ChoJSONReader(FileNameJsonToXmlJsonInput, new ChoJSONRecordConfiguration()
+                    /*.Configure(c => c.MaxScanRows = 1)*/).ToArray();
+                w.Write(recs);
             }
 
             var actual = xml.ToString();

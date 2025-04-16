@@ -1,6 +1,5 @@
 <Root>
-  <book>
-    <id>bk101</id>
+  <book id="bk101">
     <author>Gambardella, Matthew</author>
     <title>XML Developer's Guide [49-o]</title>
     <genre>Computer</genre>
@@ -10,8 +9,7 @@
       <dynamic x="1" y="2" />
     </description>
   </book>
-  <book>
-    <id>bk102</id>
+  <book id="bk102">
     <author>Ralls, Kim</author>
     <title>Midnight Rain</title>
     <genre>Fantasy</genre>
@@ -19,8 +17,7 @@
     <publish_date>2000-12-16</publish_date>
     <description>A former architect [100-x] battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.</description>
   </book>
-  <book>
-    <id>bk103</id>
+  <book id="bk103">
     <author>Corets, Eva</author>
     <title>Maeve Ascendant</title>
     <genre>Fantasy</genre>

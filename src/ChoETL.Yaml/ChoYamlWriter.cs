@@ -598,11 +598,11 @@ namespace ChoETL
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
-            if (Configuration.UseYamlSerialization)
-            {
-                Write(dr);
-                return;
-            }
+            //if (Configuration.UseYamlSerialization)
+            //{
+            //    Write(dr);
+            //    return;
+            //}
 
             Write(FromDataReader(dr));
         }

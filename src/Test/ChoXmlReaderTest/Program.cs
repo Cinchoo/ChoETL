@@ -5302,24 +5302,16 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
     <Age>35</Age>
     <Gender>Male</Gender>
     <DateOfBirth>1980-05-30T00:00:00</DateOfBirth>
-    <Height units=""cm"">
-    30
-  </Height>
-    <Weight units=""kg"">
-    10
-  </Weight>
+    <Height units=""cm"">30</Height>
+    <Weight units=""kg"">10</Weight>
   </Patient>
   <Patient id=""2"">
     <Name>Tom</Name>
     <Age>21</Age>
     <Gender>Female</Gender>
     <DateOfBirth>2000-01-01T00:00:00</DateOfBirth>
-    <Height units=""cm"">
-    10
-  </Height>
-    <Weight units=""kg"">
-    20
-  </Weight>
+    <Height units=""cm"">10</Height>
+    <Weight units=""kg"">20</Weight>
   </Patient>
 </ContrastDoseReport>";
             string actual = null;
@@ -7473,9 +7465,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
   <ApplicationCrediential>
     <ConsumerKey>
       <Consumers json:Array=""true"" xsi:nil=""false"">
-        <Name isActive=""false"">
-        Tom
-      </Name>
+        <Name isActive=""false"">Tom</Name>
         <Name>Mark</Name>
       </Consumers>
     </ConsumerKey>

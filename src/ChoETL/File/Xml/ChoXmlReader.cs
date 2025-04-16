@@ -371,10 +371,10 @@ namespace ChoETL
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_xmlReader.Value).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                return PerformPostParsingOperation(ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
                     ++_recordNumber;
                     return e.MoveNext();
-                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose())).GetEnumerator();
             }
             else
             {
@@ -385,13 +385,29 @@ namespace ChoETL
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-                var e = rr.AsEnumerable(_xElements).GetEnumerator();
+                var e = PerformPostParsingOperation(rr.AsEnumerable(_xElements)).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() =>
                 {
                     ++_recordNumber;
                     return e.MoveNext();
                 }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
+        }
+
+        private IEnumerable<T> PerformPostParsingOperation<T>(IEnumerable<T> input)
+        {
+            if (input == null)
+                yield break;
+
+            if (Configuration.FlattenObjectByFieldNames == null || Configuration.FlattenObjectByFieldNames.Length == 0)
+            {
+                foreach (var obj in input)
+                    yield return obj;
+            }
+
+            foreach (var obj in input.FlattenBy(Configuration.FlattenObjectByFieldNames, false, Configuration.IgnoreDictionaryFieldPrefix,
+                Configuration.ArrayValueNamePrefix, Configuration.NestedKeySeparator?.ToString()))
+                yield return obj;
         }
 
         IEnumerator IEnumerable.GetEnumerator()

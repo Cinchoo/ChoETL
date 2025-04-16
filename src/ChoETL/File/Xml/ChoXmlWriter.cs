@@ -836,11 +836,11 @@ namespace ChoETL
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
-            if (Configuration.UseXmlSerialization)
-            {
-                Write(dr);
-                return;
-            }
+            //if (Configuration.UseXmlSerialization)
+            //{
+            //    Write(dr);
+            //    return;
+            //}
 
             DataTable schemaTable = dr.GetSchemaTable();
 

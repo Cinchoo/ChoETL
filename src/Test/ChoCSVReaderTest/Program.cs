@@ -1034,15 +1034,15 @@ namespace ChoCSVReaderTest
     ""Column2"": ""A test, which \""fails\"" all the time""
   }
 ]";
-            using (var parser = new ChoCSVReader(FileNameNestedQuotesCSV)
-                .MayHaveQuotedFields())
-            {
-                //foreach (dynamic x in parser)
-                //    actual.Add(x);
-                var recs = parser.ToArray();
-                var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
-                Assert.AreEqual(expected, actual);
-            }
+using (var parser = new ChoCSVReader(FileNameNestedQuotesCSV)
+    .MayHaveQuotedFields())
+{
+    //foreach (dynamic x in parser)
+    //    actual.Add(x);
+    var recs = parser.ToArray();
+    var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
+    Assert.AreEqual(expected, actual);
+}
         }
 
         [Test]

@@ -950,10 +950,17 @@ namespace ChoETL
                     }
                     else
                     {
-                        elems.Add(fieldConfig.FieldName, fieldValue);
+                        if (rec is ChoDynamicObject dobj && dobj.IsAttribute(fieldConfig.FieldName))
+                        {
+                            attrs.Add(fieldConfig.FieldName, fieldValue);
+                        }
+                        else
+                        {
+                            elems.Add(fieldConfig.FieldName, fieldValue);
 
-                        if (fieldConfig.IsXmlCDATA)
-                            CDATAs.Add(fieldConfig.FieldName);
+                            if (fieldConfig.IsXmlCDATA)
+                                CDATAs.Add(fieldConfig.FieldName);
+                        }
                     }
                 }
                 else
@@ -1357,7 +1364,15 @@ namespace ChoETL
         private XAttribute CreateXAttribute(string name, object value, ChoXmlNamespaceManager nsMgr, string nsPrefix)
         {
             //return new XAttribute(name, value);
-
+            if (name == "$type")
+            {
+                name = "type";
+                nsPrefix = nsPrefix ?? "xsi";
+            }
+            if (name.StartsWith("@"))
+            {
+                name = name.Substring(1);
+            }
             if (nsPrefix.IsNullOrWhiteSpace() || nsMgr.GetNamespaceForPrefix(nsPrefix) == null)
                 return new XAttribute(name, value);
             else
@@ -1483,6 +1498,9 @@ namespace ChoETL
                 string t = value as string;
                 if (t.StartsWith("<![CDATA[") && t.EndsWith("]]>"))
                     value = t = t.Replace("<![CDATA[", "").Replace("]]>", "");
+                //else
+                //    value = t = System.Web.HttpUtility.HtmlEncode(t);
+                
                 if (t.StartsWith("<") && t.EndsWith(">") && !t.StartsWith("<![CDATA["))
                     isXmlValue = true;
                 else

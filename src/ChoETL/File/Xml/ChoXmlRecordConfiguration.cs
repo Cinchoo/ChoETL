@@ -148,6 +148,7 @@ namespace ChoETL
         [DataMember]
         public bool OmitXmlDeclaration { get; set; }
         public bool OmitXsiNamespace { get; set; }
+        public string[] FlattenObjectByFieldNames { get; set; }
         internal Dictionary<string, ChoXmlRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
