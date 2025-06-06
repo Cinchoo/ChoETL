@@ -154,12 +154,11 @@ namespace ChoETL
         private IEnumerable<IDictionary<string, object>> Unpack(DataColumn[] dc)
         {
             long index = 0;
-            Dictionary<string, object> data = new Dictionary<string, object>();
             long dataLength = GetDataLength(dc);
 
             while (index < dataLength)
             {
-                data.Clear();
+                Dictionary<string, object> data = new Dictionary<string, object>();
                 for (int j = 0; j < dc.Length; j++)
                 {
                     string cn = dc[j].Field.Name;
@@ -774,7 +773,7 @@ namespace ChoETL
                     }
                 }
             }
-            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
+            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@"""") && fieldValue.Length >= 2)
             {
                 fieldValue = fieldValue.Substring(1, fieldValue.Length - 2);
             }

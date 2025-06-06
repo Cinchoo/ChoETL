@@ -1381,7 +1381,7 @@ namespace ChoETL
                     }
                 }
             }
-            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
+            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@"""") && fieldValue.Length >= 2)
             {
                 fieldValue = fieldValue.Substring(1, fieldValue.Length - 2);
             }

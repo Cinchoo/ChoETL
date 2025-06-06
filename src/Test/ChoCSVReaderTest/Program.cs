@@ -9524,6 +9524,27 @@ Dialogue,5,0,FALSE,1004,Jack,""256,128;257,129""";
 
         }
 
+        public partial class Account
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        [Test]
+        public static void Issue307()
+        {
+            var csv = @"""Id"",""Name""
+""1"",""Tom""
+""2"",""Carl""
+""3"",""Mark""";
+
+            foreach (var rec in ChoCSVReader<Account>.LoadText(csv).WithFirstLineHeader().QuoteAllFields())
+            {
+                Assert.AreEqual(rec.Id, "1");
+                break;
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;

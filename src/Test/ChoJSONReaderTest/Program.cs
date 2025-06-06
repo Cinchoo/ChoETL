@@ -15403,6 +15403,97 @@ asdf,b,c,1,2";
             }
         }
 
+        [Test]
+        public static void Issue303()
+        {
+            var json = @"{
+ ""name"": ""Binance Sverige"",
+ ""type"": ""public_supergroup"",
+ ""id"": 1685735066,
+ ""messages"": [
+  {
+   ""id"": 1,
+   ""type"": ""service"",
+   ""date"": ""2022-01-20T18:40:06"",
+   ""date_unixtime"": ""1642700406"",
+   ""actor"": ""Binance Sverige"",
+   ""actor_id"": ""channel1685735066"",
+   ""action"": ""migrate_from_group"",
+   ""title"": ""BNB community - Sverige"",
+   ""text"": [
+    ""And it freaking says swedish speaking in the group info. \n\""Öppen grupp för att prata om BNB och Binance \""\""på Svenska\""\"".\nHär välkomnas Binance användare, BNB HODLers, traders och alla andra krypto intresserade.\nFölj också Binance announcements: "",
+    {
+     ""type"": ""mention"",
+     ""text"": ""@binance_announcements""
+    },
+    ""\""""
+   ],
+   ""text_entities"": []
+  }
+ ]
+}";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                r.Configuration.FlattenNode = true;
+                r.Configuration.NullValue = " ";
+                //r.ErrorMode(ChoErrorMode.IgnoreAndContinue);
+                //r.Configure( )
+                //r.Configure(Function(c) CSharpImpl.__Assign(c.FlattenNode, True)).JsonSerializationSettings(Function(s) CSharpImpl.__Assign(s.DateParseHandling, DateParseHandling.None))
+
+                var recs = r.ToArray();
+                using (var w = new ChoCSVWriter("Issue303.csv"))
+                {
+                    w.WithDelimiter(";");
+                    w.QuoteAllFields(true);
+                    w.WithFirstLineHeader();
+
+                    w.Write(recs);
+                }
+            }
+            var actual = File.ReadAllText("Issue303.csv");
+            var expected = File.ReadAllText("Issue303Expected.csv");
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void Json2CSVCustomArray()
+        {
+            var json = @"{ ""extension"": [
+    {
+        ""Test"": ""value"",
+        ""value"": [ ""0"", ""1"", ""2"" ]
+    },
+    {
+        ""Test1"": ""Test"",
+        ""value"": ""20""
+    },
+    {
+        ""Test2"": ""Test"",
+        ""value"": ""35""
+    }
+]}";
+
+            string expected = @"extension_0_Test,extension_0_value_0,extension_0_value_1,extension_0_value_2,extension_1_Test1,extension_1_value,extension_2_Test2,extension_2_value
+value,0,1,2,Test,20,Test,35";
+
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = ChoJSONReader.LoadText(json)
+                )
+            {
+                var recs = r.ToArray();
+                using (var w = new ChoCSVWriter(csv)
+                                      .WithFirstLineHeader()
+                                      .WithMaxScanRows(10)
+                                      .Configure(c => c.ThrowAndStopOnMissingField = false))
+                    w.Write(recs);
+            }
+
+            var actual = csv.ToString().Trim();
+            Assert.AreEqual(expected, actual);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;

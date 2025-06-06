@@ -243,6 +243,7 @@ namespace ChoETL
 
         internal ChoParquetRecordConfiguration(Type recordType) : base(recordType)
         {
+            UseNestedKeyFormat = false;
             ParquetOptions = new ParquetOptions();
             ParquetRecordFieldConfigurations = new List<ChoParquetRecordFieldConfiguration>();
             RowGroupSize = 0;

@@ -2738,54 +2738,54 @@ ca6f8387-bcf0-45ce-85d8-d609dd5a96bd,,,0,10,1";
             public string Name { get; set; }
         }
 
-//        [Test]
-//        public static void UpsertToDbFrom2CSVs()
-//        {
-//            string csv1 = @"ID,name
-//1,Danny
-//2,Fred
-//3,Sam";
+        //        [Test]
+        //        public static void UpsertToDbFrom2CSVs()
+        //        {
+        //            string csv1 = @"ID,name
+        //1,Danny
+        //2,Fred
+        //3,Sam";
 
-//            string csv2 = @"ID,name
-//1,Danny
-//3,Pamela
-//4,Fernando";
-//            string expected = @"ID,name,Status
-//1,Danny,Unchanged
-//2,Fred,Deleted
-//3,Pamela,Changed
-//4,Fernando,New";
+        //            string csv2 = @"ID,name
+        //1,Danny
+        //3,Pamela
+        //4,Fernando";
+        //            string expected = @"ID,name,Status
+        //1,Danny,Unchanged
+        //2,Fred,Deleted
+        //3,Pamela,Changed
+        //4,Fernando,New";
 
-//            //ChoTypeComparerCache.Instance.ScanAndLoad();
+        //            //ChoTypeComparerCache.Instance.ScanAndLoad();
 
-//            var r1 = ChoCSVReader<User>.LoadText(csv1).WithFirstLineHeader();
-//            var r2 = ChoCSVReader<User>.LoadText(csv2).WithFirstLineHeader();
+        //            var r1 = ChoCSVReader<User>.LoadText(csv1).WithFirstLineHeader();
+        //            var r2 = ChoCSVReader<User>.LoadText(csv2).WithFirstLineHeader();
 
-//            StringBuilder csvOut = new StringBuilder();
-//            using (var w = new ChoCSVWriter(csvOut).WithFirstLineHeader())
-//            {
-//                foreach (var t in r1.Compare(r2, "ID", "name"))
-//                {
-//                    dynamic v1 = t.MasterRecord as dynamic;
-//                    dynamic v2 = t.DetailRecord as dynamic;
-//                    if (t.Status == CompareStatus.Unchanged || t.Status == CompareStatus.Deleted)
-//                    {
-//                        v1.Status = t.Status.ToString();
-//                        w.Write(v1);
-//                    }
-//                    else
-//                    {
-//                        v2.Status = t.Status.ToString();
-//                        w.Write(v2);
-//                    }
-//                }
-//            }
+        //            StringBuilder csvOut = new StringBuilder();
+        //            using (var w = new ChoCSVWriter(csvOut).WithFirstLineHeader())
+        //            {
+        //                foreach (var t in r1.Compare(r2, "ID", "name"))
+        //                {
+        //                    dynamic v1 = t.MasterRecord as dynamic;
+        //                    dynamic v2 = t.DetailRecord as dynamic;
+        //                    if (t.Status == CompareStatus.Unchanged || t.Status == CompareStatus.Deleted)
+        //                    {
+        //                        v1.Status = t.Status.ToString();
+        //                        w.Write(v1);
+        //                    }
+        //                    else
+        //                    {
+        //                        v2.Status = t.Status.ToString();
+        //                        w.Write(v2);
+        //                    }
+        //                }
+        //            }
 
-//            Console.WriteLine(csvOut.ToString());
+        //            Console.WriteLine(csvOut.ToString());
 
-//            var actual = csvOut.ToString();
-//            Assert.AreEqual(expected, actual);
-//        }
+        //            var actual = csvOut.ToString();
+        //            Assert.AreEqual(expected, actual);
+        //        }
         [Test]
         public static void CSVDiffWithStatus()
         {
@@ -3570,7 +3570,7 @@ Jason,2";
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id"));
-            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1",2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1", 2));
 
             List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
 
@@ -4115,42 +4115,42 @@ Circle,200,Lou,10/23/1990,$0.00,N,";
             }
             Assert.AreEqual(expected, actual.ToString());
 
-//            return;
-//            string expected = @"Id,Name
-//1,Lou
-//50,Jason
-//200,Mike";
-//            string actual = null;
+            //            return;
+            //            string expected = @"Id,Name
+            //1,Lou
+            //50,Jason
+            //200,Mike";
+            //            string actual = null;
 
-//            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
-//            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
-//            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
-//            //            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-//            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;AttachDBFileName=" + Environment.CurrentDirectory + @"\WriteData.mdf";
+            //            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+            //            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
+            //            //            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            //            string connString = @"Data Source=(localdb)\MSSQLLocalDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;AttachDBFileName=" + Environment.CurrentDirectory + @"\WriteData.mdf";
 
-//            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-//            config.FileHeaderConfiguration.HasHeaderRecord = true;
+            //            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            //            config.FileHeaderConfiguration.HasHeaderRecord = true;
 
-//            SqlConnection conn = new SqlConnection(connString);
-//            conn.Open();
-//            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
-//            SqlDataAdapter da = new SqlDataAdapter(cmd);
-//            DataTable dt = new DataTable();
-//            da.Fill(dt);
+            //            SqlConnection conn = new SqlConnection(connString);
+            //            conn.Open();
+            //            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
+            //            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            //            DataTable dt = new DataTable();
+            //            da.Fill(dt);
 
-//            using (var stream = new MemoryStream())
-//            using (var reader = new StreamReader(stream))
-//            using (var writer = new StreamWriter(stream))
-//            using (var parser = new ChoCSVWriter(writer, config))
-//            {
-//                parser.Write(dt);
+            //            using (var stream = new MemoryStream())
+            //            using (var reader = new StreamReader(stream))
+            //            using (var writer = new StreamWriter(stream))
+            //            using (var parser = new ChoCSVWriter(writer, config))
+            //            {
+            //                parser.Write(dt);
 
-//                writer.Flush();
-//                stream.Position = 0;
+            //                writer.Flush();
+            //                stream.Position = 0;
 
-//                actual = reader.ReadToEnd();
-//            }
-//            Assert.AreEqual(expected, actual);
+            //                actual = reader.ReadToEnd();
+            //            }
+            //            Assert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -4540,7 +4540,283 @@ Circle,200,Lou,1/1/0001,$0.00,False,";
             }
             Assert.AreEqual(expected, actual);
         }
+
+        [Test]
+        public static void Json2CSVIssue325()
+        {
+            string json = @"{
+  ""Name"": ""Test"",
+  ""type"": ""Test"",
+  ""entry"": [
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1807""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""john"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""Robet""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+
+          },
+          {
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
+    },
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1808""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""hello"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""test""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+          },
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
+    },
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1809""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""john"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""Robet""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+          },
+          {
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
+    },
+    {
+      ""testUrl"": ""https://"",
+      ""resource"": {
+        ""resourceType"": ""test"",
+        ""managingtest"": {
+          ""test"": ""test/1810""
+        },
+        ""name"": [
+          {
+            ""firstname"": ""hello"",
+            ""lastname"": ""smith"",
+            ""given"": [
+              ""test""
+            ]
+          }
+        ],
+        ""gender"": ""male"",
+        ""birthDate"": ""1925-01-01"",
+        ""testtension"": [
+
+          {
+            ""url"": ""www.1.com"",
+            ""value"": ""test20""
+          },
+          {
+            ""url"": ""www.2.com"",
+            ""value"": ""test30""
+          },
+          {
+            ""url"": ""www.com"",
+            ""value"": [
+              ""test1"",
+              ""test2"",
+              ""test3""
+            ]
+          },
+          {
+
+            ""url"": ""www.3.com"",
+            ""value"": ""test40""
+          }
+        ],
+        ""sata"": {
+          ""YearUpdated"": ""2024""
+        }
+      }
     }
+  ]
+}
+";
+
+            var expected = @"Name,type,testUrl,resourceType,managingtest_test,name_0_firstname,name_0_lastname,name_0_given_0,gender,birthDate,sata_YearUpdated,url,value_0,value_1,value_2
+Test,Test,https://,test,test/1807,john,smith,Robet,male,1925-01-01,2024,www.com,test1,test2,test3
+Test,Test,https://,test,test/1807,john,smith,Robet,male,1925-01-01,2024,www.1.com,test20,,
+Test,Test,https://,test,test/1807,john,smith,Robet,male,1925-01-01,2024,www.2.com,test30,,
+Test,Test,https://,test,test/1807,john,smith,Robet,male,1925-01-01,2024,www.3.com,test40,,
+Test,Test,https://,test,test/1808,hello,smith,test,male,1925-01-01,2024,www.1.com,test20,,
+Test,Test,https://,test,test/1808,hello,smith,test,male,1925-01-01,2024,www.2.com,test30,,
+Test,Test,https://,test,test/1808,hello,smith,test,male,1925-01-01,2024,www.com,test1,test2,test3
+Test,Test,https://,test,test/1808,hello,smith,test,male,1925-01-01,2024,www.3.com,test40,,
+Test,Test,https://,test,test/1809,john,smith,Robet,male,1925-01-01,2024,www.com,test1,test2,test3
+Test,Test,https://,test,test/1809,john,smith,Robet,male,1925-01-01,2024,www.1.com,test20,,
+Test,Test,https://,test,test/1809,john,smith,Robet,male,1925-01-01,2024,www.2.com,test30,,
+Test,Test,https://,test,test/1809,john,smith,Robet,male,1925-01-01,2024,www.3.com,test40,,
+Test,Test,https://,test,test/1810,hello,smith,test,male,1925-01-01,2024,www.1.com,test20,,
+Test,Test,https://,test,test/1810,hello,smith,test,male,1925-01-01,2024,www.2.com,test30,,
+Test,Test,https://,test,test/1810,hello,smith,test,male,1925-01-01,2024,www.com,test1,test2,test3
+Test,Test,https://,test,test/1810,hello,smith,test,male,1925-01-01,2024,www.3.com,test40,,";
+
+            StringBuilder actual = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)
+                  //.WithJSONPath($"$..entry")
+                  )
+            {
+                using (var w = new ChoCSVWriter(actual)
+                       .WithMaxScanRows(10)
+                       .WithFirstLineHeader()
+                       .Configure(c => c.UseNestedKeyFormat = true)
+                       .Configure(c => c.ThrowAndStopOnMissingField = false)
+                      )
+                {
+                    var r1 = r
+                        .Select(rec =>
+                        {
+                            foreach (dynamic entry in rec.entry)
+                            {
+                                foreach (dynamic item in entry.resource.testtension)
+                                {
+                                    if (item.value is IList)
+                                    {
+
+                                    }
+                                    else
+                                        item.value = new string[] { item.value };
+                                }
+                            }
+                            return rec;
+                        })
+                        .FlattenBy(new string[] { "entry", "resource", "testtension" }).ToArray();
+
+                    w.Write(r1);
+                }
+            }
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void WriteHeaderAndFields()
+        {
+            string expected = @"A,B
+A1,B1
+A2,B2";
+
+            using (var writer = new StringWriter())
+            {
+                using (var choWriter = new ChoCSVWriter(writer).WithFirstLineHeader())
+                {
+                    choWriter.WriteHeader("A", "B");
+                    choWriter.WriteFields("A1", "B1");
+                    choWriter.WriteFields("A2", "B2");
+                    choWriter.Flush();
+                    writer.Flush();
+                    var actual = writer.ToString();
+             
+                    Assert.AreEqual(expected, actual);
+                }
+            }
+        }
+    }
+
 
     public partial class EmployeeRecSimple
     {

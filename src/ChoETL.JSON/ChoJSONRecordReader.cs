@@ -1248,6 +1248,7 @@ namespace ChoETL
                 }
 
                 fieldValue = !jTokens.IsNullOrEmpty() ? (object)jTokens : jToken;
+                var originalFieldValue = fieldValue;
                 Reader.ContractResolverState = new ChoContractResolverState
                 {
                     Name = kvp.Key,
@@ -1574,7 +1575,7 @@ namespace ChoETL
                     ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                        throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field at [Node: {lineNo}].", ex);
 
                     try
                     {
@@ -1589,7 +1590,7 @@ namespace ChoETL
                             else if (ex is ValidationException)
                                 throw;
                             else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field at [Node: {lineNo}].", ex);
                         }
                         else if (pi != null)
                         {
@@ -1600,10 +1601,10 @@ namespace ChoETL
                             else if (ex is ValidationException)
                                 throw;
                             else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field at [Node: {lineNo}].", ex);
                         }
                         else
-                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field at [Node: {lineNo}].", ex);
                     }
                     catch (Exception innerEx)
                     {
@@ -1621,7 +1622,7 @@ namespace ChoETL
                                     if (ex is ValidationException)
                                         throw;
 
-                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field at [Node: {lineNo}].", ex);
                                 }
                                 else
                                 {
@@ -1647,7 +1648,7 @@ namespace ChoETL
                         }
                         else
                         {
-                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
+                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field at [Node: {lineNo}].".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
                         }
                     }
                 }
@@ -2476,7 +2477,7 @@ namespace ChoETL
                     }
                 }
             }
-            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
+            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@"""") && fieldValue.Length >= 2)
             {
                 fieldValue = fieldValue.Substring(1, fieldValue.Length - 2);
             }

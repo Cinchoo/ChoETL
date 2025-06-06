@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using System;
 using System.Collections;
@@ -809,6 +810,136 @@ namespace ChoXmlWriterTest
             }
         }
 
+
+        [Test]
+        public void JsonToCSVArrayItemRenaming()
+        {
+            var json = @"
+[
+    {
+        ""name"": ""John"",
+        ""age"": 30,
+        ""address"": {
+            ""city"": ""New York"",
+            ""street"": ""5th Avenue"",
+            ""number"": 123
+        },
+        ""phones"": [
+            {
+                ""type"": ""Home"",
+                ""number"": ""123-456-7890""
+            },
+            {
+                ""type"": ""Work"",
+                ""number"": ""456-789-0123""
+            }
+        ]
+    }
+]";
+            string expected = @"<root>
+  <item>
+    <name>John</name>
+    <age>30</age>
+    <address>
+      <city>New York</city>
+      <street>5th Avenue</street>
+      <number>123</number>
+    </address>
+    <phones>
+      <item>
+        <type>Home</type>
+        <number>123-456-7890</number>
+      </item>
+      <item>
+        <type>Work</type>
+        <number>456-789-0123</number>
+      </item>
+    </phones>
+  </item>
+</root>";
+
+            var sb = new StringBuilder();
+            using (var xml = new ChoXmlWriter(sb).Configure(x =>
+            {
+                x.RootName = "root";
+                x.NodeName = "item";
+                x.UseXmlArray = true;
+                x.DoNotEmitXmlNamespace = true;
+                x.ThrowAndStopOnMissingField = false;
+            }))
+            {
+                using (var r = new ChoJSONReader(JToken.Parse(json)))
+                {
+                    var recs = r.ToArray();
+                    foreach (var rec in recs)
+                    {
+                        foreach (var phone in rec.phones) // Rename 'phone' to 'item'
+                        {
+                            phone.DynamicObjectName = "item";
+                        }
+                    }
+                    xml.Write(recs);
+                }
+            }
+
+            var actual = sb.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public static void MergingNestedArraysToCsvIssue304()
+        {
+            string json = @"[
+  {
+    ""incident"": {
+      ""id"": ""120950002"",
+      ""name"": ""Mosquito Fire""
+    },
+    ""additionalClaimant"": [
+      {
+        ""claimantFirstName"": ""Olga"",
+        ""claimantLastName"": ""Yachnik""
+
+      },
+      {
+        ""claimantFirstName"": ""Meera"",
+        ""claimantLastName"": ""Lavina""
+
+      }
+    ]
+  },
+  {
+    ""incident"": {
+      ""id"": ""120950002"",
+      ""name"": ""Mosquito Fire""
+    },
+    ""additionalClaimant"": []
+  }
+]";
+            string expected = @"incident_id,incident_name,additionalClaimant_claimantFirstName,additionalClaimant_claimantLastName
+120950002,Mosquito Fire,Olga,Yachnik
+120950002,Mosquito Fire,Meera,Lavina
+120950002,Mosquito Fire,,";
+
+            StringBuilder actual = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)
+                .Configure(c => c.DefaultArrayHandling = false)
+                .Configure(c => c.FlattenNode = true)
+                .Configure(c => c.UseNestedKeyFormat = true)
+                .Configure(c => c.FlattenByNodeName = "additionalClaimant")
+                .Configure(c => c.NestedKeySeparator = '.')
+                )
+            {
+                using (var w = new ChoCSVWriter(actual)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(r);
+                }
+
+            }
+            Assert.AreEqual(expected, actual.ToString());
+        }
 
         //[Test]
         public static void ConfigFirstTest()

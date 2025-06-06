@@ -226,19 +226,19 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
     ""groupId"": null,
     ""bundleId"": null,
     ""description"": ""Test"",
-    ""linePrice"": ""110"",
+    ""linePrice"": 110.0,
     ""quantity"": 1,
-    ""detailAmount"": ""15"",
-    ""taxRate"": ""0.95"",
-    ""taxAmount"": ""6.53"",
-    ""unitServiceFee"": ""12"",
-    ""serviceFeeDetailAmount"": ""15"",
-    ""serviceTaxRate"": ""1.25"",
+    ""detailAmount"": 15.0,
+    ""taxRate"": 0.95,
+    ""taxAmount"": 6.53,
+    ""unitServiceFee"": 12.0,
+    ""serviceFeeDetailAmount"": 15.0,
+    ""serviceTaxRate"": 1.25,
     ""isRevenue"": false,
-    ""groupEnum"": ""0"",
+    ""groupEnum"": 0,
     ""modifiedDate"": ""2020-01-01T00:00:00.100000"",
     ""isDeleted"": false,
-    ""serviceFeeTaxAmount"": ""13"",
+    ""serviceFeeTaxAmount"": 13.0,
     ""derivativeSalesList"": [
       {
         ""salesId"": 1,
@@ -265,6 +265,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                     .Configure(c => c.TreatDateTimeAsString = true)
                     .TypeConverterFormatSpec(ts => ts.DateTimeOffsetFormat = "yyyy-MM-ddThh:mm:ss.fzzz")
                     .Configure(c => c.ArrayValueNamePrefix = String.Empty)
+                    .UseNestedKeyFormat()
                     )
                 {
                     foreach (var rec in recs)
@@ -272,7 +273,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 }
             }
 
-            var actual = ReadParquetFileAsJSON(filePath, jsonSerializerSettings: new JsonSerializerSettings()
+            var actual = ReadParquetFileAsJSONUsingChoETL<SalesItem>(filePath, jsonSerializerSettings: new JsonSerializerSettings()
             {
                 DateFormatString = "yyyy-MM-ddThh:mm:ss.fzzz",
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc,
@@ -832,6 +833,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 .UseJsonSerialization())
             {
                 using (var w = new ChoParquetWriter(filePath)
+                    .UseNestedKeyFormat()
                     )
                 {
                     var recs = r.ToArray();
@@ -868,7 +870,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             using (var r = new ChoParquetReader(filePath)
                 )
             {
-                var recs = r.ToArray();
+                var recs = r.Select(r1 => r1.ConvertToNestedObject()).ToArray();
                 var actual = JsonConvert.SerializeObject(recs, Formatting.Indented);
                 Assert.AreEqual(expected, actual);
             }
@@ -1212,6 +1214,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 using (var w = new ChoParquetWriter(filePath)
                     .WithMaxScanRows(3)
                     .ThrowAndStopOnMissingField(false)
+                    .UseNestedKeyFormat()
                     )
                 {
                     var recs = r.ToArray();
@@ -1227,7 +1230,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 //}
             }
 
-            var actual = ReadParquetFileAsJSON(filePath);
+            var actual = ReadParquetFileAsJSONUsingChoETL(filePath);
             File.WriteAllText("Issue202Out.json", actual);
             var expected = File.ReadAllText("Issue202Expected.json");
             Assert.AreEqual(expected, actual);
@@ -1264,6 +1267,34 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 w.Print();
             }
         }
+        static string ReadParquetFileAsJSONUsingChoETL(string parquetOutputFilePath, int? recCount = null, JsonSerializerSettings jsonSerializerSettings = null)
+        {
+            jsonSerializerSettings = jsonSerializerSettings ?? new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+            };
+            parquetOutputFilePath.Print();
+            using (var r = new ChoParquetReader(parquetOutputFilePath))
+            {
+                var recs = recCount == null ? r.ToArray() : r.Take(recCount.Value).ToArray();
+                return ChoJSONWriter.Serialize(recs.Select(r => r.ConvertToNestedObject()), jsonSerializerSettings);
+            }
+        }
+        static string ReadParquetFileAsJSONUsingChoETL<T>(string parquetOutputFilePath, int? recCount = null, JsonSerializerSettings jsonSerializerSettings = null)
+            where T : class
+        {
+            jsonSerializerSettings = jsonSerializerSettings ?? new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+            };
+            parquetOutputFilePath.Print();
+            using (var r = new ChoParquetReader<T>(parquetOutputFilePath).UseNestedKeyFormat())
+            {
+                var recs = recCount == null ? r.ToArray() : r.Take(recCount.Value).ToArray();
+                var recs1 = recs.Select(r => r.ConvertToNestedObject()).ToArray();
+                return ChoJSONWriter.Serialize(recs1, jsonSerializerSettings);
+            }
+        }
         static string ReadParquetFileAsJSON(string parquetOutputFilePath, int? recCount = null, JsonSerializerSettings jsonSerializerSettings = null)
         {
             jsonSerializerSettings = jsonSerializerSettings ?? new JsonSerializerSettings
@@ -1272,6 +1303,20 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             };
             parquetOutputFilePath.Print();
             using (var r = new ChoParquetReader(parquetOutputFilePath))
+            {
+                var recs = recCount == null ? r.ToArray() : r.Take(recCount.Value).ToArray();
+                return JsonConvert.SerializeObject(recs, jsonSerializerSettings);
+            }
+        }
+        static string ReadParquetFileAsJSON<T>(string parquetOutputFilePath, int? recCount = null, JsonSerializerSettings jsonSerializerSettings = null)
+            where T : class
+        {
+            jsonSerializerSettings = jsonSerializerSettings ?? new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+            };
+            parquetOutputFilePath.Print();
+            using (var r = new ChoParquetReader<T>(parquetOutputFilePath))
             {
                 var recs = recCount == null ? r.ToArray() : r.Take(recCount.Value).ToArray();
                 return JsonConvert.SerializeObject(recs, jsonSerializerSettings);
@@ -2583,6 +2628,52 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             Assert.AreEqual(expected, actual);
         }
 
+
+        [Test]
+        public static void Json2ParquetWithNestedArrayIssue285()
+        {
+            string json = @"{
+  ""Stype"": ""BaseDecorator"",
+  ""Decorators"": [
+    {
+      ""Stype"": ""FiscalInformationDecorator"",
+      ""FiscalInformation"": {
+        ""Stype"": ""FiscalInformation"",
+        ""UUID"": ""02d0c973-727e-449e-bb4e-45dddbd7dbeb""
+      }
+    },
+    {
+      ""Stype"": ""DocumentInformationDecorator"",
+      ""DocumentInformation"": {
+        ""Stype"": ""DocumentInformation"",
+        ""DocumentModelID"": ""7ec7b1d4-f94f-42b5-ba36-77701cdf1db4""
+      }
+    },
+    {
+      ""Stype"": ""IssuingInformationDecorator"",
+      ""IssuingInformation"": {
+        ""Stype"": ""IssuingInformation"",
+        ""RFC"": ""PRR890126QC2""
+      }
+    }
+  ],
+  ""InstanceID"": ""78091f6e-e458-4a23-abfe-fe286b24b59a"",
+  ""company"": ""d6038f2d-787c-427b-8eaf-4d9eea44a24a""
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                //.Configure(c => c.FlattenNode = false)
+                //.Configure(c => c.UseNestedKeyFormat = true)
+                //.Configure(c => c.NestedKeySeparator = '.')
+                )
+            {
+                var recs = r.ToArray();
+                using (var w = new ChoParquetWriter("Issue285.parquet"))
+                {
+                    w.Write(recs);
+                }
+            }
+        }
 
         static void Main(string[] args)
         {
