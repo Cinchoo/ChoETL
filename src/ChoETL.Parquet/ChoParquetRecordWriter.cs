@@ -255,8 +255,6 @@ namespace ChoETL
                 return typeof(string);
             else if (underlyingType.IsEnum)
                 return typeof(string);
-            else if (asRaw && type.IsNullableType())
-                return typeof(string);
             else if (type == typeof(byte[]))
                 return underlyingType;
             else if (type == typeof(DateTimeOffset))
