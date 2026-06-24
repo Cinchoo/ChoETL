@@ -1615,12 +1615,12 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
   {
     ""Id"": null,
     ""Price"": null,
-    ""Quantity"": ""2"",
+    ""Quantity"": 2.0,
     ""Name"": null,
     ""CreateDate"": null
   },
   {
-    ""Id"": ""100"",
+    ""Id"": 100,
     ""Price"": null,
     ""Quantity"": null,
     ""Name"": null,
@@ -1628,8 +1628,8 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
   },
   {
     ""Id"": null,
-    ""Price"": ""2.3"",
-    ""Quantity"": ""2.45"",
+    ""Price"": 2.3,
+    ""Quantity"": 2.45,
     ""Name"": ""Name"",
     ""CreateDate"": ""2023-06-10T12:10:30+00:00""
   }
