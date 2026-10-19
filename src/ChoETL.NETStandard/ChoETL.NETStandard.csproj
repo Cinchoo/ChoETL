@@ -43,6 +43,7 @@
 		<PackageReference Include="System.Memory" Version="4.6.3" />
 		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
 		<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
 	</ItemGroup>
 	<ItemGroup>
         <Compile Include="..\ChoETL\Common\Attributes\ChoQuoteFieldAttribute.cs" Link="Common\Attributes\ChoQuoteFieldAttribute.cs" />
